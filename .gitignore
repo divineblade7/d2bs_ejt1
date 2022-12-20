@@ -4,6 +4,5 @@
 
 /.vs
 /Debug
-/out/build
+/out
 *.user
-/D2BS.vcxproj
