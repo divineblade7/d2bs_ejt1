@@ -17,7 +17,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #include "CommandLine.h"
 
 #include "core/File.h"
-#include "utils/ArrayEx.h"
 #include "utils/Offset.h"
 
 #include <shlwapi.h>
@@ -26,7 +25,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #include <windows.h>
 #define ArraySize(x) (sizeof((x)) / sizeof((x)[0]))
 
-CArrayEx<sLine*, sLine*> aCommand;
+std::vector<sLine*> aCommand;
 
 // Commands.
 sLine CLine[] = {{L"-d2c", 0},    {L"-d2x", 0},   {L"-title", 0},  {L"-mpq", 0},     {L"-profile", 0},
@@ -81,13 +80,16 @@ VOID ParseCommandLine(LPWSTR Command) {
     wcscpy_s(sl->Param, _countof(sl->Param), CLine[x].Param);
     if (!sl->isBool) wcscpy_s(sl->szText, _countof(sl->szText), szText);
 
-    aCommand.Add(sl);
+    aCommand.push_back(sl);
   }
 }
 
 sLine* GetCommand(LPCWSTR Param) {
-  for (int x = 0; x < aCommand.GetSize(); x++)
-    if (!_wcsicmp(aCommand[x]->Param, Param)) return aCommand[x];
+  for (const auto& cmd : aCommand) {
+    if (!_wcsicmp(cmd->Param, Param)) {
+      return cmd;
+    }
+  }
 
   return 0;
 }

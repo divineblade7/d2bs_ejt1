@@ -16,7 +16,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <utils/ArrayEx.h>
+#include <vector>
+#include <Windows.h>
 
 struct sLine {
   WCHAR Param[400];
@@ -27,4 +28,4 @@ struct sLine {
 void ParseCommandLine(LPWSTR Command);
 sLine* GetCommand(LPCWSTR Param);
 
-extern CArrayEx<sLine*, sLine*> aCommand;
+extern std::vector<sLine*> aCommand;
