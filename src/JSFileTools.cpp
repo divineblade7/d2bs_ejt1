@@ -97,13 +97,13 @@ JSAPI_FUNC(filetools_copy) {
     while (!feof(fptr1)) {
         int ch = fgetc(fptr1);
         if (ferror(fptr1)) {
-            THROW_ERROR(cx, _strerror("Read Error"));
+            THROW_ERROR(cx, "Read Error");
             break;
         } else {
             if (!feof(fptr1))
                 fputc(ch, fptr2);
             if (ferror(fptr2)) {
-                THROW_ERROR(cx, _strerror("Write Error"));
+                THROW_ERROR(cx, "Write Error");
                 break;
             }
         }
@@ -115,7 +115,7 @@ JSAPI_FUNC(filetools_copy) {
         fclose(fptr2);
         fclose(fptr1);
         _wremove(pnewName); // delete the partial file so it doesnt look like we succeeded
-        THROW_ERROR(cx, _strerror("File copy failed"));
+        THROW_ERROR(cx, "File copy failed");
     }
 
     fflush(fptr2);
@@ -167,7 +167,7 @@ JSAPI_FUNC(filetools_readText) {
     // Check to see if we had an error
     if (ferror(fptr)) {
         delete[] contents;
-        THROW_ERROR(cx, _strerror("Read failed"));
+        THROW_ERROR(cx, "Read failed");
     }
 
     int offset = 0;

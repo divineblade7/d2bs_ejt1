@@ -404,7 +404,7 @@ JSAPI_FUNC(my_sendCopyData) {
 
     // if data is NULL, strlen crashes
     if (data) {
-        COPYDATASTRUCT aCopy = {nModeId, strlen(data) + 1, data};
+        COPYDATASTRUCT aCopy = {static_cast<ULONG_PTR>(nModeId), strlen(data) + 1, data};
 
         // bob20	 jsrefcount depth = JS_SuspendRequest(cx);
         JS_SET_RVAL(

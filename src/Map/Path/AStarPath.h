@@ -33,13 +33,13 @@ inline int __fastcall Euclidean(Point const& start, Point const& end) {
     double dy = (double)(end.second - start.second);
     dx = pow(dx, 2);
     dy = pow(dy, 2);
-    return sqrt(dx + dy) * 10;
+    return static_cast<int>(sqrt(dx + dy) * 10);
 }
 
 inline int __fastcall Slope(Point const& start, Point const& end) {
     double dx = (double)(end.first - start.first);
     double dy = (double)(end.second - start.second);
-    return dy/dx;
+    return static_cast<int>(dy/dx);
 }
 
 inline bool __fastcall checkFlag(int flag) {

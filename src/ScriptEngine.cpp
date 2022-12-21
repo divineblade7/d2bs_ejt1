@@ -280,7 +280,7 @@ JSBool operationCallback(JSContext* cx) {
                 int l = 0;
                 COPYDATASTRUCT aCopy = {164344, 0, str};
                 if (JSVAL_IS_STRING(stack)) {
-                    if (l = JS_EncodeStringToBuffer(cx, JSVAL_TO_STRING(stack), str, 1024)) {
+                    if ((l = JS_EncodeStringToBuffer(cx, JSVAL_TO_STRING(stack), str, 1024)) > 0) {
                         str[l] = 0;
                         aCopy.cbData = l + 1;
                         SendMessage(debug_wnd, WM_COPYDATA, (WPARAM)D2GFX_GetHwnd(), (LPARAM)&aCopy);
@@ -289,7 +289,7 @@ JSBool operationCallback(JSContext* cx) {
                 } else if (JSVAL_IS_OBJECT(stack)) {
                     if (JS_CallFunctionName(cx, JSVAL_TO_OBJECT(stack), "ToString", 0, NULL, &err)) {
 
-                        if (l = JS_EncodeStringToBuffer(cx, JSVAL_TO_STRING(err), str, 1024)) {
+                        if ((l = JS_EncodeStringToBuffer(cx, JSVAL_TO_STRING(err), str, 1024)) > 0) {
                             str[l] = 0;
                             aCopy.cbData = l + 1;
                             SendMessage(debug_wnd, WM_COPYDATA, (WPARAM)D2GFX_GetHwnd(), (LPARAM)&aCopy);
