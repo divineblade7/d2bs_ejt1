@@ -286,11 +286,11 @@ JSAPI_FUNC(my_version) {
   JS_SET_RVAL(cx, vp, JSVAL_TRUE);
 
   if (argc < 1) {
-    JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(JS_InternUCString(cx, D2BS_VERSION)));
+    JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(JS_InternUCString(cx, AnsiToUnicode(D2BS_VERSION))));
     return JS_TRUE;
   }
 
-  Print(L"\u00FFc4D2BS\u00FFc1 \u00FFc3%s for Diablo II 1.14d.", D2BS_VERSION);
+  Print(L"\u00FFc4D2BS\u00FFc1 \u00FFc3%s for Diablo II 1.14d.", AnsiToUnicode(D2BS_VERSION));
   return JS_TRUE;
 }
 

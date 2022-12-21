@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.23)
 
-project(d2bs)
+include(cmake/d2bs_version.cmake)
+d2bs_extract_version()
+
+project(d2bs VERSION ${D2BS_VERSION})
+message(STATUS "Build d2bs ${D2BS_VERSION}")
 
 # Set default built to release
 if(NOT CMAKE_BUILD_TYPE)
@@ -76,8 +80,14 @@ set(D2BS_SRCS
   src/d2bs/utils/sqlite3.c
   src/d2bs/utils/stringhash.cpp
 
-  src/d2bs/D2BS.cpp
-  src/version.rc)
+  src/d2bs/D2BS.cpp)
+
+if(WIN32)
+  configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.rc.in
+    ${CMAKE_CURRENT_BINARY_DIR}/version.rc @ONLY)
+  list(APPEND D2BS_SRCS ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
+endif()
 
 add_library(${PROJECT_NAME} SHARED ${D2BS_SRCS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -94,7 +104,8 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
   WIN32_LEAN_AND_MEAN
 
   XP_WIN
-  STATIC_JS_API)
+  STATIC_JS_API
+  D2BS_VERSION="${D2BS_VERSION}")
 
 # Set option definitions
 foreach(D2BS_OPTION

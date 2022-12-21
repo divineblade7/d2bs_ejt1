@@ -4,7 +4,9 @@
 #include "d2bs/diablo/D2Ptrs.h"
 #include "d2bs/script/api/JSScreenHook.h"
 #include "d2bs/utils/Console.h"
+#include "d2bs/utils/Helpers.h"
 
+#include <format>
 #include <vector>
 
 bool Genhook::init = false;
@@ -13,7 +15,8 @@ HookList Genhook::invisible = HookList();
 CRITICAL_SECTION Genhook::globalSection = {0};
 
 void DrawLogo(void) {
-  static wchar_t version[] = L"D2BS " D2BS_VERSION;
+  // Cancer ansi -> unicode right now before we can get rid of all unicode usages ~ ejt
+  static const wchar_t* version = AnsiToUnicode(std::format("D2BS {}", D2BS_VERSION).c_str());
   static int len = CalculateTextLen(version, 0).x;
   int dx = GetScreenSize().x - len - 1;
   int dy = GetScreenSize().y - 1;

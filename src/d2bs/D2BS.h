@@ -1,15 +1,11 @@
-#ifndef __D2BS_H__
-#define __D2BS_H__
-
 #pragma once
 
 #ifndef XP_WIN
 #define XP_WIN
 #endif
 
-#define D2BS_VERSION L"1.6.5"
-
 #include "d2bs/core/ScreenHook.h"
+#include "d2bs/version.h"
 
 #include <queue>
 #include <vector>
@@ -127,5 +123,3 @@ extern Variables Vars;
 
 BOOL Startup(void);
 void Shutdown(void);
-
-#endif
