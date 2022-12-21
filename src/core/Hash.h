@@ -1,8 +1,10 @@
 #pragma once
 #pragma comment(lib, "Crypt32")
 
+// clang-format off
 #include <windows.h>
 #include <wincrypt.h>
+// clang-format on
 
 char* HashString(char* string, ALG_ID algo);
 char* HashFile(wchar_t* file, ALG_ID algo);

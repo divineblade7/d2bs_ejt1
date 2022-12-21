@@ -2,7 +2,6 @@
 #define ROOM_H
 
 #include "core/Room.h"
-
 #include "script/js32.h"
 
 CLASS_CTOR(room);
@@ -22,27 +21,28 @@ JSAPI_FUNC(room_reveal);
 JSAPI_FUNC(my_getRoom);
 
 enum room_tinyid {
-    ROOM_NUM,
-    ROOM_XPOS,
-    ROOM_YPOS,
-    ROOM_XSIZE,
-    ROOM_YSIZE,
-    ROOM_SUBNUMBER,
-    ROOM_AREA,
-    ROOM_LEVEL,
-    ROOM_CORRECTTOMB,
+  ROOM_NUM,
+  ROOM_XPOS,
+  ROOM_YPOS,
+  ROOM_XSIZE,
+  ROOM_YSIZE,
+  ROOM_SUBNUMBER,
+  ROOM_AREA,
+  ROOM_LEVEL,
+  ROOM_CORRECTTOMB,
 };
 
-static JSPropertySpec room_props[] = {{"number", ROOM_NUM, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(room_getProperty), JSOP_NULLWRAPPER},
-                                      {"x", ROOM_XPOS, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(room_getProperty), JSOP_NULLWRAPPER},
-                                      {"y", ROOM_YPOS, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(room_getProperty), JSOP_NULLWRAPPER},
-                                      {"xsize", ROOM_XSIZE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(room_getProperty), JSOP_NULLWRAPPER},
-                                      {"ysize", ROOM_YSIZE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(room_getProperty), JSOP_NULLWRAPPER},
-                                      {"subnumber", ROOM_SUBNUMBER, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(room_getProperty), JSOP_NULLWRAPPER},
-                                      {"area", ROOM_AREA, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(room_getProperty), JSOP_NULLWRAPPER},
-                                      {"level", ROOM_LEVEL, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(room_getProperty), JSOP_NULLWRAPPER},
-                                      {"correcttomb", ROOM_CORRECTTOMB, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(room_getProperty), JSOP_NULLWRAPPER},
-                                      {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
+static JSPropertySpec room_props[] = {
+    {"number", ROOM_NUM, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(room_getProperty), JSOP_NULLWRAPPER},
+    {"x", ROOM_XPOS, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(room_getProperty), JSOP_NULLWRAPPER},
+    {"y", ROOM_YPOS, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(room_getProperty), JSOP_NULLWRAPPER},
+    {"xsize", ROOM_XSIZE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(room_getProperty), JSOP_NULLWRAPPER},
+    {"ysize", ROOM_YSIZE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(room_getProperty), JSOP_NULLWRAPPER},
+    {"subnumber", ROOM_SUBNUMBER, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(room_getProperty), JSOP_NULLWRAPPER},
+    {"area", ROOM_AREA, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(room_getProperty), JSOP_NULLWRAPPER},
+    {"level", ROOM_LEVEL, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(room_getProperty), JSOP_NULLWRAPPER},
+    {"correcttomb", ROOM_CORRECTTOMB, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(room_getProperty), JSOP_NULLWRAPPER},
+    {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
 
 static JSFunctionSpec room_methods[] = {JS_FS("getNext", room_getNext, 0, FUNCTION_FLAGS),
                                         JS_FS("reveal", room_reveal, 1, FUNCTION_FLAGS),

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "diablo/D2Structs.h"
 #include "diablo/Constants.h"
+#include "diablo/D2Structs.h"
 
 Control* findControl(int Type, int LocaleID, int Disabled, int PosX, int PosY, int SizeX, int SizeY);
 Control* findControl(int Type, const wchar_t* Text, int Disabled, int PosX, int PosY, int SizeX, int SizeY);

@@ -2,8 +2,9 @@
 #ifndef __JSGAME_H__
 #define __JSGAME_H__
 
+#include "script/api/JSGlobalClasses.h"
 #include "script/js32.h"
-#include "JSGlobalClasses.h"
+
 JSAPI_FUNC(my_rand);
 JSAPI_FUNC(my_submitItem);
 JSAPI_FUNC(my_copyUnit);

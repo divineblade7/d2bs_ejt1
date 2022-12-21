@@ -1,8 +1,8 @@
 #ifndef D2HELPERS_H
 #define D2HELPERS_H
 
-#include "D2Structs.h"
-#include "D2Ptrs.h"
+#include "diablo/D2Ptrs.h"
+#include "diablo/D2Structs.h"
 #include "script/js32.h"
 
 #define DEBUG_LOG(MESSAGE) Log(L"%s (%s, %d)", MESSAGE, __FILE__, __LINE__)
@@ -72,19 +72,19 @@ CellFile* LoadBmpCellFile(const wchar_t* filename);
 CellFile* myInitCellFile(CellFile* cf);
 
 static inline UnitAny* GetPlayerUnit() {
-    return D2CLIENT_GetPlayerUnit();
+  return D2CLIENT_GetPlayerUnit();
 }
 static inline void AddRoomData(Room2* room) {
-    D2COMMON_AddRoomData(room->pLevel->pMisc->pAct, room->pLevel->dwLevelNo, room->dwPosX, room->dwPosY, room->pRoom1);
+  D2COMMON_AddRoomData(room->pLevel->pMisc->pAct, room->pLevel->dwLevelNo, room->dwPosX, room->dwPosY, room->pRoom1);
 }
 static inline void RemoveRoomData(Room2* room) {
-    D2COMMON_RemoveRoomData(room->pLevel->pMisc->pAct, room->pLevel->dwLevelNo, room->dwPosX, room->dwPosY, room->pRoom1);
+  D2COMMON_RemoveRoomData(room->pLevel->pMisc->pAct, room->pLevel->dwLevelNo, room->dwPosX, room->dwPosY, room->pRoom1);
 }
 static inline char* __stdcall GetLevelName(const Level* level) {
-    return D2COMMON_GetLevelText(level->dwLevelNo)->szName;
+  return D2COMMON_GetLevelText(level->dwLevelNo)->szName;
 }
 static inline char* __stdcall GetLevelIdName(DWORD level) {
-    return D2COMMON_GetLevelText(level)->szName;
+  return D2COMMON_GetLevelText(level)->szName;
 }
 
 DWORD __fastcall D2CLIENT_GetUnitName_STUB(DWORD UnitAny);
@@ -94,7 +94,8 @@ void __fastcall D2CLIENT_SetSelectedUnit_STUB(DWORD UnitAny);
 void __fastcall D2CLIENT_Interact_ASM(DWORD Struct);
 DWORD __fastcall D2CLIENT_ClickParty_ASM(DWORD RosterUnit, DWORD Mode);
 void __fastcall D2CLIENT_ClickShopItem_ASM(DWORD x, DWORD y, DWORD BuyOrSell);
-void __fastcall D2CLIENT_ShopAction_ASM(DWORD pTable, DWORD pItem, DWORD pNPC, DWORD _1, DWORD pTable2 /* Could be also the ItemCost?*/, DWORD dwMode, DWORD _2,
+void __fastcall D2CLIENT_ShopAction_ASM(DWORD pTable, DWORD pItem, DWORD pNPC, DWORD _1,
+                                        DWORD pTable2 /* Could be also the ItemCost?*/, DWORD dwMode, DWORD _2,
                                         DWORD _3);
 void __fastcall D2CLIENT_ClickItemRight_ASM(DWORD x, DWORD y, DWORD Location, DWORD pItem, DWORD pItemPath);
 void __fastcall D2CLIENT_ClickBelt(DWORD x, DWORD y, Inventory* pInventoryData);
@@ -110,7 +111,8 @@ DWORD __cdecl D2CLIENT_GetMinionCount(UnitAny* pUnit, DWORD dwType);
 void __fastcall D2CLIENT_HostilePartyUnit(RosterUnit* pUnit, DWORD dwButton);
 void __stdcall D2CLIENT_TakeWaypoint(DWORD dwWaypointId, DWORD dwArea);
 DWORD __fastcall D2CLIENT_SendGamePacket_ASM(DWORD dwLen, BYTE* bPacket);
-void __stdcall D2CLIENT_LeftClickItem(DWORD Location, UnitAny* pPlayer, Inventory* pInventory, int x, int y, DWORD dwClickType, InventoryLayout* pLayout);
+void __stdcall D2CLIENT_LeftClickItem(DWORD Location, UnitAny* pPlayer, Inventory* pInventory, int x, int y,
+                                      DWORD dwClickType, InventoryLayout* pLayout);
 
 double GetDistance(long x1, long y1, long x2, long y2, DistanceType type = Euclidean);
 bool IsScrollingText();

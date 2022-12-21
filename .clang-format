@@ -6,11 +6,11 @@ ColumnLimit: 120
 DerivePointerAlignment: false
 PointerAlignment: Left
 #QualifierAlignment: Left
-IncludeBlocks: Merge
+IncludeBlocks: Regroup
 IncludeCategories:
 - Regex: '^\"'
-  Priority: 1500
+  Priority: 2
 - Regex: '^<.*/.*'
-  Priority: 4000
+  Priority: 4
 - Regex: '^<[^/]*>'
-  Priority: 5000
+  Priority: 6

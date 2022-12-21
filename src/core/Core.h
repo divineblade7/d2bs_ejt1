@@ -1,10 +1,10 @@
 #pragma once
 
-#include <windows.h>
-#include <string>
-#include <list>
-
 #include "diablo/D2Structs.h"
+
+#include <list>
+#include <string>
+#include <windows.h>
 
 bool SplitLines(const std::wstring& str, size_t maxlen, const wchar_t delim, std::list<std::wstring>& lst);
 void Print(const wchar_t* szFormat, ...);

@@ -1,6 +1,8 @@
 #ifndef _OFFSET_H
 #define _OFFSET_H
 
+#include <Windows.h>
+
 #define INST_INT3 0xCC
 #define INST_CALL 0xE8
 #define INST_NOP 0x90
@@ -8,12 +10,12 @@
 #define INST_RET 0xC3
 
 typedef struct PatchHook_t {
-    void (*pFunc)(DWORD, DWORD, DWORD);
-    DWORD dwAddr;
-    DWORD dwFunc;
-    DWORD dwLen;
-    BOOL* enabled;
-    BYTE* bOldCode;
+  void (*pFunc)(DWORD, DWORD, DWORD);
+  DWORD dwAddr;
+  DWORD dwFunc;
+  DWORD dwLen;
+  BOOL* enabled;
+  BYTE* bOldCode;
 } PatchHook;
 
 void DefineOffsets();

@@ -1,24 +1,32 @@
+#include "script/api/JSArea.h"
+#include "script/api/JSControl.h"
+#include "script/api/JSDirectory.h"
+#include "script/api/JSExits.h"
+#include "script/api/JSFile.h"
+#include "script/api/JSFileTools.h"
+#include "script/api/JSParty.h"
+#include "script/api/JSPresetUnit.h"
+#include "script/api/JSProfile.h"
+#include "script/api/JSRoom.h"
+#include "script/api/JSSQLite.h"
+#include "script/api/JSSandbox.h"
+#include "script/api/JSScreenHook.h"
+#include "script/api/JSScript.h"
+#include "script/api/JSSocket.h"
+#include "script/api/JSUnit.h"
 #include "script/js32.h"
-#include "JSFile.h"
-#include "JSSocket.h"
-#include "JSSQLite.h"
-#include "JSSandbox.h"
-#include "JSUnit.h"
-#include "JSScreenHook.h"
-#include "JSPresetUnit.h"
-#include "JSDirectory.h"
-#include "JSFileTools.h"
-#include "JSArea.h"
-#include "JSControl.h"
-#include "JSParty.h"
-#include "JSExits.h"
-#include "JSRoom.h"
-#include "JSScript.h"
-#include "JSProfile.h"
 
-JSClass global_obj = {
-    "global", JSCLASS_GLOBAL_FLAGS,       JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub,
-    NULL,     JSCLASS_NO_OPTIONAL_MEMBERS};
+JSClass global_obj = {"global",
+                      JSCLASS_GLOBAL_FLAGS,
+                      JS_PropertyStub,
+                      JS_PropertyStub,
+                      JS_PropertyStub,
+                      JS_StrictPropertyStub,
+                      JS_EnumerateStub,
+                      JS_ResolveStub,
+                      JS_ConvertStub,
+                      NULL,
+                      JSCLASS_NO_OPTIONAL_MEMBERS};
 // JSAPI_EMPTY_CTOR(global)
 
 // JSClass global_obj = { "global", JSCLASS_GLOBAL_FLAGS, JSCLASS_DEFAULT_WITH_CTOR(global) };
@@ -27,99 +35,106 @@ JSClass global_obj = {
 //	JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
 //				 JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, pipe_finalize, Pipe)};
 
-// JSClassSpec pipe_spec = JS_CS(&pipe_class, &stream_class, Pipe, 0, pipe_methods, pipe_props, pipe_static_methods, nullptr);
+// JSClassSpec pipe_spec = JS_CS(&pipe_class, &stream_class, Pipe, 0, pipe_methods, pipe_props, pipe_static_methods,
+// nullptr);
 
 JSClass sqlite_db = {"SQLite", JSCLASS_HAS_PRIVATE,
-                     JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, (JSPropertyOp)JS_PropertyStub, (JSStrictPropertyOp)JS_StrictPropertyStub, JS_EnumerateStub,
-                                  JS_ResolveStub, JS_ConvertStub, sqlite_finalize, sqlite_ctor)};
+                     JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, (JSPropertyOp)JS_PropertyStub,
+                                  (JSStrictPropertyOp)JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub,
+                                  JS_ConvertStub, sqlite_finalize, sqlite_ctor)};
 
-JSClass sqlite_stmt = {"DBStatement", JSCLASS_HAS_PRIVATE,
-                       JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub,
-                                    sqlite_stmt_finalize, sqlite_stmt_ctor)};
+JSClass sqlite_stmt = {
+    "DBStatement", JSCLASS_HAS_PRIVATE,
+    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
+                 JS_ResolveStub, JS_ConvertStub, sqlite_stmt_finalize, sqlite_stmt_ctor)};
 
-JSClass script_class = {
-    "D2BSScript", JSCLASS_HAS_PRIVATE,
-    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL, script_ctor)};
+JSClass script_class = {"D2BSScript", JSCLASS_HAS_PRIVATE,
+                        JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL, script_ctor)};
 
-JSClass frame_class = {
-    "Frame", JSCLASS_HAS_PRIVATE,
-    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, hook_finalize, frame_ctor)};
+JSClass frame_class = {"Frame", JSCLASS_HAS_PRIVATE,
+                       JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, hook_finalize, frame_ctor)};
 
-JSClass box_class = {
-    "Box", JSCLASS_HAS_PRIVATE,
-    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, hook_finalize, box_ctor)};
+JSClass box_class = {"Box", JSCLASS_HAS_PRIVATE,
+                     JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, hook_finalize, box_ctor)};
 
-JSClass line_class = {
-    "Line", JSCLASS_HAS_PRIVATE,
-    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, hook_finalize, line_ctor)};
+JSClass line_class = {"Line", JSCLASS_HAS_PRIVATE,
+                      JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, hook_finalize, line_ctor)};
 
-JSClass text_class = {
-    "Text", JSCLASS_HAS_PRIVATE,
-    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, hook_finalize, text_ctor)};
+JSClass text_class = {"Text", JSCLASS_HAS_PRIVATE,
+                      JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, hook_finalize, text_ctor)};
 
-JSClass image_class = {
-    "Image", JSCLASS_HAS_PRIVATE,
-    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, hook_finalize, image_ctor)};
+JSClass image_class = {"Image", JSCLASS_HAS_PRIVATE,
+                       JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, hook_finalize, image_ctor)};
 
-JSClass sandbox_class = {"Sandbox", JSCLASS_HAS_PRIVATE,
-                         JSCLASS_SPEC(sandbox_addProperty, sandbox_delProperty, sandbox_getProperty, sandbox_setProperty, JS_EnumerateStub, JS_ResolveStub,
-                                      JS_ConvertStub, sandbox_finalize, sandbox_ctor)};
+JSClass sandbox_class = {
+    "Sandbox", JSCLASS_HAS_PRIVATE,
+    JSCLASS_SPEC(sandbox_addProperty, sandbox_delProperty, sandbox_getProperty, sandbox_setProperty, JS_EnumerateStub,
+                 JS_ResolveStub, JS_ConvertStub, sandbox_finalize, sandbox_ctor)};
 
-JSClass room_class = {
-    "Room", JSCLASS_HAS_PRIVATE,
-    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL, room_ctor)};
+JSClass room_class = {"Room", JSCLASS_HAS_PRIVATE,
+                      JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL, room_ctor)};
 
-JSClass presetunit_class = {"PresetUnit", JSCLASS_HAS_PRIVATE,
-                            JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub,
-                                         presetunit_finalize, presetunit_ctor)};
+JSClass presetunit_class = {
+    "PresetUnit", JSCLASS_HAS_PRIVATE,
+    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
+                 JS_ResolveStub, JS_ConvertStub, presetunit_finalize, presetunit_ctor)};
 
-JSClass party_class = {
-    "Party", JSCLASS_HAS_PRIVATE,
-    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL, party_ctor)};
+JSClass party_class = {"Party", JSCLASS_HAS_PRIVATE,
+                       JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL, party_ctor)};
 
-JSClass filetools_class = {
-    "FileTools", NULL,
-    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL, filetools_ctor)};
+JSClass filetools_class = {"FileTools", NULL,
+                           JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                        JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL, filetools_ctor)};
 
-JSClass file_class = {
-    "File", JSCLASS_HAS_PRIVATE,
-    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, file_finalize, file_ctor)};
+JSClass file_class = {"File", JSCLASS_HAS_PRIVATE,
+                      JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, file_finalize, file_ctor)};
 
 JSClass socket_class = {"Socket", JSCLASS_HAS_PRIVATE,
-                        JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub,
-                                     socket_finalize, socket_ctor)};
+                        JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, socket_finalize, socket_ctor)};
 
-JSClass exit_class = {
-    "Exit", JSCLASS_HAS_PRIVATE,
-    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, exit_finalize, exit_ctor)};
+JSClass exit_class = {"Exit", JSCLASS_HAS_PRIVATE,
+                      JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, exit_finalize, exit_ctor)};
 
-JSClass folder_class = {
-    "Folder", JSCLASS_HAS_PRIVATE,
-    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, dir_finalize, dir_ctor)};
+JSClass folder_class = {"Folder", JSCLASS_HAS_PRIVATE,
+                        JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, dir_finalize, dir_ctor)};
 
-JSClass control_class = {"Control", JSCLASS_HAS_PRIVATE,
-                         JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub,
-                                      control_finalize, control_ctor)};
+JSClass control_class = {
+    "Control", JSCLASS_HAS_PRIVATE,
+    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
+                 JS_ResolveStub, JS_ConvertStub, control_finalize, control_ctor)};
 
-JSClass area_class = {
-    "Area", JSCLASS_HAS_PRIVATE,
-    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, area_finalize, area_ctor)};
+JSClass area_class = {"Area", JSCLASS_HAS_PRIVATE,
+                      JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, area_finalize, area_ctor)};
 
-JSClass unit_class = {
-    "Unit", JSCLASS_HAS_PRIVATE,
-    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, unit_finalize, unit_ctor)};
+JSClass unit_class = {"Unit", JSCLASS_HAS_PRIVATE,
+                      JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, unit_finalize, unit_ctor)};
 
-JSClass profile_class = {"Profile", JSCLASS_HAS_PRIVATE,
-                         JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub,
-                                      profile_finalize, profile_ctor)};
+JSClass profile_class = {
+    "Profile", JSCLASS_HAS_PRIVATE,
+    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
+                 JS_ResolveStub, JS_ConvertStub, profile_finalize, profile_ctor)};
 
-JSClass profileType_class = {
-    "ProfileType", JSCLASS_HAS_PRIVATE,
-    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL, profileType_ctor)};
+JSClass profileType_class = {"ProfileType", JSCLASS_HAS_PRIVATE,
+                             JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                          JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL, profileType_ctor)};
 
-JSClass dialogLine_class = {
-    "DailogLine", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1),
-    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL, NULL)};
+JSClass dialogLine_class = {"DailogLine", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1),
+                            JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                         JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL, NULL)};
 
 // JSExtendedClass unit_class_ex = {
 //	unit_class,
@@ -138,8 +153,9 @@ JSClass dialogLine_class = {
 //	sqlite_equal,
 //	NULL, NULL, NULL, NULL
 //};
-// JSClassSpec pipe_spec = JS_CS(&pipe_class, &stream_class, Pipe, 0, pipe_methods, pipe_props, pipe_static_methods, nullptr);
-// JSClassSpec file_spec = JS_CS(&file_class, &stream_class, File, 0, file_methods, file_props, file_static_methods, nullptr);
+// JSClassSpec pipe_spec = JS_CS(&pipe_class, &stream_class, Pipe, 0, pipe_methods, pipe_props, pipe_static_methods,
+// nullptr); JSClassSpec file_spec = JS_CS(&file_class, &stream_class, File, 0, file_methods, file_props,
+// file_static_methods, nullptr);
 JSClassSpec global_classes[] = {
     // JS_CS(&event_class, nullptr, ::Event, 0, nullptr, nullptr, event_methods, nullptr),
     {&unit_class, 0, unit_ctor, 0, unit_methods, unit_props, NULL, NULL},
@@ -170,16 +186,23 @@ JSClassSpec global_classes[] = {
 };
 
 // JSClassSpec global_classes[] = {
-/*JSClass*				properties			functions				static props	static funcs */
+/*JSClass*				properties			functions				static props
+ * static funcs */
 // game objects
 //{&unit_class_ex.base,	unit_props,			unit_methods,			NULL,			NULL},
-//{&presetunit_class,		presetunit_props,	NULL,					NULL,			NULL},
-//{&area_class,			area_props,			NULL,					NULL,			NULL},
+//{&presetunit_class,		presetunit_props,	NULL,					NULL,
+// NULL},
+//{&area_class,			area_props,			NULL,					NULL,
+// NULL},
 //{&control_class,		control_props,		control_funcs,			NULL,			NULL},
-//{&folder_class,			dir_props,			dir_methods,			NULL,			NULL},
-//{&exit_class,			exit_props,			NULL,					NULL,			NULL},
-//{&party_class,			party_props,		party_methods,			NULL,			NULL},
-//{&room_class,			room_props,			room_methods,			NULL,			NULL},
+//{&folder_class,			dir_props,			dir_methods,			NULL,
+// NULL},
+//{&exit_class,			exit_props,			NULL,					NULL,
+// NULL},
+//{&party_class,			party_props,		party_methods,			NULL,
+// NULL},
+//{&room_class,			room_props,			room_methods,			NULL,
+// NULL},
 //{&profile_class,		profile_props,		profile_methods,		NULL,			NULL},
 //{&profileType_class,	NULL,				NULL,					profileType_props,
 //																					NULL},
@@ -188,15 +211,22 @@ JSClassSpec global_classes[] = {
 //{&file_class,	file_props,			file_methods,			NULL,			file_s_methods},
 //{&sqlite_db,	sqlite_props,		sqlite_methods,			NULL,			NULL},
 //{&sqlite_stmt,			sqlite_stmt_props,	sqlite_stmt_methods,	NULL,			NULL},
-//{&filetools_class,		NULL,				NULL,					NULL,			filetools_s_methods},
-//{&sandbox_class,		NULL,				sandbox_methods,		NULL,			NULL},
-//{&script_class,			script_props,		script_methods,			NULL,			NULL},
+//{&filetools_class,		NULL,				NULL,					NULL,
+// filetools_s_methods},
+//{&sandbox_class,		NULL,				sandbox_methods,		NULL,
+// NULL},
+//{&script_class,			script_props,		script_methods,			NULL,
+// NULL},
 
 // screenhook objects
-//{&frame_class,			frame_props,		frame_methods,			NULL,			NULL},
-//	{&box_class,			box_props,			box_methods,			NULL,			NULL},
-//	{&line_class,			line_props,			line_methods,			NULL,			NULL},
-//	{&text_class,			text_props,			text_methods,			NULL,			NULL},
-//	{&image_class,			image_props,		image_methods,			NULL,			NULL},
-//	{0}
+//{&frame_class,			frame_props,		frame_methods,			NULL,
+// NULL},
+//	{&box_class,			box_props,			box_methods,			NULL,
+// NULL},
+//	{&line_class,			line_props,			line_methods,			NULL,
+// NULL},
+//	{&text_class,			text_props,			text_methods,			NULL,
+// NULL},
+//	{&image_class,			image_props,		image_methods,			NULL,
+// NULL}, 	{0}
 //};

@@ -13,10 +13,11 @@ FileTools.exists(string path) - static - determines if a file exists or not
 
 These are atomic operations:
 
-string FileTools.readText(string path) - static - open a file in read mode, read the full contents, return it as a string
-bool FileTools.writeText(string path, object contents, ...) - static - open a file in write mode, write the content parameters into the file, and close it, true
-if the write succeeded, false if not bool FileTools.appendText(string path, string contents) - static - open a file in append mode, write contents into the
-file, close it, true if the write succeeded, false if not
+string FileTools.readText(string path) - static - open a file in read mode, read the full contents, return it as a
+string bool FileTools.writeText(string path, object contents, ...) - static - open a file in write mode, write the
+content parameters into the file, and close it, true if the write succeeded, false if not bool
+FileTools.appendText(string path, string contents) - static - open a file in append mode, write contents into the file,
+close it, true if the write succeeded, false if not
 **/
 
 CLASS_CTOR(filetools);
