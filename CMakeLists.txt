@@ -75,8 +75,6 @@ string(REGEX REPLACE "/W[0-4]$" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 target_compile_options(${PROJECT_NAME} PRIVATE /W0)
 message(STATUS "D2BS: Maximum warning setting configured, here we go!")
 
-target_compile_options(d2bs PRIVATE /Zc:strictStrings- /permissive)
-
 # These are all trash definitions from d2bs solution required to successfully
 # compile... at least for now :)
 target_compile_definitions(${PROJECT_NAME} PRIVATE

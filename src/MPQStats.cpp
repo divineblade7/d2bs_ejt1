@@ -65,7 +65,7 @@ DWORD GetBaseTable(int table, int row) {
     return dwResult;
 }
 
-bool FillBaseStat(char* szTable, int row, char* szStat, void* result, size_t size) {
+bool FillBaseStat(const char* szTable, int row, const char* szStat, void* result, size_t size) {
     int table = -1;
     for (int i = 0; BaseStatTable[i].pTable != NULL; i++)
         if (!_strcmpi(szTable, BaseStatTable[i].szTableName)) {
@@ -79,7 +79,7 @@ bool FillBaseStat(char* szTable, int row, char* szStat, void* result, size_t siz
     return FillBaseStat(table, row, szStat, result, size);
 }
 
-bool FillBaseStat(char* szTable, int row, int column, void* result, size_t size) {
+bool FillBaseStat(const char* szTable, int row, int column, void* result, size_t size) {
     int table = -1;
     for (int i = 0; BaseStatTable[i].pTable != NULL; i++)
         if (!_strcmpi(szTable, BaseStatTable[i].szTableName)) {
@@ -93,7 +93,8 @@ bool FillBaseStat(char* szTable, int row, int column, void* result, size_t size)
     return FillBaseStat(table, row, column, result, size);
 }
 
-bool FillBaseStat(int table, int row, char* szStat, void* result, size_t size) {
+bool FillBaseStat(int table, int row, const char* szStat, void* result,
+                  size_t size) {
     BinField* pTable = BaseStatTable[table].pTable;
 
     int column = -1;
@@ -172,7 +173,8 @@ bool FillBaseStat(int table, int row, int column, void* result, size_t size) {
     return true;
 }
 
-DWORD FillBaseStat(JSContext* cx, jsval* argv, int table, int row, int column, char* szTable, char* szStat) {
+DWORD FillBaseStat(JSContext* cx, jsval* argv, int table, int row, int column,
+                   const char* szTable, const char* szStat) {
     if (szTable) {
         table = -1;
         for (int i = 0; BaseStatTable[i].pTable != NULL; i++)
