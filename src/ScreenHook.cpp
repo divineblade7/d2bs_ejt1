@@ -25,25 +25,25 @@ bool zOrderSort(Genhook* first, Genhook* second) {
     return first->GetZOrder() < second->GetZOrder();
 }
 
-bool HoverHook(Genhook* hook, void* argv, uint argc) {
+bool HoverHook(Genhook* hook, void* argv, uint) {
     HookClickHelper* helper = (HookClickHelper*)argv;
     hook->Hover(&helper->point);
     return true;
 }
 
-bool ClickHook(Genhook* hook, void* argv, uint argc) {
+bool ClickHook(Genhook* hook, void* argv, uint) {
     HookClickHelper* helper = (HookClickHelper*)argv;
     return hook->Click(helper->button, &helper->point);
 }
 
-bool DrawHook(Genhook* hook, void* argv, uint argc) {
+bool DrawHook(Genhook* hook, void* argv, uint) {
     if ((hook->GetGameState() == (ScreenhookState)(int)argv || hook->GetGameState() == Perm) &&
         (!hook->GetIsAutomap() || (hook->GetIsAutomap() && *p_D2CLIENT_AutomapOn)))
         hook->Draw();
     return true;
 }
 
-bool CleanHook(Genhook* hook, void* argv, uint argc) {
+bool CleanHook(Genhook* hook, void* argv, uint) {
     if (hook->getOwner() == (Script*)argv)
         hook->SetIsVisible(false);
     return true;
@@ -151,7 +151,7 @@ void Genhook::Clean(Script* owner) {
     HookIterator it = visible.begin();
     while (it != visible.end()) {
         if ((*it)->owner->IsAborted()) {
-            Genhook* i = *it;
+            //Genhook* i = *it;
             it = invisible.erase(it);
             //	delete(i);
         } else
@@ -161,7 +161,7 @@ void Genhook::Clean(Script* owner) {
     it = invisible.begin();
     while (it != invisible.end()) {
         if ((*it)->owner == owner) {
-            Genhook* i = *it;
+            //Genhook* i = *it;
             it = invisible.erase(it);
             // delete(i);
 
@@ -270,7 +270,7 @@ void Genhook::SetClickHandler(jsval handler) {
         return;
     Lock();
 
-    JSContext* cx = owner->GetContext();
+    //JSContext* cx = owner->GetContext();
     // if(JSVAL_IS_FUNCTION(cx, handler))
     //	JS_RemoveRoot(owner->GetContext(), &clicked);
     // JS_SetContextThread(cx);
@@ -390,12 +390,12 @@ void ImageHook::SetImage(const wchar_t* nimage) {
 void LineHook::Draw(void) {
     Lock();
     if (GetIsVisible() && GetX() != -1 && GetY() != -1) {
-        uint x = GetX(), y = GetY(), x2 = GetX2(), y2 = GetY2();
+        uint x = GetX(), y = GetY(), _x2 = GetX2(), _y2 = GetY2();
         POINT loc = {x, y};
-        POINT sz = {x2, y2};
+        POINT sz = {_x2, _y2};
         if (GetIsAutomap()) {
             loc = ScreenToAutomap(x, y);
-            sz = ScreenToAutomap(x2, y2);
+            sz = ScreenToAutomap(_x2, _y2);
         }
         EnterCriticalSection(&Vars.cLineHookSection);
         D2GFX_DrawLine(loc.x, loc.y, sz.x, sz.y, color, 0xFF);

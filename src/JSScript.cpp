@@ -23,7 +23,6 @@ JSAPI_PROP(script_getProperty) {
         return JS_TRUE;
     jsval ID;
     JS_IdToValue(cx, id, &ID);
-    char* nShortFilename = NULL;
 
     switch (JSVAL_TO_INT(ID)) {
     case SCRIPT_FILENAME:
@@ -207,7 +206,7 @@ JSAPI_FUNC(my_getScripts) {
     JS_EndRequest(cx);
     return JS_TRUE;
 }
-bool __fastcall FindScriptByName(Script* script, void* argv, uint argc) {
+bool __fastcall FindScriptByName(Script* script, void* argv, uint) {
     FindHelper* helper = (FindHelper*)argv;
     // static uint pathlen = wcslen(Vars.szScriptPath) + 1;
     const wchar_t* fname = script->GetShortFilename();
@@ -218,7 +217,7 @@ bool __fastcall FindScriptByName(Script* script, void* argv, uint argc) {
     return true;
 }
 
-bool __fastcall FindScriptByTid(Script* script, void* argv, uint argc) {
+bool __fastcall FindScriptByTid(Script* script, void* argv, uint) {
     FindHelper* helper = (FindHelper*)argv;
     if (script->GetThreadId() == helper->tid) {
         helper->script = script;

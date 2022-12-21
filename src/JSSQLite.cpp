@@ -253,7 +253,7 @@ JSAPI_PROP(sqlite_getProperty) {
         vp.setBoolean(dbobj->open);
         break;
     case SQLITE_LASTROWID:
-        vp.setInt32(sqlite3_last_insert_rowid(dbobj->db));
+        vp.setInt32(static_cast<int32_t>(sqlite3_last_insert_rowid(dbobj->db)));
         break;
     case SQLITE_STMTS: {
         JS_BeginRequest(cx);
@@ -277,7 +277,7 @@ JSAPI_PROP(sqlite_getProperty) {
     return JS_TRUE;
 }
 
-void sqlite_finalize(JSFreeOp* fop, JSObject* obj) {
+void sqlite_finalize(JSFreeOp*, JSObject* obj) {
     SqliteDB* dbobj = (SqliteDB*)JS_GetPrivate(obj);
     JS_SetPrivate(obj, NULL);
     if (dbobj) {
@@ -574,7 +574,7 @@ JSAPI_PROP(sqlite_stmt_getProperty) {
     return JS_TRUE;
 }
 
-void sqlite_stmt_finalize(JSFreeOp* fop, JSObject* obj) {
+void sqlite_stmt_finalize(JSFreeOp*, JSObject* obj) {
     DBStmt* stmtobj = (DBStmt*)JS_GetPrivate(obj);
     JS_SetPrivate(obj, NULL);
     if (stmtobj) {

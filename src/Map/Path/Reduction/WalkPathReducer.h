@@ -103,7 +103,7 @@ class WalkPathReducer : public PathReducer {
 function getSlope(a, b) {
     return (a.y - b.y) / (a.x - b.x);
 }*/
-    void Reduce(PointList const& in, PointList& out, bool abs) {
+    void Reduce(PointList const& in, PointList& out, bool) {
         if (in.size() < 2) {
             out = in;
             return;
@@ -196,7 +196,7 @@ function getSlope(a, b) {
                    map->SpaceHasFlag(ActMap::BlockPlayer, pt, abs);*/
     }
 
-    void GetOpenNodes(Point const& center, PointList& out, Point const& endpoint) {
+    void GetOpenNodes(Point const& center, PointList& out, Point const&) {
         /*for(int i = 1; i >= -1; i--)
         {
                 for(int j = 1; j >= -1; j--)

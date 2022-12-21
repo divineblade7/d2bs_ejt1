@@ -5,7 +5,7 @@
 
 EMPTY_CTOR(control)
 
-void control_finalize(JSFreeOp* fop, JSObject* obj) {
+void control_finalize(JSFreeOp*, JSObject* obj) {
     ControlData* pData = ((ControlData*)JS_GetPrivate(obj));
 
     if (pData) {
@@ -30,7 +30,7 @@ JSAPI_PROP(control_getProperty) {
     JS_IdToValue(cx, id, &ID);
     JS_BeginRequest(cx);
 
-    JSType a = JS_TypeOfValue(cx, ID);
+    //JSType a = JS_TypeOfValue(cx, ID);
 
     if (JSID_IS_STRING(id)) {
         // TODO: Figure out what this is for

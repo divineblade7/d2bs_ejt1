@@ -316,11 +316,11 @@ bool Script::Include(const wchar_t* file) {
 
     JS_BeginRequest(cx);
 
-    JSScript* script = JS_CompileFile(cx, GetGlobalObject(), fname);
-    if (script) {
+    JSScript* _script = JS_CompileFile(cx, GetGlobalObject(), fname);
+    if (_script) {
         jsval dummy;
         inProgress[fname] = true;
-        rval = !!JS_ExecuteScript(cx, GetGlobalObject(), script, &dummy);
+        rval = !!JS_ExecuteScript(cx, GetGlobalObject(), _script, &dummy);
         if (rval)
             includes[fname] = true;
         else

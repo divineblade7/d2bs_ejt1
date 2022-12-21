@@ -145,7 +145,11 @@ EXPORT JSObject* JS_NewObjectWithProto(JSContext* cx, JSObject* obj, JSClassSpec
         THROW_ERROR(cx, "Invalid Operation");                                                                                                                            \
     }
 
-#define JSAPI_PROP(name) JSBool name##(JSContext * cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp)
+#define JSAPI_PROP(name)                                            \
+  JSBool name##([[maybe_unused]] JSContext * cx,                    \
+                [[maybe_unused]] JSHandleObject obj, \
+                [[maybe_unused]] JSHandleId id, \
+                [[maybe_unused]] JSMutableHandleValue vp)
 #define JSAPI_STRICT_PROP(name)                                      \
   JSBool name##([[maybe_unused]] JSContext * cx,                    \
                 [[maybe_unused]] JSHandleObject obj, \

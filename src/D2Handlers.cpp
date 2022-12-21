@@ -531,7 +531,7 @@ BOOL __fastcall ChatPacketRecv(BYTE* pPacket, [[maybe_unused]] int len) {
     bool blockPacket = false;
 
     if (pPacket[1] == 0xF) {
-        DWORD mode = pPacket[4];
+        //DWORD mode = pPacket[4];
         const char* who = (char*)pPacket + 28;
         char* said = (char*)pPacket + 29 + strlen(who);
         wchar_t* wsaid = AnsiToUnicode(said, CP_ACP);

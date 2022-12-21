@@ -99,7 +99,7 @@ JSAPI_FUNC(socket_open) {
     if (host == NULL)
         THROW_ERROR(cx, "Cannot find host");
     SOCKADDR_IN SockAddr;
-    SockAddr.sin_port = htons(port);
+    SockAddr.sin_port = htons(static_cast<u_short>(port));
     SockAddr.sin_family = AF_INET;
     SockAddr.sin_addr.s_addr = *((unsigned long*)host->h_addr);
     Sdata->mode = Sdata->socket;
@@ -144,7 +144,6 @@ JSAPI_FUNC(socket_read) {
 
     char buffer[10000] = {0};
     std::string returnVal;
-    int nDataLength;
 
     int iResult = 0;
     do {
@@ -164,7 +163,7 @@ JSAPI_FUNC(socket_read) {
     return JS_TRUE;
 }
 
-void socket_finalize(JSFreeOp* fop, JSObject* obj) {
+void socket_finalize(JSFreeOp*, JSObject* obj) {
     SocketData* sData = (SocketData*)JS_GetPrivate(obj);
     if (sData) {
         closesocket(sData->socket);

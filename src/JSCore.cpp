@@ -421,7 +421,7 @@ JSAPI_FUNC(my_sendCopyData) {
 
 JSAPI_FUNC(my_sendDDE) {
     JS_SET_RVAL(cx, vp, JSVAL_FALSE);
-    jsint mode;
+    jsint mode{};
     char *pszDDEServer = nullptr, *pszTopic = nullptr, *pszItem = nullptr,
                *pszData = nullptr;
     JS_BeginRequest(cx);

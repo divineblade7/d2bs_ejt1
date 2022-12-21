@@ -567,7 +567,7 @@ JSAPI_FUNC(file_end) {
     return JS_TRUE;
 }
 
-void file_finalize(JSFreeOp* fop, JSObject* obj) {
+void file_finalize(JSFreeOp*, JSObject* obj) {
     FileData* fdata = (FileData*)JS_GetPrivate(obj);
     if (fdata) {
         free(fdata->path);

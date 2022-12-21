@@ -971,7 +971,7 @@ js_ReportErrorNumberUCArray(JSContext *cx, unsigned flags, JSErrorCallback callb
     report.messageArgs = args;
 
     char *message;
-    va_list dummy;
+    va_list dummy{};
     if (!js_ExpandErrorArguments(cx, callback, userRef, errorNumber,
                                  &message, &report, ArgumentsAreUnicode, dummy)) {
         return false;

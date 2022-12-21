@@ -15,14 +15,14 @@ using namespace std;
 
 Variables Vars = {};
 
-DWORD ReassignPlayerHandler(BYTE* pPacket, DWORD dwSize) {
+DWORD ReassignPlayerHandler(BYTE* pPacket, [[maybe_unused]] DWORD dwSize) {
     if (*(LPDWORD)&pPacket[2] == D2CLIENT_GetPlayerUnit()->dwUnitId)
         pPacket[10] = NULL;
 
     return TRUE;
 }
 
-DWORD HPMPUpdateHandler(BYTE* pPacket, DWORD dwSize) {
+DWORD HPMPUpdateHandler(BYTE* pPacket, [[maybe_unused]] DWORD dwSize) {
     WORD Life = *(WORD*)&pPacket[1];
     WORD Mana = *(WORD*)&pPacket[3];
 
@@ -52,7 +52,7 @@ DWORD HPMPUpdateHandler(BYTE* pPacket, DWORD dwSize) {
     return TRUE;
 }
 
-DWORD ChatEventHandler(BYTE* pPacket, DWORD dwSize) {
+DWORD ChatEventHandler(BYTE* pPacket, [[maybe_unused]] DWORD dwSize) {
     char* pName = (char*)pPacket + 10;
     char* pMessage = (char*)pPacket + strlen(pName) + 11;
     wchar_t* uc = AnsiToUnicode(pMessage, CP_ACP);
@@ -68,7 +68,7 @@ DWORD ChatEventHandler(BYTE* pPacket, DWORD dwSize) {
     return result;
 }
 
-DWORD NPCTransactionHandler(BYTE* pPacket, DWORD dwSize) {
+DWORD NPCTransactionHandler(BYTE* pPacket, [[maybe_unused]] DWORD dwSize) {
     char code[5] = "";
     BYTE mode = pPacket[0x02]; // [BYTE Result - 0x00 =  Purchased || 0x01 = Sold || 0x0c = Insuffecient Gold]
     DWORD gid = *(DWORD*)(pPacket + 0x07);
@@ -78,7 +78,7 @@ DWORD NPCTransactionHandler(BYTE* pPacket, DWORD dwSize) {
     return TRUE;
 }
 
-DWORD EventMessagesHandler(BYTE* pPacket, DWORD dwSize) {
+DWORD EventMessagesHandler(BYTE* pPacket, [[maybe_unused]] DWORD dwSize) {
     // packet breakdown: http://www.edgeofnowhere.cc/viewtopic.php?t=392307
     BYTE mode = pPacket[1];
     DWORD param1 = *(DWORD*)(pPacket + 3);
@@ -129,7 +129,7 @@ DWORD EventMessagesHandler(BYTE* pPacket, DWORD dwSize) {
     return TRUE;
 }
 
-DWORD ItemActionHandler(BYTE* pPacket, DWORD dwSize) {
+DWORD ItemActionHandler(BYTE* pPacket, [[maybe_unused]] DWORD dwSize) {
     // TODO: fix this code later by changing the way it's parsed
     INT64 icode = 0;
     char code[5] = "";
@@ -170,7 +170,7 @@ DWORD ItemActionHandler(BYTE* pPacket, DWORD dwSize) {
     return TRUE;
 }
 
-DWORD DelayedStateHandler(BYTE* pPacket, DWORD dwSize) {
+DWORD DelayedStateHandler(BYTE* pPacket, [[maybe_unused]] DWORD dwSize) {
     if (pPacket[6] == AFFECT_JUST_PORTALED)
         return FALSE;
 

@@ -28,7 +28,7 @@ JSContext* ScriptEngine::context = NULL;
 bool __fastcall DisposeScript(Script* script, void*, uint);
 bool __fastcall StopScript(Script* script, void* argv, uint argc);
 
-Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptState state, uint argc, JSAutoStructuredCloneBuffer** argv, bool recompile) {
+Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptState _state, uint argc, JSAutoStructuredCloneBuffer** argv, bool) {
     if (GetState() != Running)
         return NULL;
 
@@ -39,7 +39,7 @@ Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptState state, uint a
         if (scripts.count(fileName))
             scripts[fileName]->Stop();
 
-        Script* script = new Script(fileName, state, argc, argv);
+        Script* script = new Script(fileName, _state, argc, argv);
         scripts[fileName] = script;
         free(fileName);
         return script;
@@ -88,11 +88,11 @@ void ScriptEngine::DisposeScript(Script* script) {
         script->FireEvent(evt);
     }
 }
-void ScriptEngine::LockScriptList(const char* loc) {
+void ScriptEngine::LockScriptList(const char*) {
     EnterCriticalSection(&scriptListLock);
     // Log(loc);
 }
-void ScriptEngine::UnLockScriptList(const char* loc) {
+void ScriptEngine::UnLockScriptList(const char*) {
     // Log(loc);
     LeaveCriticalSection(&scriptListLock);
 }
@@ -227,14 +227,14 @@ bool ScriptEngine::ForEachScript(ScriptCallback callback, void* argv, uint argc)
     return block;
 }
 
-void ScriptEngine::InitClass(JSContext* context, JSObject* globalObject, JSClass* classp, JSFunctionSpec* methods, JSPropertySpec* props, JSFunctionSpec* s_methods,
+void ScriptEngine::InitClass(JSContext* cx, JSObject* globalObject, JSClass* classp, JSFunctionSpec* methods, JSPropertySpec* props, JSFunctionSpec* s_methods,
                              JSPropertySpec* s_props) {
-    if (!JS_InitClass(context, globalObject, NULL, classp, classp->construct, 0, props, methods, s_props, s_methods))
+    if (!JS_InitClass(cx, globalObject, NULL, classp, classp->construct, 0, props, methods, s_props, s_methods))
         throw std::exception("Couldn't initialize the class");
 }
 
-void ScriptEngine::DefineConstant(JSContext* context, JSObject* globalObject, const char* name, int value) {
-    if (!JS_DefineProperty(context, globalObject, name, INT_TO_JSVAL(value), NULL, NULL, JSPROP_PERMANENT_VAR))
+void ScriptEngine::DefineConstant(JSContext* cx, JSObject* globalObject, const char* name, int value) {
+    if (!JS_DefineProperty(cx, globalObject, name, INT_TO_JSVAL(value), NULL, NULL, JSPROP_PERMANENT_VAR))
         throw std::exception("Couldn't initialize the constant");
 }
 
@@ -244,7 +244,7 @@ bool __fastcall DisposeScript(Script* script, void*, uint) {
     return true;
 }
 
-bool __fastcall StopScript(Script* script, void* argv, uint argc) {
+bool __fastcall StopScript(Script* script, void* argv, uint) {
     script->TriggerOperationCallback();
     if (script->GetState() != Command)
         script->Stop(*(bool*)(argv), ScriptEngine::GetState() == Stopping);
@@ -425,7 +425,7 @@ JSBool contextCallback(JSContext* cx, uint contextOp) {
 //	//return JS_TRUE;
 //}
 
-void reportError(JSContext* cx, const char* message, JSErrorReport* report) {
+void reportError(JSContext*, const char* message, JSErrorReport* report) {
     bool warn = JSREPORT_IS_WARNING(report->flags);
     bool isStrict = JSREPORT_IS_STRICT(report->flags);
     const char* type = (warn ? "Warning" : "Error");
@@ -450,7 +450,7 @@ void reportError(JSContext* cx, const char* message, JSErrorReport* report) {
 }
 
 bool ExecScriptEvent(Event* evt, bool clearList) {
-    JSContext* cx;
+    JSContext* cx = nullptr;
 
     if (!clearList)
         cx = evt->owner->GetContext();
@@ -819,7 +819,7 @@ void ScriptEngine::RemoveDelayedEvent(int key) {
     list<Event*>::iterator it;
     it = DelayedExecList.begin();
     while (it != DelayedExecList.end()) {
-        if (*(DWORD*)(*it)->arg1 == key) {
+        if (*(DWORD*)(*it)->arg1 == static_cast<DWORD>(key)) {
             CancelWaitableTimer((HANDLE*)(*it)->arg2);
             CloseHandle((HANDLE*)(*it)->arg2);
             Event* evt = *it;
@@ -834,7 +834,7 @@ void ScriptEngine::RemoveDelayedEvent(int key) {
     }
     LeaveCriticalSection(&Vars.cEventSection);
 }
-void CALLBACK EventTimerProc(LPVOID lpArg, DWORD dwTimerLowValue, DWORD dwTimerHighValue) {
+void CALLBACK EventTimerProc(LPVOID lpArg, DWORD, DWORD) {
     Event* evt = (Event*)lpArg;
     evt->owner->FireEvent(evt);
 }

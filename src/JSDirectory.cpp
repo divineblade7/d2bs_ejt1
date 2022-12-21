@@ -183,7 +183,7 @@ JSAPI_FUNC(dir_create) {
         JS_ReportError(cx, "Couldn't create directory %s, path %s not found", name, path);
         return JS_FALSE;
     } else {
-        DirData* d = new DirData(name);
+        d = new DirData(name);
         JSObject* jsdir = BuildObject(cx, &folder_class, dir_methods, dir_props, d);
         JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(jsdir));
     }
@@ -224,7 +224,7 @@ JSAPI_PROP(dir_getProperty) {
     return JS_TRUE;
 }
 
-void dir_finalize(JSFreeOp* fop, JSObject* obj) {
+void dir_finalize(JSFreeOp*, JSObject* obj) {
     DirData* d = (DirData*)JS_GetPrivate(obj);
     delete d;
 }

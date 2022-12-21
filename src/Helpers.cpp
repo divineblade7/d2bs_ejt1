@@ -31,7 +31,7 @@ char* UnicodeToAnsi(const wchar_t* str, UINT codepage) {
 
 void StringToLower(char* p) {
     for (; *p; ++p)
-        *p = tolower(*p);
+        *p = static_cast<char>(tolower(static_cast<int>(*p)));
 }
 
 void StringToLower(wchar_t* p) {
@@ -383,7 +383,7 @@ char* DllLoadAddrStrs() {
     result[0] = '\0';
 
     for (i = 0; i < sizeof(dlls) / sizeof(dlls[0]); ++i) {
-        sprintf_s(lineBuf, sizeof(lineBuf), "%s loaded at: 0x%08x.", dlls[i], GetModuleHandle(dlls[i]));
+        sprintf_s(lineBuf, sizeof(lineBuf), "%s loaded at: 0x%p.", dlls[i], GetModuleHandle(dlls[i]));
         strcat_s(result, strMaxLen, lineBuf);
         if (i != (sizeof(dlls) / sizeof(dlls[0]) - 1)) {
             strcat_s(result, strMaxLen, "\n");
@@ -404,7 +404,7 @@ LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* ptrs) {
     char* szString;
     char* dllAddrs;
 
-    len = _scprintf("EXCEPTION!\n*** 0x%08x at 0x%08x\n"
+    len = _scprintf("EXCEPTION!\n*** 0x%08x at 0x%p\n"
                     "D2BS loaded at: 0x%08x\n"
                     "Registers:\n"
                     "\tEIP: 0x%08x, ESP: 0x%08x\n"
@@ -415,7 +415,7 @@ LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* ptrs) {
 
     szString = new char[len + 1];
     sprintf_s(szString, len + 1,
-              "EXCEPTION!\n*** 0x%08x at 0x%08x\n"
+              "EXCEPTION!\n*** 0x%08x at 0x%p\n"
               "D2BS loaded at: 0x%08x\n"
               "Registers:\n"
               "\tEIP: 0x%08x, ESP: 0x%08x\n"

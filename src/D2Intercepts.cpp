@@ -246,7 +246,7 @@ SkipInput:
     }
 }
 
-void __declspec(naked) AddUnit_Intercept(UnitAny* lpUnit) {
+void __declspec(naked) AddUnit_Intercept([[maybe_unused]] UnitAny* lpUnit) {
     __asm
     {
 		call [D2CLIENT_GameAddUnit_I]
@@ -258,7 +258,7 @@ void __declspec(naked) AddUnit_Intercept(UnitAny* lpUnit) {
     }
 }
 
-void __declspec(naked) RemoveUnit_Intercept(UnitAny* lpUnit) {
+void __declspec(naked) RemoveUnit_Intercept([[maybe_unused]] UnitAny* lpUnit) {
     __asm {
 		pushad
 		push dword ptr ds:[esi+edx*4]
@@ -323,11 +323,11 @@ int EraseCacheFiles() {
     return 0;
 }
 
-HMODULE __stdcall Multi(LPSTR Class, LPSTR Window) {
+HMODULE __stdcall Multi(LPSTR, LPSTR) {
     return 0;
 }
 
-HANDLE __stdcall Windowname(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int x, int y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu,
+HANDLE __stdcall Windowname(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR, DWORD dwStyle, int x, int y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu,
                             HINSTANCE hInstance, LPVOID lpParam) {
     WCHAR szWindowName[200] = L"D2";
     WCHAR szClassName[200] = L"CNAME";
@@ -342,7 +342,7 @@ HANDLE __stdcall Windowname(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindow
     return CreateWindowExW(dwExStyle, szClassName, szWindowName, dwStyle, x, y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
 }
 
-HANDLE __stdcall CacheFix(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition,
+HANDLE __stdcall CacheFix(LPCSTR, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition,
                           DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) {
     EraseCacheFiles();
     CHAR path[MAX_PATH];
@@ -354,7 +354,7 @@ HANDLE __stdcall CacheFix(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShar
         CHAR Def[100] = "";
 
         if (strlen(szTitle) > 1) {
-            sprintf_s(Def, "\\bncache%d.dat", szTitle);
+            sprintf_s(Def, "\\bncache%s.dat", szTitle);
             strcat_s(path, Def);
         } else {
             srand(GetTickCount());
@@ -398,7 +398,6 @@ LONG WINAPI MyUnhandledExceptionFilter(_In_ struct _EXCEPTION_POINTERS* Exceptio
     MiniDumpWriteDump(hProcess, ProcessId, hFile, MiniDumpNormal, &ExceptionParam, NULL, NULL);
     CloseHandle(hFile);
     exit(0);
-    return EXCEPTION_EXECUTE_HANDLER;
 }
 
 //  FogException(6, (int)&Default, a3, "Unrecoverable internal error %08x", a2);
@@ -409,11 +408,10 @@ void FogException() {
                        0, NULL);
     } __except (UnhandledExceptionFilter(GetExceptionInformation())) {
         exit(0);
-        exit(0);
     }
 }
 
-char __fastcall ErrorReportLaunch(const char* crash_file, int a2) {
+char __fastcall ErrorReportLaunch(const char* crash_file, int) {
     GetStackWalk();
     Log(L"Crash File: %hs\n", crash_file);
     exit(0);

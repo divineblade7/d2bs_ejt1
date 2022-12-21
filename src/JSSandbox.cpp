@@ -165,7 +165,7 @@ JSAPI_STRICT_PROP(sandbox_setProperty) {
     return JS_FALSE;
 }
 
-void sandbox_finalize(JSFreeOp* fop, JSObject* obj) {
+void sandbox_finalize(JSFreeOp*, JSObject* obj) {
     sandbox* box = (sandbox*)JS_GetPrivate(obj);
     if (box) {
         // bob1.8.8		JS_SetContextThread(box->context);
@@ -230,7 +230,7 @@ JSAPI_FUNC(sandbox_isIncluded) {
 }
 
 JSAPI_FUNC(sandbox_clear) {
-    sandbox* box = (sandbox*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &sandbox_class, NULL);
+    //sandbox* box = (sandbox*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &sandbox_class, NULL);
     // if(box)
     //	JS_ClearScope(cx, box->innerObj);
     return JS_TRUE;

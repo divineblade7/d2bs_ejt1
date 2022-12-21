@@ -10,7 +10,7 @@
 
 EMPTY_CTOR(unit)
 
-void unit_finalize(JSFreeOp* fop, JSObject* obj) {
+void unit_finalize(JSFreeOp*, JSObject* obj) {
     Private* lpUnit = (Private*)JS_GetPrivate(obj);
 
     if (lpUnit) {
@@ -50,7 +50,6 @@ JSAPI_PROP(unit_getProperty) {
     jsval ID;
     JS_IdToValue(cx, id, &ID);
     JS_BeginRequest(cx);
-    char* nProfile;
 
     switch (JSVAL_TO_INT(ID)) {
     case ME_PID:
@@ -957,11 +956,11 @@ JSAPI_FUNC(unit_getStat) {
                     continue;
 
                 jsval nIndex = INT_TO_JSVAL(aStatList[i].wStatIndex);
-                jsval nSubIndex = INT_TO_JSVAL(aStatList[i].wSubIndex);
+                jsval nSubIndexVal = INT_TO_JSVAL(aStatList[i].wSubIndex);
                 jsval nValue = INT_TO_JSVAL(aStatList[i].dwStatValue);
 
                 JS_SetElement(cx, pArrayInsert, 0, &nIndex);
-                JS_SetElement(cx, pArrayInsert, 1, &nSubIndex);
+                JS_SetElement(cx, pArrayInsert, 1, &nSubIndexVal);
                 JS_SetElement(cx, pArrayInsert, 2, &nValue);
 
                 jsval aObj = OBJECT_TO_JSVAL(pArrayInsert);
