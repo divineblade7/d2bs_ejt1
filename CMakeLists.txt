@@ -1,79 +1,88 @@
 cmake_minimum_required(VERSION 3.23)
 
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-
-add_subdirectory(vendor/mozjs)
-
 project(d2bs)
 
-enable_language(CXX ASM_MASM)
+# Set default built to release
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose Release or Debug" FORCE)
+endif()
 
+# Set runtime linking to /MT
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 20)
+  set(CMAKE_CXX_STANDARD_REQUIRED True)
+endif()
+
+option(D2BS_ENABLE_PROFILING "Enable profiling" OFF)
+
+option(D2BS_NO_EXCEPTIONS "Enable profiling" OFF)
+
+# Set D2BS sources
 set(D2BS_SRCS
-  src/core/ActMap.cpp
-  src/core/Control.cpp
-  src/core/Core.cpp
-  src/core/dde.cpp
-  src/core/File.cpp
-  src/core/Game.cpp
-  src/core/Hash.cpp
-  src/core/LevelMap.cpp
-  src/core/MPQStats.cpp
-  src/core/Profile.cpp
-  src/core/Room.cpp
-  src/core/ScreenHook.cpp
-  src/core/Unit.cpp
+  src/d2bs/core/ActMap.cpp
+  src/d2bs/core/Control.cpp
+  src/d2bs/core/Core.cpp
+  src/d2bs/core/dde.cpp
+  src/d2bs/core/File.cpp
+  src/d2bs/core/Game.cpp
+  src/d2bs/core/Hash.cpp
+  src/d2bs/core/LevelMap.cpp
+  src/d2bs/core/MPQStats.cpp
+  src/d2bs/core/Profile.cpp
+  src/d2bs/core/Room.cpp
+  src/d2bs/core/ScreenHook.cpp
+  src/d2bs/core/Unit.cpp
   
-  src/diablo/handlers/D2Handlers.cpp
-  src/diablo/handlers/D2NetHandlers.cpp
-  src/diablo/patches/D2Intercepts.cpp
-  src/diablo/D2Helpers.cpp
+  src/d2bs/diablo/handlers/D2Handlers.cpp
+  src/d2bs/diablo/handlers/D2NetHandlers.cpp
+  src/d2bs/diablo/patches/D2Intercepts.cpp
+  src/d2bs/diablo/D2Helpers.cpp
 
-  src/script/api/JSArea.cpp
-  src/script/api/JSControl.cpp
-  src/script/api/JSCore.cpp
-  src/script/api/JSDirectory.cpp
-  src/script/api/JSExits.cpp
-  src/script/api/JSFile.cpp
-  src/script/api/JSFileTools.cpp
-  src/script/api/JSGame.cpp
-  src/script/api/JSGlobalClasses.cpp
-  src/script/api/JSHash.cpp
-  src/script/api/JSMenu.cpp
-  src/script/api/JSParty.cpp
-  src/script/api/JSPresetUnit.cpp
-  src/script/api/JSProfile.cpp
-  src/script/api/JSRoom.cpp
-  src/script/api/JSSandbox.cpp
-  src/script/api/JSScreenHook.cpp
-  src/script/api/JSScript.cpp
-  src/script/api/JSSocket.cpp
-  src/script/api/JSSQLite.cpp
-  src/script/api/JSUnit.cpp
+  src/d2bs/script/api/JSArea.cpp
+  src/d2bs/script/api/JSControl.cpp
+  src/d2bs/script/api/JSCore.cpp
+  src/d2bs/script/api/JSDirectory.cpp
+  src/d2bs/script/api/JSExits.cpp
+  src/d2bs/script/api/JSFile.cpp
+  src/d2bs/script/api/JSFileTools.cpp
+  src/d2bs/script/api/JSGame.cpp
+  src/d2bs/script/api/JSGlobalClasses.cpp
+  src/d2bs/script/api/JSHash.cpp
+  src/d2bs/script/api/JSMenu.cpp
+  src/d2bs/script/api/JSParty.cpp
+  src/d2bs/script/api/JSPresetUnit.cpp
+  src/d2bs/script/api/JSProfile.cpp
+  src/d2bs/script/api/JSRoom.cpp
+  src/d2bs/script/api/JSSandbox.cpp
+  src/d2bs/script/api/JSScreenHook.cpp
+  src/d2bs/script/api/JSScript.cpp
+  src/d2bs/script/api/JSSocket.cpp
+  src/d2bs/script/api/JSSQLite.cpp
+  src/d2bs/script/api/JSUnit.cpp
   
-  src/script/engine/AutoRoot.cpp
-  src/script/engine/Script.cpp
-  src/script/engine/ScriptEngine.cpp
+  src/d2bs/script/AutoRoot.cpp
+  src/d2bs/script/js32.cpp
+  src/d2bs/script/Script.cpp
+  src/d2bs/script/ScriptEngine.cpp
 
-  src/script/js32.cpp
+  src/d2bs/utils/CommandLine.cpp
+  src/d2bs/utils/Console.cpp
+  src/d2bs/utils/Events.cpp
+  src/d2bs/utils/Helpers.cpp
+  src/d2bs/utils/Offset.cpp
+  src/d2bs/utils/StackWalker.cpp
+  src/d2bs/utils/sqlite3.c
+  src/d2bs/utils/stringhash.cpp
 
-  src/utils/CommandLine.cpp
-  src/utils/Console.cpp
-  src/utils/Events.cpp
-  src/utils/Helpers.cpp
-  src/utils/Offset.cpp
-  src/utils/StackWalker.cpp
-  src/utils/sqlite3.c
-  src/utils/stringhash.cpp
-
-  src/D2BS.cpp
+  src/d2bs/D2BS.cpp
   src/version.rc)
 
 add_library(${PROJECT_NAME} SHARED ${D2BS_SRCS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+# Enable all warnings
 string(REGEX REPLACE "/W[0-4] " "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 string(REGEX REPLACE "/W[0-4]$" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 string(REGEX REPLACE "/W[0-4] " "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
@@ -81,13 +90,20 @@ string(REGEX REPLACE "/W[0-4]$" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 target_compile_options(${PROJECT_NAME} PRIVATE /W4)
 message(STATUS "D2BS: Maximum warning setting configured, here we go!")
 
-# These are all trash definitions from d2bs solution required to successfully
-# compile... at least for now :)
 target_compile_definitions(${PROJECT_NAME} PRIVATE
   WIN32_LEAN_AND_MEAN
 
   XP_WIN
   STATIC_JS_API)
+
+# Set option definitions
+foreach(D2BS_OPTION
+  D2BS_ENABLE_PROFILING
+  D2BS_NO_EXCEPTIONS)
+  if(${D2BS_OPTION})
+    target_compile_definitions(d2bs PRIVATE ${SPDLOG_OPTION})
+  endif()
+endforeach()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
   dbghelp
@@ -105,3 +121,5 @@ install(FILES
   resources/LICENSE.txt
   resources/version.bmp
   DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+  
+add_subdirectory(vendor/mozjs)
