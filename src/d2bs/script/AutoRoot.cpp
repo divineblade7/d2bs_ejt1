@@ -5,7 +5,7 @@
 AutoRoot::AutoRoot(JSContext* ncx, jsval nvar) : cx(ncx), var(nvar), count(0) {
   Take();
 }
-AutoRoot::AutoRoot(jsval nvar) : cx(ScriptEngine::GetGlobalContext()), var(nvar), count(0) {
+AutoRoot::AutoRoot(jsval nvar) : cx(sScriptEngine->GetGlobalContext()), var(nvar), count(0) {
   Take();
 }
 AutoRoot::~AutoRoot() {

@@ -465,7 +465,9 @@ DWORD WINAPI ScriptThread(void* data) {
     SetThreadName(0xFFFFFFFF, script->GetShortFilename());
 #endif
     script->Run();
-    if (Vars.bDisableCache) ScriptEngine::DisposeScript(script);
+    if (Vars.bDisableCache) {
+      sScriptEngine->DisposeScript(script);
+    }
   }
   return 0;
 }

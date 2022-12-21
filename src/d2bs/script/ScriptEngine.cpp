@@ -15,15 +15,6 @@
 #include <assert.h>
 #include <vector>
 
-Script* ScriptEngine::console = NULL;
-JSRuntime* ScriptEngine::runtime = NULL;
-ScriptMap ScriptEngine::scripts = ScriptMap();
-EngineState ScriptEngine::state = Stopped;
-CRITICAL_SECTION ScriptEngine::lock = {0};
-CRITICAL_SECTION ScriptEngine::scriptListLock = {0};
-std::list<Event*> ScriptEngine::DelayedExecList;
-int ScriptEngine::delayedExecKey;
-JSContext* ScriptEngine::context = NULL;
 // internal ForEachScript helpers
 bool __fastcall DisposeScript(Script* script, void*, uint);
 bool __fastcall StopScript(Script* script, void* argv, uint argc);
@@ -227,13 +218,13 @@ void ScriptEngine::DefineConstant(JSContext* cx, JSObject* globalObject, const c
 
 // internal ForEachScript helper functions
 bool __fastcall DisposeScript(Script* script, void*, uint) {
-  ScriptEngine::DisposeScript(script);
+  sScriptEngine->DisposeScript(script);
   return true;
 }
 
 bool __fastcall StopScript(Script* script, void* argv, uint) {
   script->TriggerOperationCallback();
-  if (script->GetState() != Command) script->Stop(*(bool*)(argv), ScriptEngine::GetState() == Stopping);
+  if (script->GetState() != Command) script->Stop(*(bool*)(argv), sScriptEngine->GetState() == Stopping);
   return true;
 }
 
@@ -338,7 +329,8 @@ JSBool contextCallback(JSContext* cx, uint contextOp) {
     lpUnit->_dwPrivateType = PRIVATE_UNIT;
 
     for (JSClassSpec* entry = global_classes; entry->classp != NULL; entry++)
-      ScriptEngine::InitClass(cx, globalObject, entry->classp, entry->methods, entry->properties, entry->static_methods,
+      sScriptEngine->InitClass(cx, globalObject, entry->classp, entry->methods, entry->properties,
+                               entry->static_methods,
                               entry->static_properties);
 
     JSObject* meObject = BuildObject(cx, &unit_class, unit_methods, me_props, lpUnit);
@@ -348,7 +340,7 @@ JSBool contextCallback(JSContext* cx, uint contextOp) {
         JS_FALSE)
       return JS_FALSE;
 
-#define DEFCONST(vp) ScriptEngine::DefineConstant(cx, globalObject, #vp, vp)
+#define DEFCONST(vp) sScriptEngine->DefineConstant(cx, globalObject, #vp, vp)
     DEFCONST(FILE_READ);
     DEFCONST(FILE_WRITE);
     DEFCONST(FILE_APPEND);
@@ -764,13 +756,13 @@ bool ExecScriptEvent(Event* evt, bool clearList) {
     }
 
     if (strcmp(evtName, "setTimeout") == 0) {
-      ScriptEngine::RemoveDelayedEvent(*(DWORD*)evt->arg1);
+      sScriptEngine->RemoveDelayedEvent(*(DWORD*)evt->arg1);
     }
 
     return true;
   }
   if (strcmp(evtName, "DisposeMe") == 0) {
-    ScriptEngine::DisposeScript(evt->owner);
+    sScriptEngine->DisposeScript(evt->owner);
   }
 
   return true;

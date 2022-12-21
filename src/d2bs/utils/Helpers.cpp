@@ -181,7 +181,7 @@ bool InitHooks(void) {
       continue;
 
     if (Vars.hKeybHook && Vars.hMouseHook) {
-      if (!ScriptEngine::Startup()) return false;
+      if (!sScriptEngine->Startup()) return false;
 
       Vars.bActive = TRUE;
 
@@ -208,23 +208,23 @@ ScriptState GetStarterScriptState(void) {
 }
 
 bool ExecCommand(const wchar_t* command) {
-  ScriptEngine::RunCommand(command);
+  sScriptEngine->RunCommand(command);
   return true;
 }
 
 bool StartScript(const wchar_t* scriptname, ScriptState state) {
   wchar_t file[_MAX_FNAME + _MAX_PATH];
   swprintf_s(file, _countof(file), L"%s\\%s", Vars.szScriptPath, scriptname);
-  Script* script = ScriptEngine::CompileFile(file, state);
+  Script* script = sScriptEngine->CompileFile(file, state);
   return (script && script->BeginThread(ScriptThread));
 }
 
 void Reload(void) {
-  if (ScriptEngine::GetCount() > 0) Print(L"\u00FFc2D2BS\u00FFc0 :: Stopping all scripts");
-  ScriptEngine::StopAll();
+  if (sScriptEngine->GetCount() > 0) Print(L"\u00FFc2D2BS\u00FFc0 :: Stopping all scripts");
+  sScriptEngine->StopAll();
 
   if (Vars.bDisableCache != TRUE) Print(L"\u00FFc2D2BS\u00FFc0 :: Flushing the script cache");
-  ScriptEngine::FlushCache();
+  sScriptEngine->FlushCache();
 
   // wait for things to catch up
   Sleep(500);
@@ -255,12 +255,12 @@ bool ProcessCommand(const wchar_t* command, bool unprocessedIsCommand) {
       Print(L"\u00FFc2D2BS\u00FFc0 :: Failed to start %s", script);
     result = true;
   } else if (_wcsicmp(argv, L"stop") == 0) {
-    if (ScriptEngine::GetCount() > 0) Print(L"\u00FFc2D2BS\u00FFc0 :: Stopping all scripts");
-    ScriptEngine::StopAll();
+    if (sScriptEngine->GetCount() > 0) Print(L"\u00FFc2D2BS\u00FFc0 :: Stopping all scripts");
+    sScriptEngine->StopAll();
     result = true;
   } else if (_wcsicmp(argv, L"flush") == 0) {
     if (Vars.bDisableCache != TRUE) Print(L"\u00FFc2D2BS\u00FFc0 :: Flushing the script cache");
-    ScriptEngine::FlushCache();
+    sScriptEngine->FlushCache();
     result = true;
   } else if (_wcsicmp(argv, L"load") == 0) {
     const wchar_t* script = command + 5;
