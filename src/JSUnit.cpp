@@ -579,7 +579,7 @@ JSAPI_FUNC(unit_getUnit) {
     uint32 nClassId = (uint32)-1;
     uint32 nMode = (uint32)-1;
     uint32 nUnitId = (uint32)-1;
-    char* szName = "";
+    char* szName = nullptr;
 
     JS_BeginRequest(cx);
     if (argc > 0 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0]))
@@ -626,7 +626,9 @@ JSAPI_FUNC(unit_getUnit) {
     pmyUnit->dwMode = nMode;
     pmyUnit->dwType = pUnit->dwType;
     pmyUnit->dwUnitId = pUnit->dwUnitId;
-    strcpy_s(pmyUnit->szName, sizeof(pmyUnit->szName), szName);
+    if (szName) {
+        strcpy_s(pmyUnit->szName, sizeof(pmyUnit->szName), szName);
+    }
     JS_free(cx, szName);
 
     JSObject* jsunit = BuildObject(cx, &unit_class, unit_methods, unit_props, pmyUnit);

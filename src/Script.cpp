@@ -147,7 +147,7 @@ void Script::Run(void) {
             if (wcslen(Vars.szConsole) > 0) {
                 script = JS_CompileFile(context, globalObject, fileName);
             } else {
-                char* cmd = "function main() {print('ÿc2D2BSÿc0 :: Started Console'); while (true){delay(10000)};}  ";
+                const char* cmd = "function main() {print('ÿc2D2BSÿc0 :: Started Console'); while (true){delay(10000)};}  ";
                 script = JS_CompileScript(context, globalObject, cmd, strlen(cmd), "Command Line", 1);
             }
             JS_AddNamedScriptRoot(context, &script, "console script");

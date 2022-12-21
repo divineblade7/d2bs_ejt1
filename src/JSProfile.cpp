@@ -91,7 +91,7 @@ CLASS_CTOR(profile) {
 
 JSAPI_FUNC(profile_login) {
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    char* error;
+    const char* error;
     Profile* prof;
 
     prof = (Profile*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));

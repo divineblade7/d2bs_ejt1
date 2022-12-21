@@ -73,6 +73,7 @@ struct NodeComparer {
 template <class Allocator = std::allocator<Node>> class AStarPath : public MapPath {
   private:
     Allocator alloc;
+    using AllocTrait = std::allocator_traits<Allocator>;
 
     Map* map;
     Reducing::PathReducer* reducer;
@@ -91,7 +92,7 @@ template <class Allocator = std::allocator<Node>> class AStarPath : public MapPa
         std::priority_queue<Node*, std::vector<Node*>, NodeComparer> open;
         std::set<Point> closed;
         PointList newNodes;
-        Node* begin = alloc.allocate(1);
+        Node* begin = AllocTrait::allocate(alloc, 1);
         UnitAny* player = D2CLIENT_GetPlayerUnit();
         DWORD startLvl = player->pPath->pRoom1->pRoom2->pLevel->dwLevelNo;
 
@@ -99,7 +100,8 @@ template <class Allocator = std::allocator<Node>> class AStarPath : public MapPa
         if (!begin)
             return;
 
-        alloc.construct(begin, Node(start, NULL, 0, estimate(map, start, end)));
+        AllocTrait::construct(alloc, begin,
+                              Node(start, NULL, 0, estimate(map, start, end)));
         nodes.push_back(begin);
         open.push(begin);
         DWORD ticks = GetTickCount();
@@ -140,12 +142,17 @@ template <class Allocator = std::allocator<Node>> class AStarPath : public MapPa
                     closed.insert(point);
                     continue;
                 }
-                Node* next = alloc.allocate(1);
+                Node* next = AllocTrait::allocate(alloc, 1);
                 // if we don't get a valid node, just return
                 if (!next)
                     return;
                 int pointPenalty = reducer->GetPenalty(point, abs);
-                alloc.construct(next, Node(point, current, current->g + distance(current->point, point) + pointPenalty, estimate(map, point, end)));
+                AllocTrait::construct(
+                    alloc, next,
+                    Node(point, current,
+                         current->g + distance(current->point, point) +
+                             pointPenalty,
+                         estimate(map, point, end)));
                 nodes.push_back(next);
                 open.push(next);
             }
@@ -193,8 +200,8 @@ template <class Allocator = std::allocator<Node>> class AStarPath : public MapPa
 
         std::vector<Node*>::iterator lbegin = nodes.begin(), lend = nodes.end();
         for (std::vector<Node*>::iterator it = lbegin; it != lend; it++) {
-            alloc.destroy((*it));
-            alloc.deallocate((*it), sizeof(*it));
+            AllocTrait::destroy(alloc, (*it));
+            AllocTrait::deallocate(alloc, (*it), sizeof(*it));
         }
     }
 };
