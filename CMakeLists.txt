@@ -7,62 +7,62 @@ add_subdirectory(vendor/mozjs)
 project(d2bs)
 
 set(D2BS_SRCS
-  Map/Diablo_II/ActMap.cpp
-  Map/Diablo_II/LevelMap.cpp
-  Map/Diablo_II/Points.cpp
+  src/Map/Diablo_II/ActMap.cpp
+  src/Map/Diablo_II/LevelMap.cpp
+  src/Map/Diablo_II/Points.cpp
 
-  AutoRoot.cpp
-  CommandLine.cpp
-  Console.cpp
-  Control.cpp
-  Core.cpp
-  D2BS.cpp
-  D2Handlers.cpp
-  D2Helpers.cpp
-  D2Intercepts.cpp
-  D2NetHandlers.cpp
-  dde.cpp
-  Events.cpp
-  File.cpp
-  Game.cpp
-  Hash.cpp
-  Helpers.cpp
-  js32.cpp
-  JSArea.cpp
-  JSControl.cpp
-  JSCore.cpp
-  JSDirectory.cpp
-  JSExits.cpp
-  JSFile.cpp
-  JSFileTools.cpp
-  JSGame.cpp
-  JSGlobalClasses.cpp
-  JSHash.cpp
-  JSMenu.cpp
-  JSParty.cpp
-  JSPresetUnit.cpp
-  JSProfile.cpp
-  JSRoom.cpp
-  JSSandbox.cpp
-  JSScreenHook.cpp
-  JSScript.cpp
-  JSSocket.cpp
-  JSSQLite.cpp
-  JSUnit.cpp
-  MPQStats.cpp
-  Offset.cpp
-  Profile.cpp
-  Room.cpp
-  ScreenHook.cpp
-  Script.cpp
-  ScriptEngine.cpp
-  StackWalker.cpp
-  stringhash.cpp
-  sqlite3.c
-  Unit.cpp)
+  src/AutoRoot.cpp
+  src/CommandLine.cpp
+  src/Console.cpp
+  src/Control.cpp
+  src/Core.cpp
+  src/D2BS.cpp
+  src/D2Handlers.cpp
+  src/D2Helpers.cpp
+  src/D2Intercepts.cpp
+  src/D2NetHandlers.cpp
+  src/dde.cpp
+  src/Events.cpp
+  src/File.cpp
+  src/Game.cpp
+  src/Hash.cpp
+  src/Helpers.cpp
+  src/js32.cpp
+  src/JSArea.cpp
+  src/JSControl.cpp
+  src/JSCore.cpp
+  src/JSDirectory.cpp
+  src/JSExits.cpp
+  src/JSFile.cpp
+  src/JSFileTools.cpp
+  src/JSGame.cpp
+  src/JSGlobalClasses.cpp
+  src/JSHash.cpp
+  src/JSMenu.cpp
+  src/JSParty.cpp
+  src/JSPresetUnit.cpp
+  src/JSProfile.cpp
+  src/JSRoom.cpp
+  src/JSSandbox.cpp
+  src/JSScreenHook.cpp
+  src/JSScript.cpp
+  src/JSSocket.cpp
+  src/JSSQLite.cpp
+  src/JSUnit.cpp
+  src/MPQStats.cpp
+  src/Offset.cpp
+  src/Profile.cpp
+  src/Room.cpp
+  src/ScreenHook.cpp
+  src/Script.cpp
+  src/ScriptEngine.cpp
+  src/StackWalker.cpp
+  src/stringhash.cpp
+  src/sqlite3.c
+  src/Unit.cpp)
 
 add_library(${PROJECT_NAME} SHARED ${D2BS_SRCS})
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 string(REGEX REPLACE "/W[0-4] " "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 string(REGEX REPLACE "/W[0-4]$" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
