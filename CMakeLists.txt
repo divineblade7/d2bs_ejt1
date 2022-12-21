@@ -69,8 +69,8 @@ string(REGEX REPLACE "/W[0-4] " "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 string(REGEX REPLACE "/W[0-4]$" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 string(REGEX REPLACE "/W[0-4] " "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 string(REGEX REPLACE "/W[0-4]$" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-target_compile_options(${PROJECT_NAME} PRIVATE /W0)
-message(STATUS "D2BS: Completely ignore warnings!!!!!! Remove later...")
+target_compile_options(${PROJECT_NAME} PRIVATE /W4)
+message(STATUS "D2BS: Maximum warning setting configured, here we go!")
 
 # These are all trash definitions from d2bs solution required to successfully
 # compile... at least for now :)
