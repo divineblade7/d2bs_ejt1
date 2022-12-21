@@ -1,5 +1,4 @@
-#ifndef __JSSOCKET_H__
-#define __JSSOCKET_H__
+#pragma once
 
 #include "script/js32.h"
 
@@ -8,7 +7,7 @@
 //////////////////////////////////////////////////////////////////
 
 CLASS_CTOR(socket);
-JSBool socket_equality(JSContext* cx, JSObject* obj, jsval v, JSBool* bp);
+//JSBool socket_equality(JSContext* cx, JSObject* obj, jsval v, JSBool* bp);
 
 JSAPI_PROP(socket_getProperty);
 JSAPI_STRICT_PROP(socket_setProperty);
@@ -33,4 +32,3 @@ static JSPropertySpec socket_props[] = {
     {"writeable", SOCKET_WRITEABLE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(socket_getProperty), JSOP_NULLWRAPPER},
     {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
 
-#endif

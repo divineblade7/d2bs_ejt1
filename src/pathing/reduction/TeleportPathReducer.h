@@ -21,8 +21,6 @@ class TeleportPathReducer : public PathReducer {
   Point bestPtSoFar;
 
  public:
-  TeleportPathReducer(const TeleportPathReducer&);
-  TeleportPathReducer& operator=(const TeleportPathReducer&);
   TeleportPathReducer(ActMap* m, Distance d, int _range = 20) : map(m), distance(d), range(_range * 10) {
     distanceList.clear();
     justExpand = false;
@@ -37,6 +35,9 @@ class TeleportPathReducer : public PathReducer {
       }
     }
   }
+
+  TeleportPathReducer(const TeleportPathReducer&) = delete;
+  TeleportPathReducer& operator=(const TeleportPathReducer&) = delete;
 
   void Reduce(PointList const& in, PointList& out, bool) {
     PointList::const_iterator it = in.begin(), end = in.end();

@@ -1,5 +1,4 @@
-#ifndef __FILETOOLS_H__
-#define __FILETOOLS_H__
+#pragma once
 
 #include "script/js32.h"
 
@@ -38,5 +37,3 @@ static JSFunctionSpec filetools_s_methods[] = {JS_FS("remove", filetools_remove,
                                                JS_FS("writeText", filetools_writeText, 2, FUNCTION_FLAGS),
                                                JS_FS("appendText", filetools_appendText, 2, FUNCTION_FLAGS),
                                                JS_FS_END};
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef AREA_H
-#define AREA_H
+#pragma once
 
 #include "script/js32.h"
 
@@ -30,5 +29,3 @@ struct myArea {
   DWORD Exits;
   JSObject* ExitArray;
 };
-
-#endif

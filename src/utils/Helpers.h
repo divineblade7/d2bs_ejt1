@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef __HELPERS_H__
-#define __HELPERS_H__
-
 #include "script/engine/Script.h"
 
 bool GetStackWalk();
@@ -29,4 +26,3 @@ void MenuEntered(bool beginStarter);
 char* DllLoadAddrStrs();
 LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* ptrs);
 int __cdecl _purecall(void);
-#endif

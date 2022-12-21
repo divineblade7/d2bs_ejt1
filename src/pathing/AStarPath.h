@@ -152,11 +152,12 @@ class AStarPath : public MapPath {
   }
 
  public:
-  AStarPath(const AStarPath&);
-  AStarPath& operator=(const AStarPath&);
   AStarPath(Map* _map, Reducing::PathReducer* _reducer, Estimator _estimate = EstimateDistance,
             Distance _distance = DiagonalShortcut)
       : map(_map), reducer(_reducer), estimate(_estimate), distance(_distance), alloc(Allocator()) {}
+
+  AStarPath(const AStarPath&) = delete;
+  AStarPath& operator=(const AStarPath&) = delete;
 
   inline Allocator const& GetAllocator() {
     return alloc;

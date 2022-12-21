@@ -1,5 +1,4 @@
-#ifndef ROOM_H
-#define ROOM_H
+#pragma once
 
 #include "core/Room.h"
 #include "script/js32.h"
@@ -55,4 +54,3 @@ static JSFunctionSpec room_methods[] = {JS_FS("getNext", room_getNext, 0, FUNCTI
                                         JS_FS("unitInRoom", room_unitInRoom, 1, FUNCTION_FLAGS),
                                         JS_FS_END};
 
-#endif

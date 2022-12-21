@@ -9,9 +9,11 @@ namespace Reducing {
 class PathReducer {
  public:
   PathReducer() {}
-  PathReducer(const PathReducer&);
   virtual ~PathReducer() {}
-  PathReducer& operator=(const PathReducer&);
+
+  PathReducer(const PathReducer&) = delete;
+  PathReducer& operator=(const PathReducer&) = delete;
+
   virtual void Reduce(PointList const& in, PointList& out, bool abs) = 0;
   virtual void GetOpenNodes(Point const& center, PointList& out, Point const& endpoint) = 0;
   virtual bool Reject(Point const& pt, bool abs) = 0;

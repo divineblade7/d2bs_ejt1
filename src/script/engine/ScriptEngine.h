@@ -1,6 +1,4 @@
 #pragma once
-#ifndef __SCRIPTENGINE_H__
-#define __SCRIPTENGINE_H__
 
 #include "script/engine/AutoRoot.h"
 #include "script/engine/Script.h"
@@ -19,8 +17,10 @@ enum EngineState { Starting, Running, Paused, Stopping, Stopped };
 class ScriptEngine {
   ScriptEngine(void){};
   virtual ~ScriptEngine(void) = 0;
-  ScriptEngine(const ScriptEngine&);
-  ScriptEngine& operator=(const ScriptEngine&);
+
+  ScriptEngine(const ScriptEngine&) = delete;
+  ScriptEngine& operator=(const ScriptEngine&) = delete;
+
   static JSRuntime* runtime;
   static JSContext* context;
   static Script* console;
@@ -86,4 +86,3 @@ JSBool contextCallback(JSContext* cx, uint contextOp);
 void reportError(JSContext* cx, const char* message, JSErrorReport* report);
 bool ExecScriptEvent(Event* evt, bool clearList);
 void CALLBACK EventTimerProc(LPVOID lpArg, DWORD dwTimerLowValue, DWORD dwTimerHighValue);
-#endif

@@ -18,8 +18,6 @@ class JSPathReducer : public PathReducer {
   jsval reject, reduce, mutate;
 
  public:
-  JSPathReducer(const JSPathReducer&);
-  JSPathReducer& operator=(const JSPathReducer&);
   JSPathReducer(ActMap*, JSContext* cx, JSObject*, jsval _reject, jsval _reduce, jsval _mutate)
       : reject(_reject), reduce(_reduce), mutate(_mutate) {
     JS_AddRoot(cx, &reject);
@@ -31,6 +29,9 @@ class JSPathReducer : public PathReducer {
     JS_RemoveRoot(cx, &reduce);
     JS_RemoveRoot(cx, &mutate);
   }
+
+  JSPathReducer(const JSPathReducer&) = delete;
+  JSPathReducer& operator=(const JSPathReducer&) = delete;
 
   void Reduce(PointList const& in, PointList& out, bool) {
     // create the initial array to pass to the js function

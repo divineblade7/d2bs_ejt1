@@ -14,8 +14,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-#ifndef _COMMANDLINE_H
-#define _COMMANDLINE_H
+#pragma once
 
 #include <utils/ArrayEx.h>
 
@@ -29,5 +28,3 @@ void ParseCommandLine(LPWSTR Command);
 sLine* GetCommand(LPCWSTR Param);
 
 extern CArrayEx<sLine*, sLine*> aCommand;
-
-#endif

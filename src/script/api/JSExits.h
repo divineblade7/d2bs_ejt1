@@ -1,5 +1,4 @@
-#ifndef EXITS_H
-#define EXITS_H
+#pragma once
 
 #include "script/js32.h"
 
@@ -29,5 +28,3 @@ struct myExit {
   DWORD tileid;
   DWORD level;
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef _OFFSET_H
-#define _OFFSET_H
+#pragma once
 
 #include <Windows.h>
 
@@ -33,5 +32,3 @@ void RemovePatches();
 void InstallPatches();
 void InstallConditional();
 void RemoveConditional();
-
-#endif

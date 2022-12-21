@@ -40,7 +40,7 @@ void unit_finalize(JSFreeOp* fop, JSObject* obj);
 JSAPI_PROP(unit_getProperty);
 JSAPI_STRICT_PROP(unit_setProperty);
 
-JSBool unit_equal(JSContext* cx, JSObject* obj, jsval v, JSBool* bp);
+//JSBool unit_equal(JSContext* cx, JSObject* obj, jsval v, JSBool* bp);
 
 struct myUnit {
   DWORD _dwPrivateType;

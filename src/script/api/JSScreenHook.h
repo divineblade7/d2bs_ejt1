@@ -1,5 +1,4 @@
-#ifndef __JSSCREENHOOK_H__
-#define __JSSCREENHOOK_H__
+#pragma once
 
 #include "script/js32.h"
 
@@ -177,5 +176,3 @@ static JSFunctionSpec image_methods[] = {JS_FS("remove", hook_remove, 0, FUNCTIO
 
 JSAPI_FUNC(screenToAutomap);
 JSAPI_FUNC(automapToScreen);
-
-#endif

@@ -1,6 +1,4 @@
 #pragma once
-#ifndef __JSGAME_H__
-#define __JSGAME_H__
 
 #include "script/api/JSGlobalClasses.h"
 #include "script/js32.h"
@@ -47,5 +45,3 @@ JSAPI_FUNC(my_getBaseStat);
 JSAPI_FUNC(my_getPlayerFlag);
 JSAPI_FUNC(my_moveNPC);
 JSAPI_FUNC(my_revealLevel);
-
-#endif

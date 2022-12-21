@@ -1,5 +1,4 @@
-#ifndef D2INTERCEPTS_H
-#define D2INTERCEPTS_H
+#pragma once
 
 #include "diablo/D2Structs.h"
 
@@ -23,5 +22,3 @@ void ChatPacketRecv_Interception();
 void AddUnit_Intercept(UnitAny* lpUnit);
 void RemoveUnit_Intercept(UnitAny* lpUnit);
 int WINAPI LogMessageBoxA_Intercept(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType);
-
-#endif

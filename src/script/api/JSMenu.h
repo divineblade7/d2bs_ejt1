@@ -1,6 +1,4 @@
 #pragma once
-#ifndef __JSMENU_H__
-#define __JSMENU_H__
 
 #include "script/js32.h"
 
@@ -14,4 +12,3 @@ JSAPI_FUNC(my_addProfile);
 JSAPI_FUNC(my_getOOGLocation);
 JSAPI_FUNC(my_createCharacter);
 
-#endif

@@ -1,5 +1,4 @@
-#ifndef JSPROFILE_H
-#define JSPROFILE_H
+#pragma once
 
 #include "core/Profile.h"
 #include "script/js32.h"
@@ -59,4 +58,3 @@ static JSPropertySpec profileType_props[] = {
      JSOP_NULLWRAPPER},
     {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
 
-#endif

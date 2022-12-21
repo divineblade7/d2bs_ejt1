@@ -1,6 +1,4 @@
 #pragma once
-#ifndef __CONSOLE_H__
-#define __CONSOLE_H__
 
 #include "D2BS.h"
 
@@ -51,5 +49,3 @@ class Console {
   static void Clear(void);
   static void Draw(void);
 };
-
-#endif

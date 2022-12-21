@@ -11,9 +11,11 @@ class NoPathReducer : public PathReducer {
   ActMap* map;
 
  public:
-  NoPathReducer(const NoPathReducer&);
-  NoPathReducer& operator=(const NoPathReducer&);
   NoPathReducer(ActMap* map_) : map(map_) {}
+
+  NoPathReducer(const NoPathReducer&) = delete;
+  NoPathReducer& operator=(const NoPathReducer&) = delete;
+
   // the path is not reduced at all
   inline void Reduce(PointList const& in, PointList& out, bool) {
     out = in;

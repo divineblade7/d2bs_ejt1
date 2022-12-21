@@ -1,5 +1,6 @@
-#pragma comment(lib, "psapi.lib")  // Added to support GetProcessMemoryInfo()
 #pragma once
+
+#pragma comment(lib, "psapi.lib")  // Added to support GetProcessMemoryInfo()
 
 #ifndef XP_WIN
 #define XP_WIN
@@ -77,8 +78,6 @@ struct JSModuleSpec {
 
 class JSAutoRoot {
  private:
-  JSAutoRoot(const JSAutoRoot&);
-  JSAutoRoot& operator=(const JSAutoRoot&);
 
   JSContext* cx;
   jsval* ref;
@@ -92,6 +91,10 @@ class JSAutoRoot {
     JS_RemoveValueRoot(cx, ref);
     delete ref;
   }
+
+  JSAutoRoot(const JSAutoRoot&) = delete;
+  JSAutoRoot& operator=(const JSAutoRoot&) = delete;
+
   jsval* get() {
     return ref;
   }
@@ -129,10 +132,10 @@ JSScript* JS_CompileFile(JSContext* cx, JSObject* globalObject, std::wstring fil
   }
 
 // EXPORT JSBool JS_ThrowError(JSContext* cx, const char* message, ...);
-EXPORT void JS_DefineClasses(JSContext* cx, JSObject* obj, JSClassSpec* classes);
-EXPORT JSObject* JS_GetProtoForClass(JSContext* cx, JSClass* classp);
-EXPORT JSObject* JS_NewObjectWithProto(JSContext* cx, JSObject* obj, JSClassSpec* classp, JSClassSpec* proto,
-                                       JSObject* parent);
+//EXPORT void JS_DefineClasses(JSContext* cx, JSObject* obj, JSClassSpec* classes);
+//EXPORT JSObject* JS_GetProtoForClass(JSContext* cx, JSClass* classp);
+//EXPORT JSObject* JS_NewObjectWithProto(JSContext* cx, JSObject* obj, JSClassSpec* classp, JSClassSpec* proto,
+//                                       JSObject* parent);
 
 #define JSPROP_DEFAULT JSPROP_ENUMERATE | JSPROP_PERMANENT
 #define JSPROP_STATIC JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY

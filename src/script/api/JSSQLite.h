@@ -1,5 +1,4 @@
-#ifndef SQLITE_H
-#define SQLITE_H
+#pragma once
 
 #include "script/api/JSGlobalClasses.h"
 #include "script/js32.h"
@@ -15,7 +14,7 @@ JSAPI_FUNC(sqlite_close);
 JSAPI_FUNC(sqlite_open);
 JSAPI_PROP(sqlite_getProperty);
 void sqlite_finalize(JSFreeOp* fop, JSObject* obj);
-JSBool sqlite_equal(JSContext* cx, JSObject* obj, jsval v, JSBool* bp);
+//JSBool sqlite_equal(JSContext* cx, JSObject* obj, jsval v, JSBool* bp);
 
 CLASS_CTOR(sqlite_stmt);
 
@@ -65,4 +64,3 @@ static JSPropertySpec sqlite_stmt_props[] = {
     {"ready", SQLITE_STMT_READY, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(sqlite_stmt_getProperty), JSOP_NULLWRAPPER},
     {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
 
-#endif SQLITE_H

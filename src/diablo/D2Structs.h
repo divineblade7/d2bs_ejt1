@@ -1,6 +1,4 @@
 #pragma once
-#ifndef _D2STRUCTS_H
-#define _D2STRUCTS_H
 
 #include <windows.h>
 
@@ -799,5 +797,3 @@ struct TransactionDialogsInfo_t {
 
 #pragma warning(pop)
 #pragma optimize("", on)
-
-#endif

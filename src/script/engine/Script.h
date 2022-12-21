@@ -10,6 +10,7 @@
 #include <map>
 #include <string>
 #include <windows.h>
+
 enum ScriptState { InGame, OutOfGame, Command };
 
 class Script;
@@ -128,9 +129,10 @@ class Script {
 
   // Script(const char* file, ScriptState state, uint argc = 0, JSAutoStructuredCloneBuffer** argv = NULL);
   Script(const wchar_t* file, ScriptState state, uint argc = 0, JSAutoStructuredCloneBuffer** argv = NULL);
-  Script(const Script&);
-  Script& operator=(const Script&);
   ~Script(void);
+
+  Script(const Script&) = delete;
+  Script& operator=(const Script&) = delete;
 
  public:
   DWORD threadId;

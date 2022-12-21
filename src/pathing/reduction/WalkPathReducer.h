@@ -67,9 +67,10 @@ class WalkPathReducer : public PathReducer {
   */
 
  public:
-  WalkPathReducer(const WalkPathReducer&);
-  WalkPathReducer& operator=(const WalkPathReducer&);
   WalkPathReducer(ActMap* m, Distance d, int _range = 20) : map(m), distance(d), range(_range * 10) {}
+
+  WalkPathReducer(const WalkPathReducer&) = delete;
+  WalkPathReducer& operator=(const WalkPathReducer&) = delete;
 
   /*
   void Reduce(PointList const & in, PointList& out, bool abs)

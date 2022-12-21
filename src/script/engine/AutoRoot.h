@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef __AUTOROOT_H__
-#define __AUTOROOT_H__
-
 #include "script/js32.h"
 
 class AutoRoot {
@@ -10,14 +7,16 @@ class AutoRoot {
   jsval var;
   int count;
   JSContext* cx;
-  AutoRoot(const AutoRoot&);
-  AutoRoot& operator=(const AutoRoot&);
 
  public:
   AutoRoot() : var(JSVAL_NULL), count(0) {}
   AutoRoot(JSContext* cx, jsval var);
   AutoRoot(jsval var);
   ~AutoRoot();
+
+  AutoRoot(const AutoRoot&) = delete;
+  AutoRoot& operator=(const AutoRoot&) = delete;
+
   void Take();
   void Release();
   jsval* value() {
@@ -30,5 +29,3 @@ class AutoRoot {
     return value() == other.value();
   }
 };
-
-#endif

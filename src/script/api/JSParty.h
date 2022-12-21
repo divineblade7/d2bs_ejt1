@@ -1,5 +1,4 @@
-#ifndef PARTY_H
-#define PARTY_H
+#pragma once
 
 #include "script/js32.h"
 
@@ -37,5 +36,3 @@ static JSPropertySpec party_props[] = {
     {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
 
 static JSFunctionSpec party_methods[] = {JS_FS("getNext", party_getNext, 0, FUNCTION_FLAGS), JS_FS_END};
-
-#endif

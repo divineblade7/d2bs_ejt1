@@ -1,5 +1,4 @@
-#ifndef PRESETUNIT_H
-#define PRESETUNIT_H
+#pragma once
 
 #include "script/js32.h"
 
@@ -42,5 +41,3 @@ struct myPresetUnit {
   DWORD dwId;
   DWORD dwLevel;
 };
-
-#endif

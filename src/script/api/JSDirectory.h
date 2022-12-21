@@ -1,5 +1,4 @@
-#ifndef __JSDIRECTORY_H__
-#define __JSDIRECTORY_H__
+#pragma once
 
 // TODO: Rewrite this mess of crap too
 
@@ -42,5 +41,3 @@ class DirData {
     wcscpy_s(name, _MAX_FNAME, newname);
   }
 };
-
-#endif
