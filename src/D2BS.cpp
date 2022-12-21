@@ -4,18 +4,18 @@
 #include <io.h>
 #include <fcntl.h>
 
-#include "dde.h"
-#include "Offset.h"
-#include "ScriptEngine.h"
-#include "Helpers.h"
-#include "D2Handlers.h"
-#include "Console.h"
+#include "core/dde.h"
+#include "utils/Offset.h"
+#include "script/engine/ScriptEngine.h"
+#include "utils/Helpers.h"
+#include "diablo/handlers/D2Handlers.h"
+#include "utils/Console.h"
 #include "D2BS.h"
-#include "D2Ptrs.h"
-#include "CommandLine.h"
+#include "diablo/D2Ptrs.h"
+#include "utils/CommandLine.h"
 
 #ifdef _MSVC_DEBUG
-#include "D2Loader.h"
+#include "utils/D2Loader.h"
 #endif
 
 static HANDLE hD2Thread = INVALID_HANDLE_VALUE;
