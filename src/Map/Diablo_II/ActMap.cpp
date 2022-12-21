@@ -142,10 +142,12 @@ bool ActMap::isPointInRoom(const Room2* room, const Point& pt) const {
     return (nX >= room->dwPosX * 5 && nY >= room->dwPosY * 5 && nX < (room->dwPosX * 5 + room->dwSizeX * 5) && nY < (room->dwPosY * 5 + room->dwSizeY * 5));
 }
 
-bool ActMap::isPointInLevel(const Level* level, const Point& pt) const {
+bool ActMap::isPointInLevel(const Level* lvl, const Point& pt) const {
     DWORD x = pt.first;
     DWORD y = pt.second;
-    return (x >= level->dwPosX * 5 && y >= level->dwPosY * 5 && x < (level->dwPosX * 5 + level->dwSizeX * 5) && y < (level->dwPosY * 5 + level->dwSizeY * 5));
+    return (x >= lvl->dwPosX * 5 && y >= lvl->dwPosY * 5 &&
+            x < (lvl->dwPosX * 5 + lvl->dwSizeX * 5) &&
+            y < (lvl->dwPosY * 5 + lvl->dwSizeY * 5));
 }
 
 WORD ActMap::getAvoidLayerPoint(Room2* room, const Point& pt) const {
@@ -372,22 +374,22 @@ void ActMap::FindRoomLinkageExits(ExitArray& exits) const {
 
     std::pair<Point, std::pair<Point, int>> currentExit;
     std::multimap<int, std::pair<Point, std::pair<Point, int>>>::iterator it = exitMap.begin();
-    int level = 0;
+    int lvl = 0;
     double minDistance = -1, tmpDistance;
     do {
-        if (level == 0 && it == exitMap.end()) {
+        if (lvl == 0 && it == exitMap.end()) {
             break;
         }
-        if (level == 0) {
-            level = it->first;
+        if (lvl == 0) {
+            lvl = it->first;
             currentExit = it->second;
         }
-        if (it == exitMap.end() || level != it->first) {
-            exits.push_back(Exit(currentExit.second.first, level, Linkage, 0));
+        if (it == exitMap.end() || lvl != it->first) {
+            exits.push_back(Exit(currentExit.second.first, lvl, Linkage, 0));
             if (it == exitMap.end()) {
                 break;
             }
-            level = it->first;
+            lvl = it->first;
             currentExit = it->second;
             minDistance = -1;
         }
@@ -689,7 +691,7 @@ void ActMap::DumpLevel(const char* file) const {
     fprintf(f, "\n");
 
     for (int j = 0; j < width; j++) {
-        for (int i = 0; i < height; i++) {
+        for (i = 0; i < height; i++) {
             // skipping group of Avoid points at the end of row
             bool onlyAvoid = true;
             int k;

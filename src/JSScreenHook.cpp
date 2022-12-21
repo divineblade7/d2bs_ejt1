@@ -5,7 +5,7 @@
 #include "File.h"
 using namespace std;
 
-void hook_finalize(JSFreeOp* fop, JSObject* obj) {
+void hook_finalize(JSFreeOp*, JSObject* obj) {
     Genhook* hook = (Genhook*)JS_GetPrivate(obj);
     Genhook::EnterGlobalSection();
     if (hook) {
@@ -637,7 +637,7 @@ JSAPI_FUNC(image_ctor) {
     if (!hook)
         THROW_ERROR(cx, "Failed to create image object");
 
-    ImageHook* pImageHook = new ImageHook(script, hook, path, x, y, color, automap, align, state, 3);
+    ImageHook* pImageHook = new ImageHook(script, hook, path, x, y, color, automap, align, state);
 
     if (!pImageHook)
         THROW_ERROR(cx, "Failed to create ImageHook");

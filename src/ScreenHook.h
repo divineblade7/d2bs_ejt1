@@ -54,7 +54,7 @@ class Genhook {
 
   public:
     Genhook(Script* nowner, JSObject* nself, uint x, uint y, ushort nopacity, bool nisAutomap = false, Align nalign = Left, ScreenhookState ngameState = Perm);
-    ~Genhook(void);
+    virtual ~Genhook(void);
 
     static void DrawAll(ScreenhookState type);
 
@@ -243,8 +243,7 @@ class ImageHook : public Genhook {
     ImageHook& operator=(const ImageHook&);
 
   public:
-    ImageHook(Script* owner, JSObject* nself, const wchar_t* nloc, uint x, uint y, ushort ncolor, bool automap = false, Align align = Left, ScreenhookState state = Perm,
-              bool fromFile = true)
+    ImageHook(Script* owner, JSObject* nself, const wchar_t* nloc, uint x, uint y, ushort ncolor, bool automap = false, Align align = Left, ScreenhookState state = Perm)
         : Genhook(owner, nself, x, y, 0, automap, align, state), color(ncolor), image(NULL), location(NULL) {
         location = _wcsdup(nloc);
         image = LoadCellFile(location, 3);
@@ -294,7 +293,7 @@ class LineHook : public Genhook {
     void Draw(void);
 
   public:
-    bool IsInRange(int dx, int dy) {
+    bool IsInRange(int, int) {
         return false;
     }
 

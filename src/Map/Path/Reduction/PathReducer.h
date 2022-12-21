@@ -11,6 +11,7 @@ class PathReducer {
     PathReducer() {
     }
     PathReducer(const PathReducer&);
+    virtual ~PathReducer() {}
     PathReducer& operator=(const PathReducer&);
     virtual void Reduce(PointList const& in, PointList& out, bool abs) = 0;
     virtual void GetOpenNodes(Point const& center, PointList& out, Point const& endpoint) = 0;

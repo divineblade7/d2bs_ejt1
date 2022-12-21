@@ -65,14 +65,14 @@ BOOL WINAPI DllMain(HINSTANCE hDll, DWORD dwReason, LPVOID lpReserved) {
         if (GetCommand(L"-ftj"))
             Vars.bReduceFTJ = TRUE;
 
-        if (command = GetCommand(L"-d2c")) {
+        if ((command = GetCommand(L"-d2c")) != nullptr) {
             Vars.bUseRawCDKey = TRUE;
             const char* keys = UnicodeToAnsi(command->szText);
             strncat_s(Vars.szClassic, keys, strlen(keys));
             delete[] keys;
         }
 
-        if (command = GetCommand(L"-d2x")) {
+        if ((command = GetCommand(L"-d2x")) != nullptr) {
             const char* keys = UnicodeToAnsi(command->szText);
             strncat_s(Vars.szLod, keys, strlen(keys));
             delete[] keys;

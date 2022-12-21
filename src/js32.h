@@ -135,16 +135,23 @@ EXPORT JSObject* JS_NewObjectWithProto(JSContext* cx, JSObject* obj, JSClassSpec
 #define JSPROP_DEFAULT JSPROP_ENUMERATE | JSPROP_PERMANENT
 #define JSPROP_STATIC JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY
 
-#define JSAPI_FUNC(name) JSBool name##(JSContext * cx, uint argc, jsval * vp)
+#define JSAPI_FUNC(name)                                                     \
+  JSBool name##([[maybe_unused]] JSContext * cx, [[maybe_unused]] uint argc, \
+                [[maybe_unused]] jsval * vp)
 #define FUNCTION_FLAGS JSFUN_STUB_GSOPS
 //#define JSAPI_EMPTY_CTOR(name) JSBool name##(JSContext* cx, uint argc, jsval* vp) { return THROW_ERROR(cx, "Invalid Operation");}
 #define EMPTY_CTOR(name)                                                                                                                                                 \
-    JSBool name##_ctor(JSContext* cx, uint argc, jsval* vp) {                                                                                                            \
+    JSBool name##_ctor(JSContext* cx, uint, jsval*) {                                                                                                            \
         THROW_ERROR(cx, "Invalid Operation");                                                                                                                            \
     }
 
 #define JSAPI_PROP(name) JSBool name##(JSContext * cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp)
-#define JSAPI_STRICT_PROP(name) JSBool name##(JSContext * cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp)
+#define JSAPI_STRICT_PROP(name)                                      \
+  JSBool name##([[maybe_unused]] JSContext * cx,                    \
+                [[maybe_unused]] JSHandleObject obj, \
+                [[maybe_unused]] JSHandleId id,      \
+                [[maybe_unused]] JSBool strict,       \
+      [[maybe_unused]] JSMutableHandleValue vp)
 //#define JSAPI_FUNC(fName) JSBool fName (JSContext *cx, JSObject *obj, uint argc, jsval *rval, jsval *rval)
 //#define JSAPI_PROP(fName) JSBool fName (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 

@@ -174,7 +174,7 @@ JSAPI_FUNC(my_getDialogLines) {
     unsigned int i;
     JSObject* pReturnArray;
     JSObject* line;
-    jsval js_text, js_selectable, js_line, js_handler, js_addr;
+    jsval js_text, js_selectable, js_line, js_addr;
     JSFunction* jsf_handler;
     JSObject* jso_addr;
 
@@ -1034,7 +1034,7 @@ JSAPI_FUNC(my_playSound) {
         return JS_TRUE;
     }
 
-    jsint nSoundId = JSVAL_TO_INT(JS_ARGV(cx, vp)[0]);
+    //jsint nSoundId = JSVAL_TO_INT(JS_ARGV(cx, vp)[0]);
     // D2CLIENT_PlaySound(nSoundId);
 
     JS_SET_RVAL(cx, vp, JSVAL_TRUE);

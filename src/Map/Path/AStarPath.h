@@ -47,7 +47,7 @@ inline bool __fastcall checkFlag(int flag) {
     return (/*((ActMap::Avoid & flag) == ActMap::Avoid) |*/ (((ActMap::BlockWalk | ActMap::BlockPlayer) & flag) > 0));
 }
 
-inline int __fastcall EstimateDistance(const Map* m, const Point& point, const Point& end) {
+inline int __fastcall EstimateDistance(const Map*, const Point& point, const Point& end) {
     return DiagonalShortcut(point, end);
 }
 
@@ -128,9 +128,9 @@ template <class Allocator = std::allocator<Node>> class AStarPath : public MapPa
             if (Vars.bQuitting)
                 return;
 
-            bool result = closed.insert(current->point).second;
-            assert(result == true);
-            (void)(result); // shut up compiler about unused variable warning
+            bool _result = closed.insert(current->point).second;
+            assert(_result == true);
+            (void)(_result); // shut up compiler about unused variable warning
 
             // getOpenNodes should be in map along with a filter
             reducer->GetOpenNodes(current->point, newNodes, end);
@@ -169,11 +169,11 @@ template <class Allocator = std::allocator<Node>> class AStarPath : public MapPa
     inline Allocator const& GetAllocator() {
         return alloc;
     }
-    inline void SetMap(Map* map) {
-        this->map = map;
+    inline void SetMap(Map* _map) {
+        this->map = _map;
     }
-    inline void SetPathReducer(Reducing::PathReducer* reducer) {
-        this->reducer = reducer;
+    inline void SetPathReducer(Reducing::PathReducer* _reducer) {
+        this->reducer = _reducer;
     }
 
     void GetPath(Point const& _start, Point const& _end, PointList& list, bool abs = true) {
