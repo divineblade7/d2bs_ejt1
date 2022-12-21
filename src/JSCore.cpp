@@ -403,16 +403,19 @@ JSAPI_FUNC(my_sendCopyData) {
     }
 
     // if data is NULL, strlen crashes
-    if (data == NULL)
-        data = "";
+    if (data) {
+        COPYDATASTRUCT aCopy = {nModeId, strlen(data) + 1, data};
 
-    COPYDATASTRUCT aCopy = {nModeId, strlen(data) + 1, data};
+        // bob20	 jsrefcount depth = JS_SuspendRequest(cx);
+        JS_SET_RVAL(
+            cx, vp,
+            INT_TO_JSVAL(SendMessage(hWnd, WM_COPYDATA, (WPARAM)D2GFX_GetHwnd(),
+                                     (LPARAM)&aCopy)));
+        // bob20	 JS_ResumeRequest(cx, depth);
 
-    // bob20	 jsrefcount depth = JS_SuspendRequest(cx);
-    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(SendMessage(hWnd, WM_COPYDATA, (WPARAM)D2GFX_GetHwnd(), (LPARAM)&aCopy)));
-    // bob20	 JS_ResumeRequest(cx, depth);
+        JS_free(cx, data);
+    }
 
-    JS_free(cx, data);
     return JS_TRUE;
 }
 
