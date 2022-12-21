@@ -59,7 +59,8 @@ set(D2BS_SRCS
   src/StackWalker.cpp
   src/stringhash.cpp
   src/sqlite3.c
-  src/Unit.cpp)
+  src/Unit.cpp
+  src/version.rc)
 
 add_library(${PROJECT_NAME} SHARED ${D2BS_SRCS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
