@@ -7,8 +7,6 @@
 
 #include <vector>
 
-using namespace std;
-
 bool Genhook::init = false;
 HookList Genhook::visible = HookList();
 HookList Genhook::invisible = HookList();

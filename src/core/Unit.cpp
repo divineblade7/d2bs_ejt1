@@ -8,8 +8,6 @@
 
 #define HAS_BIT(value, bit) ((((value) >> (bit)) & 0x1) == 0x1)
 
-using namespace std;
-
 // TODO: If UnitId is the unique id of the unit, we can just look up that
 // location in the table
 static UnitAny* GetUnitFromTables(UnitHashTable* unitTables, DWORD dwTypeLow, DWORD dwTypeHigh, char* szName,

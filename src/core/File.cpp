@@ -25,11 +25,9 @@
 #include <cstring>
 #include <string>
 
-using namespace std;
-
 char* readLine(FILE* fptr, bool locking) {
   if (feof(fptr)) return NULL;
-  string buffer;
+  std::string buffer;
   char c = 0;
   // grab all the characters in this line
   do {

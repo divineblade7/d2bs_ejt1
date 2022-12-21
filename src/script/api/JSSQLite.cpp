@@ -22,8 +22,6 @@
 
 #include <set>
 
-using namespace std;
-
 struct SqliteDB;
 struct DBStmt;
 typedef std::set<DBStmt*> StmtList;

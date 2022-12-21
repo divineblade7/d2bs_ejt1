@@ -9,6 +9,8 @@ add_subdirectory(vendor/mozjs)
 
 project(d2bs)
 
+enable_language(CXX ASM_MASM)
+
 set(D2BS_SRCS
   src/core/ActMap.cpp
   src/core/Control.cpp

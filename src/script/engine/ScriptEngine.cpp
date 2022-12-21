@@ -15,7 +15,6 @@
 #include <assert.h>
 #include <vector>
 
-using namespace std;
 Script* ScriptEngine::console = NULL;
 JSRuntime* ScriptEngine::runtime = NULL;
 ScriptMap ScriptEngine::scripts = ScriptMap();
@@ -797,7 +796,7 @@ int ScriptEngine::AddDelayedEvent(Event* evt, int freq) {
 }
 
 void ScriptEngine::RemoveDelayedEvent(int key) {
-  list<Event*>::iterator it;
+  std::list<Event*>::iterator it;
   it = DelayedExecList.begin();
   while (it != DelayedExecList.end()) {
     if (*(DWORD*)(*it)->arg1 == static_cast<DWORD>(key)) {

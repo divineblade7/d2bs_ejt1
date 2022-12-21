@@ -12,8 +12,7 @@
 #include <string>
 
 bool SplitLines(const std::wstring& str, size_t maxWidth, const wchar_t delim, std::list<std::wstring>& lst) {
-  using namespace std;
-  wstring tmp(str);
+  std::wstring tmp(str);
 
   if (str.length() < 1 || maxWidth < 40) return false;
 
@@ -24,7 +23,7 @@ bool SplitLines(const std::wstring& str, size_t maxWidth, const wchar_t delim, s
   }
 
   int byteIdx = MaxLineFit(str, 0, str.length() + 1, maxWidth);
-  wstring ts = str.substr(0, byteIdx);
+  std::wstring ts = str.substr(0, byteIdx);
   // uint cmdsize = CalculateTextLen(ts.c_str(), Vars.dwConsoleFont).x;
   // int numchars = ts.length();
   // int sizechar = (cmdsize + numchars - 1) / numchars;
@@ -32,7 +31,7 @@ bool SplitLines(const std::wstring& str, size_t maxWidth, const wchar_t delim, s
 
   // byteIdx-1 since std::string::npos indexes from 0
   int pos = tmp.find_last_of(delim, byteIdx - 1);
-  if (!pos || pos == string::npos) {
+  if (!pos || pos == std::string::npos) {
     // Target delimiter was not found, breaking at byteIdx
     ts = tmp.substr(0, byteIdx);
     lst.push_back(ts);

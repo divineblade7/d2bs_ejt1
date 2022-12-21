@@ -20,8 +20,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
-
 bool __fastcall UpdatePlayerGid(Script* script, void*, uint) {
   script->UpdatePlayerGid();
   return true;
@@ -352,9 +350,9 @@ void FlushPrint() {
     std::wstring str = clean.front();
 
     // Break into lines through \n.
-    list<wstring> lines;
-    wstring temp;
-    wstringstream ss(str);
+    std::list<std::wstring> lines;
+    std::wstring temp;
+    std::wstringstream ss(str);
 
     if (Vars.bUseGamePrint && ClientState() == ClientStateInGame) {
       while (getline(ss, temp)) {
@@ -363,7 +361,7 @@ void FlushPrint() {
       }
 
       // Convert and send every line.
-      for (list<wstring>::iterator it = lines.begin(); it != lines.end(); ++it) {
+      for (std::list<std::wstring>::iterator it = lines.begin(); it != lines.end(); ++it) {
         D2CLIENT_PrintGameString((wchar_t*)it->c_str(), 0);
       }
       /*} else if (Vars.bUseGamePrint && ClientState() == ClientStateMenu && findControl(4, (const wchar_t*)NULL, -1,

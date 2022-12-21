@@ -12,8 +12,6 @@
 #include "utils/Events.h"
 #include "utils/Helpers.h"
 
-using namespace std;
-
 Variables Vars = {};
 
 DWORD ReassignPlayerHandler(BYTE* pPacket, [[maybe_unused]] DWORD dwSize) {

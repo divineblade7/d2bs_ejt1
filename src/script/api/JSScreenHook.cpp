@@ -5,8 +5,6 @@
 #include "core/ScreenHook.h"
 #include "script/engine/Script.h"
 
-using namespace std;
-
 void hook_finalize(JSFreeOp*, JSObject* obj) {
   Genhook* hook = (Genhook*)JS_GetPrivate(obj);
   Genhook::EnterGlobalSection();

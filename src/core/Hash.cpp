@@ -4,8 +4,6 @@
 
 #include <cstdio>
 
-using namespace std;
-
 char* HashString(char* dataIn, ALG_ID algo) {
   // set up the crypto environment
   HCRYPTPROV provider;
