@@ -265,3 +265,9 @@ bool isValidPath(const wchar_t* name) {
 
     return (!wcsstr(name, L"..\\") && !wcsstr(name, L"../") && (wcscspn(name, L"\":?*<>|") == wcslen(name)));
 }
+
+bool is_bom(const char* str) {
+    return str[0] == static_cast<char>(0xEF) &&
+           str[1] == static_cast<char>(0xBB) &&
+           str[2] == static_cast<char>(0xBF);
+}

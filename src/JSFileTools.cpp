@@ -171,7 +171,7 @@ JSAPI_FUNC(filetools_readText) {
     }
 
     int offset = 0;
-    if (readCount > 2 && contents[0] == (char)0xEF && contents[1] == (char)0xBB && contents[2] == (char)0xBF) { // skip BOM
+    if (readCount > 2 && is_bom(contents)) { // skip BOM
         offset = 3;
     }
 

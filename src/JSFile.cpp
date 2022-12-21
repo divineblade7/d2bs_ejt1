@@ -341,7 +341,7 @@ JSAPI_FUNC(file_read) {
                 THROW_ERROR(cx, "Read failed");
             }
 
-            if (begin && size > 2 && result[0] == (char)0xEF && result[1] == (char)0xBB && result[2] == (char)0xBF) { // skip BOM
+            if (begin && size > 2 && is_bom(result)) { // skip BOM
                 offset = 3;
             }
             wchar_t* wresult = AnsiToUnicode(result + offset);
@@ -372,7 +372,7 @@ JSAPI_FUNC(file_readLine) {
         if (!line)
             THROW_ERROR(cx, "Read failed");
 
-        if (begin && strlen(line) > 2 && line[0] == (char)0xEF && line[1] == (char)0xBB && line[2] == (char)0xBF) { // skip BOM
+        if (begin && strlen(line) > 2 && is_bom(line)) {  // skip BOM
             offset = 3;
         }
 
@@ -408,7 +408,7 @@ JSAPI_FUNC(file_readAllLines) {
             if (!line)
                 THROW_ERROR(cx, "Read failed");
 
-            if (begin && strlen(line) > 2 && line[0] == (char)0xEF && line[1] == (char)0xBB && line[2] == (char)0xBF) { // skip BOM
+            if (begin && strlen(line) > 2 && is_bom(line)) {  // skip BOM
                 offset = 3;
             }
 
@@ -468,7 +468,7 @@ JSAPI_FUNC(file_readAll) {
             THROW_ERROR(cx, "Read failed");
         }
         JS_BeginRequest(cx);
-        if (begin && count > 2 && contents[0] == (char)0xEF && contents[1] == (char)0xBB && contents[2] == (char)0xBF) { // skip BOM
+        if (begin && count > 2 && is_bom(contents)) {  // skip BOM
             offset = 3;
         }
         wchar_t* wcontents = AnsiToUnicode(contents + offset);
