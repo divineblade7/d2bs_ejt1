@@ -22,10 +22,15 @@ struct HookClickHelper {
     POINT point;
 };
 
-typedef bool(__fastcall* HookCallback)(Genhook*, void*, uint);
+typedef bool(* HookCallback)(Genhook*, void*, uint);
 
 enum Align { Left, Right, Center };
 enum ScreenhookState { OOG, IG, Perm };
+
+bool DrawHook(Genhook* hook, void* argv, uint argc);
+bool CleanHook(Genhook* hook, void* argv, uint argc);
+bool ClickHook(Genhook* hook, void* argv, uint argc);
+bool HoverHook(Genhook* hook, void* argv, uint argc);
 
 class Genhook {
   private:
@@ -48,13 +53,8 @@ class Genhook {
     Genhook& operator=(const Genhook&);
 
   public:
-    Genhook::Genhook(Script* nowner, JSObject* nself, uint x, uint y, ushort nopacity, bool nisAutomap = false, Align nalign = Left, ScreenhookState ngameState = Perm);
+    Genhook(Script* nowner, JSObject* nself, uint x, uint y, ushort nopacity, bool nisAutomap = false, Align nalign = Left, ScreenhookState ngameState = Perm);
     ~Genhook(void);
-
-    friend bool __fastcall DrawHook(Genhook* hook, void* argv, uint argc);
-    friend bool __fastcall CleanHook(Genhook* hook, void* argv, uint argc);
-    friend bool __fastcall ClickHook(Genhook* hook, void* argv, uint argc);
-    friend bool __fastcall HoverHook(Genhook* hook, void* argv, uint argc);
 
     static void DrawAll(ScreenhookState type);
 
@@ -71,11 +71,12 @@ class Genhook {
         init = false;
         DeleteCriticalSection(&globalSection);
     }
-
-  protected:
     virtual void Draw(void) = 0;
 
   public:
+    Script* getOwner() {
+        return owner;
+    }
     bool Click(int button, POINT* loc);
     void Hover(POINT* loc);
 

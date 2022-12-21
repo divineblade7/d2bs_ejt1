@@ -25,26 +25,26 @@ bool zOrderSort(Genhook* first, Genhook* second) {
     return first->GetZOrder() < second->GetZOrder();
 }
 
-bool __fastcall HoverHook(Genhook* hook, void* argv, uint argc) {
+bool HoverHook(Genhook* hook, void* argv, uint argc) {
     HookClickHelper* helper = (HookClickHelper*)argv;
     hook->Hover(&helper->point);
     return true;
 }
 
-bool __fastcall ClickHook(Genhook* hook, void* argv, uint argc) {
+bool ClickHook(Genhook* hook, void* argv, uint argc) {
     HookClickHelper* helper = (HookClickHelper*)argv;
     return hook->Click(helper->button, &helper->point);
 }
 
-bool __fastcall DrawHook(Genhook* hook, void* argv, uint argc) {
+bool DrawHook(Genhook* hook, void* argv, uint argc) {
     if ((hook->GetGameState() == (ScreenhookState)(int)argv || hook->GetGameState() == Perm) &&
         (!hook->GetIsAutomap() || (hook->GetIsAutomap() && *p_D2CLIENT_AutomapOn)))
         hook->Draw();
     return true;
 }
 
-bool __fastcall CleanHook(Genhook* hook, void* argv, uint argc) {
-    if (hook->owner == (Script*)argv)
+bool CleanHook(Genhook* hook, void* argv, uint argc) {
+    if (hook->getOwner() == (Script*)argv)
         hook->SetIsVisible(false);
     return true;
 }

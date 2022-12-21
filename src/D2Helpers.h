@@ -11,7 +11,7 @@ enum DistanceType { Euclidean, Chebyshev, Manhattan };
 
 enum ClientGameState { ClientStateNull, ClientStateMenu, ClientStateInGame, ClientStateBusy };
 
-void Log(wchar_t* szFormat, ...);
+void Log(const wchar_t* szFormat, ...);
 void LogNoFormat(const wchar_t* szString);
 
 ClientGameState ClientState(void);
