@@ -128,12 +128,13 @@ bool writeValue(FILE* fptr, JSContext* cx, jsval value, bool isBinary, bool lock
     case JSTYPE_BOOLEAN:
         if (!isBinary) {
             bval = !!JSVAL_TO_BOOLEAN(value);
-            str = bval ? "true" : "false";
+            const char* boolstr = bval ? "true" : "false";
             if (locking)
-                result = fwrite(str, sizeof(char), strlen(str), fptr);
+                result = fwrite(boolstr, sizeof(char), strlen(boolstr), fptr);
             else
-                result = _fwrite_nolock(str, sizeof(char), strlen(str), fptr);
-            return (int)strlen(str) == result;
+                result = _fwrite_nolock(boolstr, sizeof(char), strlen(boolstr),
+                                        fptr);
+            return (int)strlen(boolstr) == result;
         } else {
             bval = !!JSVAL_TO_BOOLEAN(value);
             if (locking)

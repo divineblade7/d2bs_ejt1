@@ -419,7 +419,8 @@ JSAPI_FUNC(my_sendCopyData) {
 JSAPI_FUNC(my_sendDDE) {
     JS_SET_RVAL(cx, vp, JSVAL_FALSE);
     jsint mode;
-    char *pszDDEServer = "\"\"", *pszTopic = "\"\"", *pszItem = "\"\"", *pszData = "\"\"";
+    char *pszDDEServer = nullptr, *pszTopic = nullptr, *pszItem = nullptr,
+               *pszData = nullptr;
     JS_BeginRequest(cx);
 
     if (JSVAL_IS_INT(JS_ARGV(cx, vp)[0]))
@@ -439,7 +440,9 @@ JSAPI_FUNC(my_sendDDE) {
 
     JS_EndRequest(cx);
     char buffer[255] = "";
-    BOOL result = SendDDE(mode, pszDDEServer, pszTopic, pszItem, pszData, (char**)&buffer, sizeof(buffer));
+    BOOL result = SendDDE(mode, pszDDEServer ? pszDDEServer : "\"\"",
+                          pszTopic ? pszTopic : "\"\"", pszItem ? pszTopic : "\"\"",
+                pszData ? pszTopic : "\"\"", (char**)&buffer, sizeof(buffer));
 
     JS_free(cx, pszDDEServer);
     JS_free(cx, pszTopic);
