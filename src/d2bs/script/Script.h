@@ -1,8 +1,9 @@
 #pragma once
 
+#include "d2bs/script/AutoRoot.h"
 #include "d2bs/script/api/JSGlobalClasses.h"
 #include "d2bs/script/api/JSUnit.h"
-#include "d2bs/script/AutoRoot.h"
+#include "d2bs/script/event.h"
 #include "d2bs/script/js32.h"
 #include "d2bs/utils/Events.h"
 
@@ -13,121 +14,10 @@
 
 enum ScriptState { InGame, OutOfGame, Command };
 
-class Script;
-
 typedef std::map<std::wstring, bool> IncludeList;
-typedef std::list<AutoRoot*> FunctionList;
-typedef std::map<std::string, FunctionList> FunctionMap;
 typedef std::list<Script*> ScriptList;
 
-struct Event {
-  Event() : count(0){};
-  Script* owner;
-  JSObject* object;
-  FunctionList functions;
-  JSAutoStructuredCloneBuffer** argv;
-  uint argc;
-  char* name;
-  void* arg1;
-  void* arg2;
-  void* arg3;
-  void* arg4;
-  void* arg5;
-  volatile long count;
-  inline void threadFinished() {
-    // clean up after both threads are done with the event
-    char* evtName = (char*)name;
-    InterlockedIncrement(&count);
-    if (count > 1) {
-      Event* evt = this;
-
-      if (strcmp(evtName, "itemaction") == 0) {
-        delete arg1;
-        free(arg2);
-        delete arg3;
-        delete arg4;
-      }
-      if (strcmp(evtName, "gameevent") == 0) {
-        delete evt->arg1;
-        delete evt->arg2;
-        delete evt->arg3;
-        free(evt->arg4);
-        free(evt->arg5);
-      }
-      if (strcmp(evtName, "copydata") == 0) {
-        delete evt->arg1;
-        free(evt->arg2);
-      }
-      if (strcmp(evtName, "chatmsg") == 0 || strcmp(evtName, "chatinput") == 0 || strcmp(evtName, "whispermsg") == 0 ||
-          strcmp(evtName, "chatmsgblocker") == 0 || strcmp(evtName, "chatinputblocker") == 0 ||
-          strcmp(evtName, "whispermsgblocker") == 0) {
-        free(evt->arg1);
-        free(evt->arg2);
-        delete evt->arg4;
-      }
-      if (strcmp(evtName, "mousemove") == 0 || strcmp(evtName, "ScreenHookHover") == 0) {
-        delete evt->arg1;
-        delete evt->arg2;
-      }
-      if (strcmp(evtName, "mouseclick") == 0) {
-        delete evt->arg1;
-        delete evt->arg2;
-        delete evt->arg3;
-        delete evt->arg4;
-      }
-      if (strcmp(evtName, "keyup") == 0 || strcmp(evtName, "keydownblocker") == 0 || strcmp(evtName, "keydown") == 0 ||
-          strcmp(evtName, "memana") == 0 || strcmp(evtName, "melife") == 0 || strcmp(evtName, "playerassign") == 0) {
-        delete evt->arg1;
-        delete evt->arg4;
-      }
-      if (strcmp(evtName, "ScreenHookClick") == 0) {
-        delete evt->arg1;
-        delete evt->arg2;
-        delete evt->arg3;
-        delete evt->arg4;
-      }
-      if (strcmp(evtName, "Command") == 0) {
-        // cleaned up in ExecScriptEvent
-      }
-      if (strcmp(evtName, "scriptmsg") == 0) {
-        delete evt->arg1;
-      }
-      if (strcmp(evtName, "gamepacket") == 0 || strcmp(evtName, "gamepacketsent") == 0 ||
-          strcmp(evtName, "realmpacket") == 0) {
-        delete[] evt->arg1;
-        delete evt->arg2;
-        delete evt->arg4;
-      }
-
-      free(evt->name);
-      delete evt;
-      Event::~Event();
-    }
-  };
-};
-
 class Script {
- private:
-  std::wstring fileName;
-  int execCount;
-  ScriptState scriptState;
-  JSContext* context;
-  JSScript* script;
-  JSRuntime* runtime;
-  myUnit* me;
-  uint argc;
-  JSAutoStructuredCloneBuffer** argv;
-
-  JSObject *globalObject, *scriptObject;
-  bool isLocked, isPaused, isReallyPaused, isAborted;
-
-  IncludeList includes, inProgress;
-
-  HANDLE threadHandle;
-
-  CRITICAL_SECTION lock;
-
-  // Script(const char* file, ScriptState state, uint argc = 0, JSAutoStructuredCloneBuffer** argv = NULL);
   Script(const wchar_t* file, ScriptState state, uint argc = 0, JSAutoStructuredCloneBuffer** argv = NULL);
   ~Script(void);
 
@@ -135,9 +25,13 @@ class Script {
   Script& operator=(const Script&) = delete;
 
  public:
-  DWORD threadId;
+  // not sure if we want to keep using friend class ~ ejt
   friend class ScriptEngine;
+
+  // private these
+  DWORD threadId;
   FunctionMap functions;
+
   void Run(void);
   void Join(void);
   void Pause(void);
@@ -207,6 +101,26 @@ class Script {
   void ClearAllEvents(void);
   void FireEvent(Event*);
   std::list<Event*> EventList;
+
+ private:
+  std::wstring fileName;
+  int execCount;
+  ScriptState scriptState;
+  JSContext* context;
+  JSScript* script;
+  JSRuntime* runtime;
+  myUnit* me;
+  uint argc;
+  JSAutoStructuredCloneBuffer** argv;
+
+  JSObject *globalObject, *scriptObject;
+  bool isLocked, isPaused, isReallyPaused, isAborted;
+
+  IncludeList includes, inProgress;
+
+  HANDLE threadHandle;
+
+  CRITICAL_SECTION lock;
 };
 
 struct RUNCOMMANDSTRUCT {
@@ -216,6 +130,3 @@ struct RUNCOMMANDSTRUCT {
 
 DWORD WINAPI RunCommandThread(void* data);
 DWORD WINAPI ScriptThread(void* data);
-DWORD WINAPI FuncThread(void* data);
-DWORD WINAPI EventThread(LPVOID lpParam);
-bool callEventFunction(JSContext* cx, Event* evt);

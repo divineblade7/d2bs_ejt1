@@ -15,9 +15,90 @@
 #include <assert.h>
 #include <vector>
 
-// internal ForEachScript helpers
-bool __fastcall DisposeScript(Script* script, void*, uint);
-bool __fastcall StopScript(Script* script, void* argv, uint argc);
+// internal ForEachScript helper functions
+bool __fastcall DisposeScript(Script* script, void*, uint) {
+  sScriptEngine->DisposeScript(script);
+  return true;
+}
+
+bool __fastcall StopScript(Script* script, void* argv, uint) {
+  script->TriggerOperationCallback();
+  if (script->GetState() != Command) {
+    script->Stop(*(bool*)(argv), sScriptEngine->GetState() == Stopping);
+  }
+  return true;
+}
+
+BOOL ScriptEngine::Startup(void) {
+  if (GetState() == Stopped) {
+    state = Starting;
+    InitializeCriticalSection(&scriptListLock);
+    // InitializeCriticalSection(&lock);
+    // EnterCriticalSection(&lock);
+    LockScriptList("startup - enter");
+    if (wcslen(Vars.szConsole) > 0) {
+      wchar_t file[_MAX_FNAME + _MAX_PATH];
+      swprintf_s(file, _countof(file), L"%s\\%s", Vars.szScriptPath, Vars.szConsole);
+      console = new Script(file, Command);
+    } else {
+      console = new Script(L"", Command);
+    }
+    scripts[L"console"] = console;
+    console->BeginThread(ScriptThread);
+    state = Running;
+    // LeaveCriticalSection(&lock);
+    UnLockScriptList("startup - leave");
+  }
+  return TRUE;
+}
+
+void ScriptEngine::Shutdown(void) {
+  if (GetState() == Running) {
+    // bring the engine down properly
+    // EnterCriticalSection(&lock);
+    LockScriptList("Shutdown");
+    state = Stopping;
+    StopAll(true);
+    console->Stop(true, true);
+
+    // clear all scripts now that they're stopped
+    ForEachScript(::DisposeScript, NULL, 0);
+
+    if (!scripts.empty()) scripts.clear();
+
+    if (runtime) {
+      JS_DestroyContext(context);
+      JS_DestroyRuntime(runtime);
+      JS_ShutDown();
+      runtime = NULL;
+    }
+    UnLockScriptList("shutdown");
+    // LeaveCriticalSection(&lock);
+    DeleteCriticalSection(&lock);
+    state = Stopped;
+  }
+}
+
+void ScriptEngine::FlushCache(void) {
+  if (GetState() != Running) return;
+
+  static bool isFlushing = false;
+
+  if (isFlushing || Vars.bDisableCache) return;
+
+  // EnterCriticalSection(&lock);
+  // TODO: examine if this lock is necessary any more
+  EnterCriticalSection(&Vars.cFlushCacheSection);
+
+  isFlushing = true;
+
+  ForEachScript(::DisposeScript, NULL, 0);
+
+  isFlushing = false;
+
+  LeaveCriticalSection(&Vars.cFlushCacheSection);
+  // LeaveCriticalSection(&lock);
+}
 
 Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptState _state, uint argc,
                                   JSAutoStructuredCloneBuffer** argv, bool) {
@@ -76,110 +157,15 @@ void ScriptEngine::DisposeScript(Script* script) {
     script->FireEvent(evt);
   }
 }
+
 void ScriptEngine::LockScriptList(const char*) {
   EnterCriticalSection(&scriptListLock);
   // Log(loc);
 }
+
 void ScriptEngine::UnLockScriptList(const char*) {
   // Log(loc);
   LeaveCriticalSection(&scriptListLock);
-}
-unsigned int ScriptEngine::GetCount(bool active, bool unexecuted) {
-  if (GetState() != Running) return 0;
-  LockScriptList("getCount");
-  // EnterCriticalSection(&lock);
-  int count = scripts.size();
-  for (ScriptMap::iterator it = scripts.begin(); it != scripts.end(); it++) {
-    if (!active && it->second->IsRunning() && !it->second->IsAborted()) count--;
-    if (!unexecuted && it->second->GetExecutionCount() == 0 && !it->second->IsRunning()) count--;
-  }
-  assert(count >= 0);
-  UnLockScriptList("getCount");
-  // LeaveCriticalSection(&lock);
-  return count;
-}
-
-BOOL ScriptEngine::Startup(void) {
-  if (GetState() == Stopped) {
-    state = Starting;
-    InitializeCriticalSection(&scriptListLock);
-    // InitializeCriticalSection(&lock);
-    // EnterCriticalSection(&lock);
-    LockScriptList("startup - enter");
-    if (wcslen(Vars.szConsole) > 0) {
-      wchar_t file[_MAX_FNAME + _MAX_PATH];
-      swprintf_s(file, _countof(file), L"%s\\%s", Vars.szScriptPath, Vars.szConsole);
-      console = new Script(file, Command);
-    } else {
-      console = new Script(L"", Command);
-    }
-    scripts[L"console"] = console;
-    console->BeginThread(ScriptThread);
-    state = Running;
-    // LeaveCriticalSection(&lock);
-    UnLockScriptList("startup - leave");
-  }
-  return TRUE;
-}
-
-void ScriptEngine::Shutdown(void) {
-  if (GetState() == Running) {
-    // bring the engine down properly
-    // EnterCriticalSection(&lock);
-    LockScriptList("Shutdown");
-    state = Stopping;
-    StopAll(true);
-    console->Stop(true, true);
-
-    // clear all scripts now that they're stopped
-    ForEachScript(::DisposeScript, NULL, 0);
-
-    if (!scripts.empty()) scripts.clear();
-
-    if (runtime) {
-      JS_DestroyContext(context);
-      JS_DestroyRuntime(runtime);
-      JS_ShutDown();
-      runtime = NULL;
-    }
-    UnLockScriptList("shutdown");
-    // LeaveCriticalSection(&lock);
-    DeleteCriticalSection(&lock);
-    state = Stopped;
-  }
-}
-
-void ScriptEngine::StopAll(bool forceStop) {
-  if (GetState() != Running) return;
-
-  // EnterCriticalSection(&lock);
-  ForEachScript(StopScript, &forceStop, 1);
-
-  // LeaveCriticalSection(&lock);
-}
-
-void ScriptEngine::UpdateConsole() {
-  console->UpdatePlayerGid();
-}
-void ScriptEngine::FlushCache(void) {
-  if (GetState() != Running) return;
-
-  static bool isFlushing = false;
-
-  if (isFlushing || Vars.bDisableCache) return;
-
-  // EnterCriticalSection(&lock);
-  // TODO: examine if this lock is necessary any more
-  EnterCriticalSection(&Vars.cFlushCacheSection);
-
-  isFlushing = true;
-
-  ForEachScript(::DisposeScript, NULL, 0);
-
-  isFlushing = false;
-
-  LeaveCriticalSection(&Vars.cFlushCacheSection);
-  // LeaveCriticalSection(&lock);
 }
 
 bool ScriptEngine::ForEachScript(ScriptCallback callback, void* argv, uint argc) {
@@ -205,6 +191,21 @@ bool ScriptEngine::ForEachScript(ScriptCallback callback, void* argv, uint argc)
   return block;
 }
 
+unsigned int ScriptEngine::GetCount(bool active, bool unexecuted) {
+  if (GetState() != Running) return 0;
+  LockScriptList("getCount");
+  // EnterCriticalSection(&lock);
+  int count = scripts.size();
+  for (ScriptMap::iterator it = scripts.begin(); it != scripts.end(); it++) {
+    if (!active && it->second->IsRunning() && !it->second->IsAborted()) count--;
+    if (!unexecuted && it->second->GetExecutionCount() == 0 && !it->second->IsRunning()) count--;
+  }
+  assert(count >= 0);
+  UnLockScriptList("getCount");
+  // LeaveCriticalSection(&lock);
+  return count;
+}
+
 void ScriptEngine::InitClass(JSContext* cx, JSObject* globalObject, JSClass* classp, JSFunctionSpec* methods,
                              JSPropertySpec* props, JSFunctionSpec* s_methods, JSPropertySpec* s_props) {
   if (!JS_InitClass(cx, globalObject, NULL, classp, classp->construct, 0, props, methods, s_props, s_methods))
@@ -216,16 +217,59 @@ void ScriptEngine::DefineConstant(JSContext* cx, JSObject* globalObject, const c
     throw std::exception("Couldn't initialize the constant");
 }
 
-// internal ForEachScript helper functions
-bool __fastcall DisposeScript(Script* script, void*, uint) {
-  sScriptEngine->DisposeScript(script);
-  return true;
+void ScriptEngine::StopAll(bool forceStop) {
+  if (GetState() != Running) {
+    return;
+  }
+
+  // EnterCriticalSection(&lock);
+  ForEachScript(StopScript, &forceStop, 1);
+
+  // LeaveCriticalSection(&lock);
 }
 
-bool __fastcall StopScript(Script* script, void* argv, uint) {
-  script->TriggerOperationCallback();
-  if (script->GetState() != Command) script->Stop(*(bool*)(argv), sScriptEngine->GetState() == Stopping);
-  return true;
+void ScriptEngine::UpdateConsole() {
+  console->UpdatePlayerGid();
+}
+
+int ScriptEngine::AddDelayedEvent(Event* evt, int freq) {
+  delayedExecKey++;
+  evt->arg1 = new DWORD(delayedExecKey);
+  evt->arg2 = CreateWaitableTimer(NULL, true, NULL);
+
+  __int64 start;
+  start = freq * -10000;
+  LARGE_INTEGER lStart;
+  // Copy the relative time into a LARGE_INTEGER.
+  lStart.LowPart = (DWORD)(start & 0xFFFFFFFF);
+  lStart.HighPart = (LONG)(start >> 32);
+  freq = (strcmp(evt->name, "setInterval") == 0) ? freq : 0;
+  EnterCriticalSection(&Vars.cEventSection);
+  DelayedExecList.push_back(evt);
+  SetWaitableTimer((HANDLE*)evt->arg2, &lStart, freq, &EventTimerProc, evt, false);
+  LeaveCriticalSection(&Vars.cEventSection);
+
+  return delayedExecKey;
+}
+
+void ScriptEngine::RemoveDelayedEvent(int key) {
+  std::list<Event*>::iterator it;
+  it = DelayedExecList.begin();
+  while (it != DelayedExecList.end()) {
+    if (*(DWORD*)(*it)->arg1 == static_cast<DWORD>(key)) {
+      CancelWaitableTimer((HANDLE*)(*it)->arg2);
+      CloseHandle((HANDLE*)(*it)->arg2);
+      Event* evt = *it;
+      evt->owner->UnregisterEvent(evt->name, *(jsval*)evt->arg3);
+      delete evt->arg1;
+      delete evt->arg3;
+      free(evt->name);
+      delete evt;
+      it = DelayedExecList.erase(it);
+    } else
+      it++;
+  }
+  LeaveCriticalSection(&Vars.cEventSection);
 }
 
 bool __fastcall StopIngameScript(Script* script, void*, uint) {
@@ -330,8 +374,7 @@ JSBool contextCallback(JSContext* cx, uint contextOp) {
 
     for (JSClassSpec* entry = global_classes; entry->classp != NULL; entry++)
       sScriptEngine->InitClass(cx, globalObject, entry->classp, entry->methods, entry->properties,
-                               entry->static_methods,
-                              entry->static_properties);
+                               entry->static_methods, entry->static_properties);
 
     JSObject* meObject = BuildObject(cx, &unit_class, unit_methods, me_props, lpUnit);
     if (!meObject) return JS_FALSE;
@@ -767,45 +810,7 @@ bool ExecScriptEvent(Event* evt, bool clearList) {
 
   return true;
 }
-int ScriptEngine::AddDelayedEvent(Event* evt, int freq) {
-  delayedExecKey++;
-  evt->arg1 = new DWORD(delayedExecKey);
-  evt->arg2 = CreateWaitableTimer(NULL, true, NULL);
 
-  __int64 start;
-  start = freq * -10000;
-  LARGE_INTEGER lStart;
-  // Copy the relative time into a LARGE_INTEGER.
-  lStart.LowPart = (DWORD)(start & 0xFFFFFFFF);
-  lStart.HighPart = (LONG)(start >> 32);
-  freq = (strcmp(evt->name, "setInterval") == 0) ? freq : 0;
-  EnterCriticalSection(&Vars.cEventSection);
-  DelayedExecList.push_back(evt);
-  SetWaitableTimer((HANDLE*)evt->arg2, &lStart, freq, &EventTimerProc, evt, false);
-  LeaveCriticalSection(&Vars.cEventSection);
-
-  return delayedExecKey;
-}
-
-void ScriptEngine::RemoveDelayedEvent(int key) {
-  std::list<Event*>::iterator it;
-  it = DelayedExecList.begin();
-  while (it != DelayedExecList.end()) {
-    if (*(DWORD*)(*it)->arg1 == static_cast<DWORD>(key)) {
-      CancelWaitableTimer((HANDLE*)(*it)->arg2);
-      CloseHandle((HANDLE*)(*it)->arg2);
-      Event* evt = *it;
-      evt->owner->UnregisterEvent(evt->name, *(jsval*)evt->arg3);
-      delete evt->arg1;
-      delete evt->arg3;
-      free(evt->name);
-      delete evt;
-      it = DelayedExecList.erase(it);
-    } else
-      it++;
-  }
-  LeaveCriticalSection(&Vars.cEventSection);
-}
 void CALLBACK EventTimerProc(LPVOID lpArg, DWORD, DWORD) {
   Event* evt = (Event*)lpArg;
   evt->owner->FireEvent(evt);

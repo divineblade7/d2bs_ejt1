@@ -60,15 +60,15 @@ class ScriptEngine {
     return context;
   }
 
-  void StopAll(bool forceStop = false);
-  void ExecEventAsync(char* evtName, AutoRoot** argv, uint argc);
   void InitClass(JSContext* context, JSObject* globalObject, JSClass* classp, JSFunctionSpec* methods,
                  JSPropertySpec* props, JSFunctionSpec* s_methods, JSPropertySpec* s_props);
   void DefineConstant(JSContext* context, JSObject* globalObject, const char* name, int value);
+
+  void StopAll(bool forceStop = false);
   void UpdateConsole();
+
   int AddDelayedEvent(Event* evt, int freq);
   void RemoveDelayedEvent(int key);
-  JSGCCallback gcCallback(JSRuntime* rt, JSGCStatus status);
 
  private:
   JSRuntime* runtime = nullptr;
@@ -84,13 +84,14 @@ class ScriptEngine {
 
 // these ForEachScript helpers are exposed in case they can be of use somewhere
 bool __fastcall StopIngameScript(Script* script, void*, uint);
-bool __fastcall ExecEventOnScript(Script* script, void* argv, uint argc);
+
 struct EventHelper {
   char* evtName;
   AutoRoot** argv;
   uint argc;
   bool executed;
 };
+
 JSBool operationCallback(JSContext* cx);
 JSBool contextCallback(JSContext* cx, uint contextOp);
 // gcCallback(JSContext* cx, JSGCStatus status);
