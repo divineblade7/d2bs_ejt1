@@ -2,7 +2,9 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/.vs
 /Debug
-/out
+/Release
 *.user
+
+/.vs
+/out

@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.23)
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+add_subdirectory(vendor/mozjs)
+
 project(d2bs)
 
 set(D2BS_SRCS
@@ -72,24 +74,13 @@ message(STATUS "D2BS: Completely ignore warnings!!!!!! Remove later...")
 # These are all trash definitions from d2bs solution required to successfully
 # compile... at least for now :)
 target_compile_definitions(${PROJECT_NAME} PRIVATE
-  WIN32
-  _WINDOWS
   WIN32_LEAN_AND_MEAN
-  _MSVC_DEBUG
 
-  $<$<CONFIG:Debug>:DEBUG>
-  $<$<CONFIG:Debug>:_DEBUG>
-  
-  $<$<CONFIG:Release>:NDEBUG>
-  $<$<CONFIG:Release>:_NDEBUG>
-  $<$<CONFIG:Release>:XP_WIN>
-  $<$<CONFIG:Release>:STATIC_JS_API>
-  $<$<CONFIG:Release>:_LIB>
-  $<$<CONFIG:Release>:MOZILLA_STRICT_API>)
+  XP_WIN
+  STATIC_JS_API)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
   dbghelp
   shlwapi
 
-  $<$<CONFIG:Debug>:${CMAKE_SOURCE_DIR}/dependencies/libs/debug/mozjs.lib>
-  $<$<CONFIG:Release>:${CMAKE_SOURCE_DIR}/dependencies/libs/release/js_static.lib>)
+  js)

@@ -10,8 +10,10 @@
 //#define WDEBUG
 //#endif
 
-#include "dependencies\include\jsapi.h"
-#include "dependencies\include\jsfriendapi.h"
+//#include "dependencies\include\jsapi.h"
+#include "jsapi.h"
+//#include "dependencies\include\jsfriendapi.h"
+#include "jsfriendapi.h"
 //#ifdef WDEBUG
 //#undef DEBUG
 //#undef WDEBUG
