@@ -10,10 +10,13 @@
 //#define WDEBUG
 //#endif
 
-//#include "dependencies\include\jsapi.h"
+// Disable all warnings emitted from mozjs
+// it is a dependency so not our problem! ~ ejt
+#pragma warning(push, 0)
 #include "jsapi.h"
-//#include "dependencies\include\jsfriendapi.h"
 #include "jsfriendapi.h"
+#pragma warning(pop)
+
 //#ifdef WDEBUG
 //#undef DEBUG
 //#undef WDEBUG
@@ -132,7 +135,9 @@ EXPORT JSObject* JS_NewObjectWithProto(JSContext* cx, JSObject* obj, JSClassSpec
 #define JSPROP_DEFAULT JSPROP_ENUMERATE | JSPROP_PERMANENT
 #define JSPROP_STATIC JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY
 
-#define JSAPI_FUNC(name) JSBool name##(JSContext * cx, uint argc, jsval * vp)
+#define MAYBE_UNUSED [[maybe_unused]]
+
+#define JSAPI_FUNC(name) JSBool name##(MAYBE_UNUSED JSContext * cx, MAYBE_UNUSED uint argc, MAYBE_UNUSED jsval * vp)
 #define FUNCTION_FLAGS JSFUN_STUB_GSOPS
 //#define JSAPI_EMPTY_CTOR(name) JSBool name##(JSContext* cx, uint argc, jsval* vp) { return THROW_ERROR(cx, "Invalid Operation");}
 #define EMPTY_CTOR(name)                                                                                                                                                 \

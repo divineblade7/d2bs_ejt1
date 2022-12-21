@@ -41,7 +41,7 @@ void ManaEvent(DWORD dwMana) {
 
 bool __fastcall KeyEventCallback(Script* script, void* argv, uint argc) {
     KeyEventHelper* helper = (KeyEventHelper*)argv;
-    char* name = (helper->up ? "keyup" : "keydown");
+    const char* name = (helper->up ? "keyup" : "keydown");
     if (script->IsRunning() && script->IsListenerRegistered(name)) {
         Event* evt = new Event;
         evt->owner = script;
@@ -211,17 +211,17 @@ bool __fastcall ChatEventCallback(Script* script, void* argv, uint argc) {
 }
 
 bool ChatEvent(char* lpszNick, wchar_t* lpszMsg) {
-    ChatEventHelper helper = {"chatmsg", lpszNick, lpszMsg};
+    ChatEventHelper helper = {const_cast<char*>("chatmsg"), lpszNick, lpszMsg};
     return ScriptEngine::ForEachScript(ChatEventCallback, &helper, 2);
 }
 
 bool ChatInputEvent(wchar_t* lpszMsg) {
-    ChatEventHelper helper = {"chatinput", "me", lpszMsg};
+    ChatEventHelper helper = {const_cast<char*>("chatinput"), const_cast<char*>("me"), lpszMsg};
     return ScriptEngine::ForEachScript(ChatEventCallback, &helper, 2);
 }
 
 bool WhisperEvent(char* lpszNick, wchar_t* lpszMsg) {
-    ChatEventHelper helper = {"whispermsg", lpszNick, lpszMsg};
+    ChatEventHelper helper = {const_cast<char*>("whispermsg"), lpszNick, lpszMsg};
     return ScriptEngine::ForEachScript(ChatEventCallback, &helper, 2);
 }
 
@@ -330,17 +330,17 @@ bool __fastcall PacketEventCallback(Script* script, void* argv, uint argc) {
 }
 
 bool GamePacketEvent(BYTE* pPacket, DWORD dwSize) {
-    PacketEventHelper helper = {"gamepacket", pPacket, dwSize};
+    PacketEventHelper helper = {const_cast<char*>("gamepacket"), pPacket, dwSize};
     return ScriptEngine::ForEachScript(PacketEventCallback, &helper, 3);
 }
 
 bool GamePacketSentEvent(BYTE* pPacket, DWORD dwSize) {
-    PacketEventHelper helper = {"gamepacketsent", pPacket, dwSize};
+    PacketEventHelper helper = {const_cast<char*>("gamepacketsent"), pPacket, dwSize};
     return ScriptEngine::ForEachScript(PacketEventCallback, &helper, 3);
 }
 
 bool RealmPacketEvent(BYTE* pPacket, DWORD dwSize) {
-    PacketEventHelper helper = {"realmpacket", pPacket, dwSize};
+    PacketEventHelper helper = {const_cast<char*>("realmpacket"), pPacket, dwSize};
     return ScriptEngine::ForEachScript(PacketEventCallback, &helper, 3);
 }
 

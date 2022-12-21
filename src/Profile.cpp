@@ -98,7 +98,7 @@ DWORD Profile::login(char** error) {
     // Sleep(10000);
     bool loginComplete = FALSE, skippedToBnet = TRUE;
     int location = 0;
-    char* errorMsg = "";
+    const char* errorMsg = "";
     Control* pControl = NULL;
     unsigned int timeout = 0;
 
@@ -275,13 +275,13 @@ DWORD Profile::login(char** error) {
 
         if (_strcmpi(errorMsg, "")) {
             Vars.bBlockKeys = Vars.bBlockMouse = FALSE;
-            *error = errorMsg;
+            *error = const_cast<char*>(errorMsg);
             return 2;
         }
 
         if ((timeout * 100) > maxLoginTime) {
             Vars.bBlockKeys = Vars.bBlockMouse = FALSE;
-            *error = "login time out";
+            *error = const_cast<char*>("login time out");
             return 1;
         }
 

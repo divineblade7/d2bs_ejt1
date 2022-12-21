@@ -4,6 +4,9 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 add_subdirectory(vendor/mozjs)
 
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
 project(d2bs)
 
 set(D2BS_SRCS
@@ -85,3 +88,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   shlwapi
 
   js)
+
+install(TARGETS d2bs RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)

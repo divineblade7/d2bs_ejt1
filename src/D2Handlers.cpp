@@ -538,10 +538,10 @@ BOOL __fastcall ChatPacketRecv(BYTE* pPacket, int len) {
 
         switch (pPacket[4]) {
         case 0x02: // channel join
-            ChatEvent(who, L"joined the channel");
+            ChatEvent(who, const_cast<wchar_t*>(L"joined the channel"));
             break;
         case 0x03: // channel leave
-            ChatEvent(who, L"left the channel");
+            ChatEvent(who, const_cast<wchar_t*>(L"left the channel"));
             break;
         case 0x04: // whispers
         case 0x0A:
