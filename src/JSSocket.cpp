@@ -94,7 +94,12 @@ JSAPI_FUNC(socket_open) {
     Sdata->socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
     struct hostent* host;
+
+// warning C4996: 'gethostbyname': Use getaddrinfo() or GetAddrInfoW() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+#pragma warning(push)
+#pragma warning(disable:4996)
     host = gethostbyname(hostName);
+#pragma warning(pop)
     JS_free(cx, hostName);
     if (host == NULL)
         THROW_ERROR(cx, "Cannot find host");

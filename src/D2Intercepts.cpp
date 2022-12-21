@@ -270,6 +270,9 @@ void __declspec(naked) RemoveUnit_Intercept([[maybe_unused]] UnitAny* lpUnit) {
     }
 }
 
+// flow in or out of inline asm code suppresses global optimization
+#pragma warning(push)
+#pragma warning(disable : 4740)
 VOID __declspec(naked) __fastcall ClassicSTUB() {
     *p_BNCLIENT_ClassicKey = Vars.szClassic;
     __asm {
@@ -285,6 +288,7 @@ VOID __declspec(naked) __fastcall LodSTUB() {
 		jmp BNCLIENT_DLod;
     }
 }
+#pragma warning(pop)
 
 void __declspec(naked) FailToJoin() {
     __asm
