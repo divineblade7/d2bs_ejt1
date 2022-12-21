@@ -35,7 +35,7 @@ class Console {
     static unsigned int MaxWidth(void) {
         return lineWidth;
     }
-    static unsigned int GetHeight(void) {
+    static unsigned int Console::GetHeight(void) {
         return height;
     }
 

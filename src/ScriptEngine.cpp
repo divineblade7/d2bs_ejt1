@@ -88,11 +88,11 @@ void ScriptEngine::DisposeScript(Script* script) {
         script->FireEvent(evt);
     }
 }
-void ScriptEngine::LockScriptList(const char* loc) {
+void ScriptEngine::LockScriptList(char* loc) {
     EnterCriticalSection(&scriptListLock);
     // Log(loc);
 }
-void ScriptEngine::UnLockScriptList(const char* loc) {
+void ScriptEngine::UnLockScriptList(char* loc) {
     // Log(loc);
     LeaveCriticalSection(&scriptListLock);
 }

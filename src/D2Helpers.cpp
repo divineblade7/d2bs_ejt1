@@ -14,7 +14,7 @@
 #include "stringhash.h"
 #include "CriticalSections.h"
 
-void Log(const wchar_t* szFormat, ...) {
+void Log(wchar_t* szFormat, ...) {
     va_list vaArgs;
 
     va_start(vaArgs, szFormat);
@@ -701,7 +701,7 @@ CellFile* LoadBmpCellFile(const wchar_t* filename) {
 
 CellFile* myInitCellFile(CellFile* cf) {
     if (cf)
-        D2CMP_InitCellFile(cf, &cf, const_cast<char*>("?"), 0, (DWORD)-1, const_cast<char*>("?"));
+        D2CMP_InitCellFile(cf, &cf, "?", 0, (DWORD)-1, "?");
     return cf;
 }
 

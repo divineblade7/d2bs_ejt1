@@ -579,7 +579,7 @@ JSAPI_FUNC(unit_getUnit) {
     uint32 nClassId = (uint32)-1;
     uint32 nMode = (uint32)-1;
     uint32 nUnitId = (uint32)-1;
-    char* szName = nullptr;
+    char* szName = "";
 
     JS_BeginRequest(cx);
     if (argc > 0 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0]))
@@ -861,7 +861,7 @@ JSAPI_FUNC(unit_interact) {
         }
         JS_EndRequest(cx);
         int retVal = 0;
-        if (FillBaseStat(const_cast<char*>("levels"), nWaypointID, const_cast<char*>("Waypoint"), &retVal, sizeof(int)))
+        if (FillBaseStat("levels", nWaypointID, "Waypoint", &retVal, sizeof(int)))
             if (retVal == 255)
                 return JS_TRUE;
 
@@ -1267,7 +1267,7 @@ JSAPI_FUNC(item_getItemCost) {
         }
         // TODO:: validate the base stat table sizes to make sure the game doesn't crash with checking values past the end of the table
         int retVal = 0;
-        if (FillBaseStat(const_cast<char*>("monstats"), nNpcClassId, const_cast<char*>("inventory"), &retVal, sizeof(int)) && retVal == 0)
+        if (FillBaseStat("monstats", nNpcClassId, "inventory", &retVal, sizeof(int)) && retVal == 0)
             nNpcClassId = 0x9A; // invalid npcid incoming! default to charsi to allow the game to continue
     }
 
@@ -1390,16 +1390,16 @@ JSAPI_FUNC(unit_getSkill) {
         switch (nSkillId) {
         case 0: {
             int row = 0;
-            if (FillBaseStat(const_cast<char*>("skills"), wRightSkillId, const_cast<char*>("skilldesc"), &row, sizeof(int)))
-                if (FillBaseStat(const_cast<char*>("skilldesc"), row, const_cast<char*>("str name"), &row, sizeof(int))) {
+            if (FillBaseStat("skills", wRightSkillId, "skilldesc", &row, sizeof(int)))
+                if (FillBaseStat("skilldesc", row, "str name", &row, sizeof(int))) {
                     wchar_t* szName = D2LANG_GetLocaleText((WORD)row);
                     JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, szName)));
                 }
         } break;
         case 1: {
             int row = 0;
-            if (FillBaseStat(const_cast<char*>("skills"), wLeftSkillId, const_cast<char*>("skilldesc"), &row, sizeof(int)))
-                if (FillBaseStat(const_cast<char*>("skilldesc"), row, const_cast<char*>("str name"), &row, sizeof(int))) {
+            if (FillBaseStat("skills", wLeftSkillId, "skilldesc", &row, sizeof(int)))
+                if (FillBaseStat("skilldesc", row, "str name", &row, sizeof(int))) {
                     wchar_t* szName = D2LANG_GetLocaleText((WORD)row);
                     JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, szName)));
                 }

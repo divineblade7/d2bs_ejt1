@@ -404,7 +404,7 @@ JSAPI_FUNC(my_sendCopyData) {
 
     // if data is NULL, strlen crashes
     if (data == NULL)
-        data = const_cast<char*>("");
+        data = "";
 
     COPYDATASTRUCT aCopy = {nModeId, strlen(data) + 1, data};
 
@@ -419,7 +419,7 @@ JSAPI_FUNC(my_sendCopyData) {
 JSAPI_FUNC(my_sendDDE) {
     JS_SET_RVAL(cx, vp, JSVAL_FALSE);
     jsint mode;
-    char *pszDDEServer = const_cast<char*>("\"\""), *pszTopic = const_cast<char*>("\"\""), *pszItem = const_cast<char*>("\"\""), *pszData = const_cast<char*>("\"\"");
+    char *pszDDEServer = "\"\"", *pszTopic = "\"\"", *pszItem = "\"\"", *pszData = "\"\"";
     JS_BeginRequest(cx);
 
     if (JSVAL_IS_INT(JS_ARGV(cx, vp)[0]))

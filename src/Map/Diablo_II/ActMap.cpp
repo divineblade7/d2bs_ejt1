@@ -639,7 +639,7 @@ void ActMap::DumpLevel(const char* file) const {
         for (PresetUnit* preset = room->pPreset; preset; preset = preset->pPresetNext) {
             Point loc((room->dwPosX * 5) + preset->dwPosX, (room->dwPosY * 5) + preset->dwPosY);
             Point rel = AbsToRelative(loc);
-            char* wName = nullptr;
+            char* wName = "";
             if (preset->dwType == 2 && preset->dwTxtFileNo <= 574) {
                 ObjectTxt* obj = D2COMMON_GetObjectText(preset->dwTxtFileNo);
                 if (obj != NULL) {

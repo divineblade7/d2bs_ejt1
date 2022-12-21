@@ -88,8 +88,8 @@ DWORD EventMessagesHandler(BYTE* pPacket, DWORD dwSize) {
     strcpy_s(name2, 16, (char*)pPacket + 24);
     wchar_t* wname2 = NULL;
 
-    char* tables[3] = {const_cast<char*>(""), const_cast<char*>("monstats"), const_cast<char*>("objects")};
-    char* columns[3] = {const_cast<char*>(""), const_cast<char*>("NameStr"), const_cast<char*>("Name")};
+    char* tables[3] = {"", "monstats", "objects"};
+    char* columns[3] = {"", "NameStr", "Name"};
 
     switch (mode) {
     case 0x06: // name1 slain by name2

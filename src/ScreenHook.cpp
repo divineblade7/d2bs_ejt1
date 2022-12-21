@@ -44,7 +44,7 @@ bool __fastcall DrawHook(Genhook* hook, void* argv, uint argc) {
 }
 
 bool __fastcall CleanHook(Genhook* hook, void* argv, uint argc) {
-    if (hook->getOwner() == (Script*)argv)
+    if (hook->owner == (Script*)argv)
         hook->SetIsVisible(false);
     return true;
 }

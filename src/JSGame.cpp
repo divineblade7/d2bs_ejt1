@@ -887,8 +887,8 @@ JSAPI_FUNC(my_getSkillById) {
     JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(JS_NewStringCopyZ(cx, "Unknown")));
     JS_EndRequest(cx);
     int row = 0;
-    if (FillBaseStat(const_cast<char*>("skills"), nId, const_cast<char*>("skilldesc"), &row, sizeof(int))) {
-        if (FillBaseStat(const_cast<char*>("skilldesc"), row, const_cast<char*>("str name"), &row, sizeof(int))) {
+    if (FillBaseStat("skills", nId, "skilldesc", &row, sizeof(int))) {
+        if (FillBaseStat("skilldesc", row, "str name", &row, sizeof(int))) {
             wchar_t* szName = D2LANG_GetLocaleText((WORD)row);
             JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, szName)));
         }

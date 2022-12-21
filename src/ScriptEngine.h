@@ -46,8 +46,8 @@ class ScriptEngine {
     static void RunCommand(const wchar_t* command);
     static void DisposeScript(Script* script);
 
-    static void LockScriptList(const char* loc);
-    static void UnLockScriptList(const char* loc);
+    static void LockScriptList(char* loc);
+    static void UnLockScriptList(char* loc);
 
     static bool ForEachScript(ScriptCallback callback, void* argv, uint argc);
     static unsigned int GetCount(bool active = true, bool unexecuted = false);
