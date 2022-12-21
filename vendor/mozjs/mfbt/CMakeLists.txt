@@ -20,6 +20,8 @@ target_include_directories(mfbt
 
 target_compile_definitions(mfbt PUBLIC -DIMPL_MFBT)
 
+target_compile_options(mfbt PRIVATE /W0)
+
 install(TARGETS mfbt
   DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 

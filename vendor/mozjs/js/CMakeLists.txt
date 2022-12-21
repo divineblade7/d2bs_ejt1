@@ -300,6 +300,8 @@ target_link_libraries(js PUBLIC mfbt)
 if(WIN32)
   target_link_libraries(js PUBLIC winmm)
 endif()
+
+target_compile_options(js PRIVATE /W0)
 ## End static library
 ###############################################################################
 ## Begin auto-generated files
