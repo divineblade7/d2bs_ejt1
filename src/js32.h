@@ -10,10 +10,13 @@
 //#define WDEBUG
 //#endif
 
-//#include "dependencies\include\jsapi.h"
+// Disable all warnings emitted from mozjs
+// it is a dependency so we dont care. ~ ejt
+#pragma warning(push, 0)
 #include "jsapi.h"
-//#include "dependencies\include\jsfriendapi.h"
 #include "jsfriendapi.h"
+#pragma warning(pop)
+
 //#ifdef WDEBUG
 //#undef DEBUG
 //#undef WDEBUG
