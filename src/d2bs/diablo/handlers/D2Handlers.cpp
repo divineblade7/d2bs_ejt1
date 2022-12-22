@@ -416,26 +416,6 @@ void SetMaxDiff(void) {
   }
 }
 
-void __stdcall AddUnit(UnitAny*) {
-  //	EnterCriticalSection(&Vars.cUnitListSection);
-  //	Vars.vUnitList.push_back(make_pair<DWORD, DWORD>(lpUnit->dwUnitId, lpUnit->dwType));
-  //	LeaveCriticalSection(&Vars.cUnitListSection);
-}
-
-void __stdcall RemoveUnit(UnitAny*) {
-  //	EnterCriticalSection(&Vars.cUnitListSection);
-  // no need to check the return--it has to be there or the real game would have bigger issues with it
-  //	for(vector<pair<DWORD, DWORD> >::iterator it = Vars.vUnitList.begin(); it != Vars.vUnitList.end(); it++)
-  //	{
-  //		if(it->first == lpUnit->dwUnitId && it->second == lpUnit->dwType)
-  //		{
-  //			Vars.vUnitList.erase(it);
-  //			break;
-  //		}
-  //	}
-  //	LeaveCriticalSection(&Vars.cUnitListSection);
-}
-
 void __fastcall WhisperHandler(char* szAcc, char* szText) {
   if (!Vars.bDontCatchNextMsg) {
     wchar_t* szwText = AnsiToUnicode(szText, CP_ACP);

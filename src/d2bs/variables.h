@@ -90,9 +90,6 @@ struct Variables {
   std::vector<std::pair<DWORD, DWORD>> vUnitList;
   // std::list<Event*> EventList;
   CRITICAL_SECTION cEventSection;
-  CRITICAL_SECTION cRoomSection;
-  CRITICAL_SECTION cMiscSection;
-  CRITICAL_SECTION cScreenhookSection;
   CRITICAL_SECTION cPrintSection;
   CRITICAL_SECTION cTextHookSection;
   CRITICAL_SECTION cImageHookSection;
@@ -102,7 +99,6 @@ struct Variables {
   CRITICAL_SECTION cFlushCacheSection;
   CRITICAL_SECTION cConsoleSection;
   CRITICAL_SECTION cGameLoopSection;
-  CRITICAL_SECTION cUnitListSection;
   CRITICAL_SECTION cFileSection;
 
   DWORD dwSelectedUnitId;

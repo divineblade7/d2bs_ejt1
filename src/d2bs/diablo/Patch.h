@@ -20,8 +20,6 @@ PatchHook Patches[] = {
     {PatchJmp,    GetDllOffset("D2Client.dll",  0x567EB),   (DWORD)GameActChange2_Intercept, 5},  // Updated 1.14d //004567EB-BASE
     {PatchCall,   GetDllOffset("D2Client.dll",  0x4F57C),   (DWORD)GameLeave_Intercept, 5},  // Updated 1.14d //0044F57C-BASE
     {PatchCall,   GetDllOffset("D2Client.dll",  0x61704),   (DWORD)GameAttack_Intercept, 5},  // Updated 1.14d //00461704-BASE
-    //{PatchCall,	GetDllOffset("D2Client.dll", 0xA7364),    (DWORD)AddUnit_Intercept, 5},
-    //{PatchCall, GetDllOffset("D2Client.dll", 0xA6F25), (DWORD)RemoveUnit_Interept, 9},
 
     // this patch needs a constant in ChatPacketRecv_Interception updated also
     {PatchCall,   GetDllOffset("BNCLIENT.DLL",  0x121B20),  (DWORD)ChatPacketRecv_Interception, 7},  // Updated 1.14d //00521B20-BASE

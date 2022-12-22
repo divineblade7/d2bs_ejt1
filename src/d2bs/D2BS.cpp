@@ -105,9 +105,6 @@ BOOL WINAPI DllMain(HINSTANCE hDll, DWORD dwReason, LPVOID lpReserved) {
 
 BOOL Startup(void) {
   InitializeCriticalSection(&Vars.cEventSection);
-  InitializeCriticalSection(&Vars.cRoomSection);
-  InitializeCriticalSection(&Vars.cMiscSection);
-  InitializeCriticalSection(&Vars.cScreenhookSection);
   InitializeCriticalSection(&Vars.cPrintSection);
   InitializeCriticalSection(&Vars.cBoxHookSection);
   InitializeCriticalSection(&Vars.cFrameHookSection);
@@ -117,7 +114,6 @@ BOOL Startup(void) {
   InitializeCriticalSection(&Vars.cFlushCacheSection);
   InitializeCriticalSection(&Vars.cConsoleSection);
   InitializeCriticalSection(&Vars.cGameLoopSection);
-  InitializeCriticalSection(&Vars.cUnitListSection);
   InitializeCriticalSection(&Vars.cFileSection);
 
   Vars.bNeedShutdown = TRUE;
@@ -154,9 +150,6 @@ void Shutdown(void) {
   UnhookWindowsHookEx(Vars.hMouseHook);
   UnhookWindowsHookEx(Vars.hKeybHook);
 
-  DeleteCriticalSection(&Vars.cRoomSection);
-  DeleteCriticalSection(&Vars.cMiscSection);
-  DeleteCriticalSection(&Vars.cScreenhookSection);
   DeleteCriticalSection(&Vars.cPrintSection);
   DeleteCriticalSection(&Vars.cBoxHookSection);
   DeleteCriticalSection(&Vars.cFrameHookSection);
@@ -166,7 +159,6 @@ void Shutdown(void) {
   DeleteCriticalSection(&Vars.cFlushCacheSection);
   DeleteCriticalSection(&Vars.cConsoleSection);
   DeleteCriticalSection(&Vars.cGameLoopSection);
-  DeleteCriticalSection(&Vars.cUnitListSection);
   DeleteCriticalSection(&Vars.cFileSection);
 
   Log(L"D2BS Shutdown complete.");
