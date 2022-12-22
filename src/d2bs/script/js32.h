@@ -43,9 +43,7 @@ typedef uint16_t uint16;
 #else
 #define EXPORT
 #endif
-// this should be included, but can't be due to compiler include cycles
-// however, every file that includes this one includes ScriptEngine.h first anyway
-// #include "ScriptEngine.h"
+
 #define NUM(x) #x
 #define NAME(line, v) (__FILE__ ":" NUM(line) " -> " #v)
 #define JS_AddValueRoot(cx, vp) JS_AddNamedValueRoot((cx), (vp), NAME(__LINE__, vp))

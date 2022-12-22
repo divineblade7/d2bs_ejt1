@@ -107,10 +107,6 @@ DWORD WINAPI D2Thread(LPVOID) {
         break;
     }
     Sleep(50);
-    /*	EnterCriticalSection(&ScriptEngine::lock);
-            for(ScriptMap::iterator it = ScriptEngine::scripts.begin(); it != ScriptEngine::scripts.end(); it++)
-                    JS_TriggerOperationCallback(it->second->GetContext());
-            LeaveCriticalSection(&ScriptEngine::lock);  */
   }
 
   sScriptEngine->Shutdown();
@@ -479,23 +475,9 @@ void CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD) {
 }
 
 void GameLeave(void) {
-  //	if(Vars.bGameLoopEntered)
-  //	LeaveCriticalSection(&Vars.cGameLoopSection);
-  //	else
-  //		Vars.bGameLoopEntered = true;
-
-  /*EnterCriticalSection(&ScriptEngine::lock);
-  std::vector<Script*> list;
-  for(ScriptMap::iterator it = ScriptEngine::scripts.begin(); it != ScriptEngine::scripts.end(); it++)
-          if(it->second->GetState() == InGame)
-                  it->second->Stop(true);
-
-  LeaveCriticalSection(&ScriptEngine::lock); */
   Vars.bQuitting = false;
   sScriptEngine->ForEachScript(StopIngameScript, NULL, 0);
   ActMap::ClearCache();
-
-  //	EnterCriticalSection(&Vars.cGameLoopSection);
 }
 
 BOOL __fastcall RealmPacketRecv(BYTE* pPacket, DWORD dwSize) {

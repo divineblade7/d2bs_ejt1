@@ -25,7 +25,6 @@ AutoRoot::~AutoRoot() {
 void AutoRoot::Take() {
   count++;
   JS_AddNamedValueRoot(cx, &var, "AutoRoot");
-  // JS_AddNamedRootRT(ScriptEngine::GetRuntime(), &var, "AutoRoot");
 }
 
 void AutoRoot::Release() {

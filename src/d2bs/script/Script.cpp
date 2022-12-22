@@ -433,7 +433,6 @@ void Script::ClearAllEvents(void) {
 }
 
 void Script::FireEvent(Event* evt) {
-  // EnterCriticalSection(&ScriptEngine::lock);
   EnterCriticalSection(&Vars.cEventSection);
   evt->owner->events().push_front(evt);
   LeaveCriticalSection(&Vars.cEventSection);
@@ -442,7 +441,6 @@ void Script::FireEvent(Event* evt) {
     evt->owner->TriggerOperationCallback();
   }
   SetEvent(eventSignal_);
-  // LeaveCriticalSection(&ScriptEngine::lock);
 }
 
 #ifdef DEBUG

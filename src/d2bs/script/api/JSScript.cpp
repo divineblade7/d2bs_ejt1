@@ -50,7 +50,6 @@ JSAPI_PROP(script_getProperty) {
 JSAPI_FUNC(script_getNext) {
   Script* iterp = (Script*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &script_class, NULL);
   sScriptEngine->LockScriptList("scrip.getNext");
-  // EnterCriticalSection(&ScriptEngine::lock);
 
   auto& scripts = sScriptEngine->scripts();
   for (ScriptMap::iterator it = scripts.begin(); it != scripts.end(); it++) {
@@ -63,12 +62,10 @@ JSAPI_FUNC(script_getNext) {
       JS_SetPrivate(cx, JS_THIS_OBJECT(cx, vp), iterp);
       JS_SET_RVAL(cx, vp, JSVAL_TRUE);
       sScriptEngine->UnLockScriptList("scrip.getNext");
-      // LeaveCriticalSection(&ScriptEngine::lock);
       return JS_TRUE;
     }
   }
 
-  // LeaveCriticalSection(&ScriptEngine::lock);
   sScriptEngine->UnLockScriptList("scrip.getNext");
 
   JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -161,11 +158,9 @@ JSAPI_FUNC(my_getScript) {
       return JS_TRUE;
   } else {
     if (sScriptEngine->scripts().size() > 0) {
-      //	EnterCriticalSection(&ScriptEngine::lock);
       sScriptEngine->LockScriptList("getScript");
       iterp = sScriptEngine->scripts().begin()->second;
       sScriptEngine->UnLockScriptList("getScript");
-      //	LeaveCriticalSection(&ScriptEngine::lock);
     }
 
     if (iterp == NULL) return JS_TRUE;
