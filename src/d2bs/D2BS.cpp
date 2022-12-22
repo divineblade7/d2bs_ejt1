@@ -21,24 +21,22 @@
 
 static HANDLE hD2Thread = INVALID_HANDLE_VALUE;
 static HANDLE hEventThread = INVALID_HANDLE_VALUE;
+
 BOOL WINAPI DllMain(HINSTANCE hDll, DWORD dwReason, LPVOID lpReserved) {
   switch (dwReason) {
     case DLL_PROCESS_ATTACH: {
       DisableThreadLibraryCalls(hDll);
 
-      if (lpReserved != NULL) {
+      if (lpReserved) {
         Vars.pModule = (Module*)lpReserved;
-
-        if (!Vars.pModule) return FALSE;
-
         wcscpy_s(Vars.szPath, MAX_PATH, Vars.pModule->szPath);
-        Vars.bLoadedWithCGuard = TRUE;
+        Vars.bLoadedWithCGuard = true;
       } else {
         Vars.hModule = hDll;
         GetModuleFileNameW(hDll, Vars.szPath, MAX_PATH);
         PathRemoveFileSpecW(Vars.szPath);
         wcscat_s(Vars.szPath, MAX_PATH, L"\\");
-        Vars.bLoadedWithCGuard = FALSE;
+        Vars.bLoadedWithCGuard = false;
       }
 
       swprintf_s(Vars.szLogPath, _countof(Vars.szLogPath), L"%slogs\\", Vars.szPath);
