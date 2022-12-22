@@ -15,8 +15,8 @@
 // ArraySize, PRIVATE_ITEM, PRIVATE_UNIT and Private should be moved. ~ ejt
 #define ArraySize(x) (sizeof((x)) / sizeof((x)[0]))
 
-#define PRIVATE_ITEM 1
-#define PRIVATE_UNIT 3
+#define PRIVATE_UNIT 1
+#define PRIVATE_ITEM 3
 
 struct Private {
   DWORD dwPrivateType;
