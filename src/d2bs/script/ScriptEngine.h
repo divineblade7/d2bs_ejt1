@@ -75,12 +75,12 @@ class ScriptEngine {
  private:
   JSRuntime* runtime_ = nullptr;
   JSContext* context_ = nullptr;
-  Script* console_ = nullptr;
   EngineState state_ = Stopped;
   ScriptMap scripts_{};
-  CRITICAL_SECTION lock_{};
+
   std::list<Event*> DelayedExecList_;
   int delayedExecKey_;
+
   CRITICAL_SECTION scriptListLock_{};
 };
 

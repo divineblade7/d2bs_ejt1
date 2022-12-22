@@ -33,20 +33,20 @@ BOOL ScriptEngine::Startup(void) {
   if (GetState() == Stopped) {
     state_ = Starting;
     InitializeCriticalSection(&scriptListLock_);
-    // InitializeCriticalSection(&lock);
-    // EnterCriticalSection(&lock);
     LockScriptList("startup - enter");
+
+    Script* console = nullptr;
     if (wcslen(Vars.szConsole) > 0) {
       wchar_t file[_MAX_FNAME + _MAX_PATH];
       swprintf_s(file, _countof(file), L"%s\\%s", Vars.szScriptPath, Vars.szConsole);
-      console_ = new Script(file, Command);
+      console = new Script(file, Command);
     } else {
-      console_ = new Script(L"", Command);
+      console = new Script(L"", Command);
     }
-    scripts_[L"console"] = console_;
-    console_->BeginThread(ScriptThread);
+    console->BeginThread(ScriptThread);
+    scripts_[L"console"] = console;
     state_ = Running;
-    // LeaveCriticalSection(&lock);
+
     UnLockScriptList("startup - leave");
   }
   return TRUE;
@@ -59,7 +59,10 @@ void ScriptEngine::Shutdown(void) {
     LockScriptList("Shutdown");
     state_ = Stopping;
     StopAll(true);
-    console_->Stop(true, true);
+
+    if (scripts_.contains(L"console")) {
+      scripts_[L"console"]->Stop(true, true);
+    }
 
     // clear all scripts now that they're stopped
     ForEachScript(::DisposeScript, NULL, 0);
@@ -75,8 +78,6 @@ void ScriptEngine::Shutdown(void) {
       runtime_ = NULL;
     }
     UnLockScriptList("shutdown");
-    // LeaveCriticalSection(&lock);
-    DeleteCriticalSection(&lock_);
     state_ = Stopped;
   }
 }
@@ -125,7 +126,6 @@ Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptState _state, uint 
     free(fileName);
     return script;
   } catch (std::exception e) {
-    LeaveCriticalSection(&lock_);
     wchar_t* what = AnsiToUnicode(e.what());
     Print(what);
     delete[] what;
@@ -140,11 +140,12 @@ void ScriptEngine::RunCommand(const wchar_t* command) {
   }
 
   try {
-    // EnterCriticalSection(&lock);
-    console_->RunCommand(command);
-    // LeaveCriticalSection(&lock);
+    LockScriptList("RunCommand");
+    if (scripts_.contains(L"console")) {
+      scripts_[L"console"]->RunCommand(command);
+    }
+    UnLockScriptList("RunCommand");
   } catch (std::exception e) {
-    // LeaveCriticalSection(&lock);
     wchar_t* what = AnsiToUnicode(e.what());
     Print(what);
     delete[] what;
@@ -243,7 +244,11 @@ void ScriptEngine::StopAll(bool forceStop) {
 }
 
 void ScriptEngine::UpdateConsole() {
-  console_->UpdatePlayerGid();
+  LockScriptList("UpdateConsole");
+  if (scripts_.contains(L"console")) {
+    scripts_[L"console"]->UpdatePlayerGid();
+  }
+  UnLockScriptList("UpdateConsole");
 }
 
 int ScriptEngine::AddDelayedEvent(Event* evt, int freq) {
