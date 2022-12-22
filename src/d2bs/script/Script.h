@@ -9,6 +9,7 @@
 
 #include <list>
 #include <map>
+#include <mutex>
 #include <string>
 #include <windows.h>
 
@@ -94,15 +95,11 @@ class Script {
   }
 
   DWORD last_gc() {
-    return LastGC_;
+    return last_gc_;
   }
 
   void set_last_gc(DWORD val) {
-    LastGC_ = val;
-  }
-
-  bool get_has_active_cx() {
-    return hasActiveCX_;
+    last_gc_ = val;
   }
 
   void set_has_active_cx(bool val) {
@@ -110,7 +107,7 @@ class Script {
   }
 
   HANDLE event_signal() {
-    return eventSignal_;
+    return event_signal_;
   }
 
  private:
@@ -140,9 +137,9 @@ class Script {
 
   FunctionMap functions_;
 
-  DWORD LastGC_ = 0;
+  DWORD last_gc_ = 0;
   bool hasActiveCX_ = false;  // hack to get away from JS_IsRunning
-  HANDLE eventSignal_;
+  HANDLE event_signal_;
 };
 
 struct RUNCOMMANDSTRUCT {

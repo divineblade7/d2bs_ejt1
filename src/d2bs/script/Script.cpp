@@ -15,7 +15,7 @@ Script::Script(const wchar_t* file, ScriptType type, uint argc, JSAutoStructured
     : type_(type), argv_(argv), argc_(argc) {
   InitializeCriticalSection(&lock_);
 
-  eventSignal_ = CreateEvent(nullptr, true, false, nullptr);
+  event_signal_ = CreateEvent(nullptr, true, false, nullptr);
 
   if (type_ == ScriptType::Command && wcslen(file) < 1) {
     filename_ = std::wstring(L"Command Line");
@@ -55,7 +55,7 @@ Script::~Script() {
   context_ = nullptr;
   globals_ = nullptr;
   script_ = nullptr;
-  CloseHandle(eventSignal_);
+  CloseHandle(event_signal_);
   includes_.clear();
   if (thread_handle_ != INVALID_HANDLE_VALUE) {
     CloseHandle(thread_handle_);
@@ -179,7 +179,7 @@ void Script::Pause() {
     state_ = ScriptState::Paused;
   }
   TriggerOperationCallback();
-  SetEvent(eventSignal_);
+  SetEvent(event_signal_);
 }
 
 void Script::Resume() {
@@ -187,7 +187,7 @@ void Script::Resume() {
     state_ = ScriptState::Running;
   }
   TriggerOperationCallback();
-  SetEvent(eventSignal_);
+  SetEvent(event_signal_);
 }
 
 bool Script::is_running() {
@@ -241,7 +241,7 @@ void Script::RunCommand(const wchar_t* command) {
   evt->owner->events().push_front(evt);
   LeaveCriticalSection(&Vars.cEventSection);
   evt->owner->TriggerOperationCallback();
-  SetEvent(evt->owner->eventSignal_);
+  SetEvent(evt->owner->event_signal_);
 }
 
 void Script::Stop(bool force, bool reallyForce) {
@@ -259,14 +259,16 @@ void Script::Stop(bool force, bool reallyForce) {
 
   // trigger call back so script ends
   TriggerOperationCallback();
-  SetEvent(eventSignal_);
+  SetEvent(event_signal_);
 
   // normal wait: 500ms, forced wait: 300ms, really forced wait: 100ms
   int maxCount = (force ? (reallyForce ? 10 : 30) : 50);
   if (GetCurrentThreadId() != thread_id()) {
     for (int i = 0; hasActiveCX_ == true; i++) {
       // if we pass the time frame, just ignore the wait because the thread will end forcefully anyway
-      if (i >= maxCount) break;
+      if (i >= maxCount) {
+        break;
+      }
       Sleep(10);
     }
   }
@@ -426,7 +428,7 @@ void Script::FireEvent(Event* evt) {
   if (evt->owner && evt->owner->is_running()) {
     evt->owner->TriggerOperationCallback();
   }
-  SetEvent(eventSignal_);
+  SetEvent(event_signal_);
 }
 
 #ifdef DEBUG
