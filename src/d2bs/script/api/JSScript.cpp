@@ -73,7 +73,7 @@ JSAPI_FUNC(script_stop) {
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
   Script* script = (Script*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &script_class, NULL);
   if (script->is_running()) {
-    script->Stop();
+    script->stop();
   }
 
   return JS_TRUE;
@@ -84,7 +84,7 @@ JSAPI_FUNC(script_pause) {
   Script* script = (Script*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &script_class, NULL);
 
   if (script->is_running()) {
-    script->Pause();
+    script->pause();
   }
 
   return JS_TRUE;
@@ -95,7 +95,7 @@ JSAPI_FUNC(script_resume) {
   Script* script = (Script*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &script_class, NULL);
 
   if (script->is_paused()) {
-    script->Resume();
+    script->resume();
   }
 
   return JS_TRUE;
@@ -132,7 +132,7 @@ JSAPI_FUNC(script_join) {
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
   Script* script = (Script*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &script_class, NULL);
 
-  script->Join();
+  script->join();
 
   return JS_TRUE;
 }

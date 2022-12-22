@@ -318,10 +318,11 @@ void MenuEntered(bool beginStarter) {
     const wchar_t* starter = GetStarterScriptName();
     if (starter != NULL) {
       Print(L"\u00FFc2D2BS\u00FFc0 :: Starting %s", starter);
-      if (StartScript(starter, GetStarterScriptState()))
+      if (StartScript(starter, GetStarterScriptState())) {
         Print(L"\u00FFc2D2BS\u00FFc0 :: %s running.", starter);
-      else
+      } else {
         Print(L"\u00FFc2D2BS\u00FFc0 :: Failed to start %s!", starter);
+      }
     }
   }
 }

@@ -235,7 +235,7 @@ JSAPI_FUNC(my_stop) {
   if (argc > 0 && (JSVAL_IS_INT(JS_ARGV(cx, vp)[0]) && JSVAL_TO_INT(JS_ARGV(cx, vp)[0]) == 1) ||
       (JSVAL_IS_BOOLEAN(JS_ARGV(cx, vp)[0]) && JSVAL_TO_BOOLEAN(JS_ARGV(cx, vp)[0]) == TRUE)) {
     Script* script = (Script*)JS_GetContextPrivate(cx);
-    if (script) script->Stop();
+    if (script) script->stop();
   } else
     sScriptEngine->StopAll();
 

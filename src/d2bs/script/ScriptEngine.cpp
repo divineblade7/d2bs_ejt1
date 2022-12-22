@@ -24,7 +24,7 @@ bool __fastcall DisposeScript(Script* script, void*, uint) {
 bool __fastcall StopScript(Script* script, void* argv, uint) {
   script->TriggerOperationCallback();
   if (script->type() != ScriptType::Command) {
-    script->Stop(*(bool*)(argv), sScriptEngine->GetState() == Stopping);
+    script->stop(*(bool*)(argv), sScriptEngine->GetState() == Stopping);
   }
   return true;
 }
@@ -57,7 +57,7 @@ void ScriptEngine::Shutdown(void) {
     StopAll(true);
 
     if (scripts_.contains(L"console")) {
-      scripts_[L"console"]->Stop(true, true);
+      scripts_[L"console"]->stop(true, true);
     }
 
     // clear all scripts now that they're stopped
@@ -113,7 +113,7 @@ Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptType type, uint arg
 
   try {
     if (scripts_.count(fileName)) {
-      scripts_[fileName]->Stop();
+      scripts_[fileName]->stop();
     }
 
     Script* script = new Script(fileName, type, argc, argv);
@@ -278,7 +278,7 @@ void ScriptEngine::RemoveDelayedEvent(int key) {
 
 bool __fastcall StopIngameScript(Script* script, void*, uint) {
   if (script->type() == ScriptType::InGame) {
-    script->Stop(true);
+    script->stop(true);
   }
   return true;
 }

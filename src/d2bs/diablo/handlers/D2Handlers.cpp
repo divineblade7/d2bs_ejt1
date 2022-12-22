@@ -63,7 +63,7 @@ DWORD WINAPI D2Thread(LPVOID) {
       Print(L"\u00FFc2D2BS\u00FFc0 :: Profile %s not found", profile);
   }
 
-  Log(L"D2BS Engine startup complete. %s", D2BS_VERSION);
+  Log(L"D2BS Engine startup complete. %s", L"" D2BS_VERSION);
   Print(L"\u00FFc2D2BS\u00FFc0 :: Engine startup complete!");
 
   while (Vars.bActive) {

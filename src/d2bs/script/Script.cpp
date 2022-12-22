@@ -13,8 +13,6 @@
 
 Script::Script(const wchar_t* file, ScriptType type, uint argc, JSAutoStructuredCloneBuffer** argv)
     : type_(type), argv_(argv), argc_(argc) {
-  InitializeCriticalSection(&lock_);
-
   event_signal_ = CreateEvent(nullptr, true, false, nullptr);
 
   if (type_ == ScriptType::Command && wcslen(file) < 1) {
@@ -41,15 +39,14 @@ Script::Script(const wchar_t* file, ScriptType type, uint argc, JSAutoStructured
 Script::~Script() {
   state_ = ScriptState::Stopped;
   hasActiveCX_ = false;
-  // JS_SetPendingException(context, JSVAL_NULL);
+
   if (JS_IsInRequest(runtime_)) {
     JS_EndRequest(context_);
   }
 
-  EnterCriticalSection(&lock_);
-  //    JS_SetRuntimeThread(rt);
+  std::lock_guard<std::mutex> lock(mutex_);
+
   JS_DestroyContext(context_);
-  // JS_ClearRuntimeThread(rt);
   JS_DestroyRuntime(runtime_);
 
   context_ = nullptr;
@@ -60,11 +57,9 @@ Script::~Script() {
   if (thread_handle_ != INVALID_HANDLE_VALUE) {
     CloseHandle(thread_handle_);
   }
-  LeaveCriticalSection(&lock_);
-  DeleteCriticalSection(&lock_);
 }
 
-void Script::Run() {
+void Script::run() {
   try {
     runtime_ = JS_NewRuntime(Vars.dwMemUsage, JS_NO_HELPER_THREADS);
     JS_SetNativeStackQuota(runtime_, (size_t)50000);
@@ -117,7 +112,6 @@ void Script::Run() {
       JS_EndRequest(context_);
       JS_DestroyContext(context_);
     }
-    LeaveCriticalSection(&lock_);
     throw;
   }
   // only let the script run if it's not already running
@@ -164,17 +158,48 @@ void Script::Run() {
   // Stop();
 }
 
-void Script::Join() {
-  EnterCriticalSection(&lock_);
-  HANDLE hThread = thread_handle_;
-  LeaveCriticalSection(&lock_);
+void Script::stop(bool force, bool reallyForce) {
+  // if we've already stopped, just return
+  if (state_ == ScriptState::Stopped) {
+    return;
+  }
 
+  std::lock_guard<std::mutex> lock(mutex_);
+
+  //  tell everyone else that the script is aborted FIRST
+  state_ = ScriptState::Stopped;
+  if (type_ != ScriptType::Command) {
+    const wchar_t* displayName = filename_.c_str() + wcslen(Vars.szScriptPath) + 1;
+    Print(L"Script %s ended", displayName);
+  }
+
+  // trigger call back so script ends
+  TriggerOperationCallback();
+  SetEvent(event_signal_);
+
+  // normal wait: 500ms, forced wait: 300ms, really forced wait: 100ms
+  int maxCount = (force ? (reallyForce ? 10 : 30) : 50);
+  if (GetCurrentThreadId() != thread_id()) {
+    for (int i = 0; hasActiveCX_ == true; i++) {
+      // if we pass the time frame, just ignore the wait because the thread will end forcefully anyway
+      if (i >= maxCount) {
+        break;
+      }
+      Sleep(10);
+    }
+  }
+}
+
+void Script::join() {
+  std::unique_lock<std::mutex> lock(mutex_);
+
+  HANDLE hThread = thread_handle_;
   if (hThread != INVALID_HANDLE_VALUE) {
     WaitForSingleObject(hThread, INFINITE);
   }
 }
 
-void Script::Pause() {
+void Script::pause() {
   if (!is_stopped() && !is_paused()) {
     state_ = ScriptState::Paused;
   }
@@ -182,7 +207,7 @@ void Script::Pause() {
   SetEvent(event_signal_);
 }
 
-void Script::Resume() {
+void Script::resume() {
   if (!is_stopped() && is_paused()) {
     state_ = ScriptState::Running;
   }
@@ -203,17 +228,16 @@ bool Script::is_stopped() {
 }
 
 bool Script::BeginThread(LPTHREAD_START_ROUTINE ThreadFunc) {
-  EnterCriticalSection(&lock_);
+  std::unique_lock<std::mutex> lock(mutex_);
+
   DWORD dwExitCode = STILL_ACTIVE;
 
   if ((!GetExitCodeThread(thread_handle_, &dwExitCode) || dwExitCode != STILL_ACTIVE) &&
       (thread_handle_ = CreateThread(0, 0, ThreadFunc, this, 0, &thread_id_)) != NULL) {
-    LeaveCriticalSection(&lock_);
     return true;
   }
 
   thread_handle_ = INVALID_HANDLE_VALUE;
-  LeaveCriticalSection(&lock_);
   return false;
 }
 
@@ -242,37 +266,6 @@ void Script::RunCommand(const wchar_t* command) {
   LeaveCriticalSection(&Vars.cEventSection);
   evt->owner->TriggerOperationCallback();
   SetEvent(evt->owner->event_signal_);
-}
-
-void Script::Stop(bool force, bool reallyForce) {
-  // if we've already stopped, just return
-  if (state_ == ScriptState::Stopped) {
-    return;
-  }
-  EnterCriticalSection(&lock_);
-  // tell everyone else that the script is aborted FIRST
-  state_ = ScriptState::Stopped;
-  if (type_ != ScriptType::Command) {
-    const wchar_t* displayName = filename_.c_str() + wcslen(Vars.szScriptPath) + 1;
-    Print(L"Script %s ended", displayName);
-  }
-
-  // trigger call back so script ends
-  TriggerOperationCallback();
-  SetEvent(event_signal_);
-
-  // normal wait: 500ms, forced wait: 300ms, really forced wait: 100ms
-  int maxCount = (force ? (reallyForce ? 10 : 30) : 50);
-  if (GetCurrentThreadId() != thread_id()) {
-    for (int i = 0; hasActiveCX_ == true; i++) {
-      // if we pass the time frame, just ignore the wait because the thread will end forcefully anyway
-      if (i >= maxCount) {
-        break;
-      }
-      Sleep(10);
-    }
-  }
-  LeaveCriticalSection(&lock_);
 }
 
 const wchar_t* Script::filename_short() {
@@ -304,8 +297,11 @@ bool Script::IsIncluded(const wchar_t* file) {
 }
 
 bool Script::Include(const wchar_t* file) {
-  // since includes will happen on the same thread, locking here is acceptable
-  EnterCriticalSection(&lock_);
+  // THREAD SAFETY! ~ ejt
+  // Removed critical section lock here because Include is called recursively, one included script file can include more
+  // script files which causes a dead-lock. If any thread synchronization issues occurs here it is necessary to rethink
+  // a solution on how to deal with that.
+
   wchar_t* fname = _wcsdup(file);
   if (!fname) return false;
   _wcslwr_s(fname, wcslen(fname) + 1);
@@ -315,7 +311,6 @@ bool Script::Include(const wchar_t* file) {
   std::wstring currentFileName = std::wstring(fname);
   // ignore already included, 'in-progress' includes, and self-inclusion
   if (!!includes_.count(fname) || !!inProgress_.count(fname) || (currentFileName.compare(filename_.c_str()) == 0)) {
-    LeaveCriticalSection(&lock_);
     free(fname);
     return true;
   }
@@ -336,14 +331,11 @@ bool Script::Include(const wchar_t* file) {
       JS_ReportPendingException(cx);
     }
     inProgress_.erase(fname);
-    // JS_RemoveRoot(&scriptObj);
   } else {
     JS_ReportPendingException(cx);
   }
 
   JS_EndRequest(cx);
-  // JS_RemoveScriptRoot(cx, &script);
-  LeaveCriticalSection(&lock_);
   free(fname);
   return rval;
 }
@@ -353,12 +345,12 @@ bool Script::IsListenerRegistered(const char* evtName) {
 }
 
 void Script::RegisterEvent(const char* evtName, jsval evtFunc) {
-  EnterCriticalSection(&lock_);
+  std::lock_guard<std::mutex> lock(mutex_);
+
   if (JSVAL_IS_FUNCTION(context_, evtFunc) && strlen(evtName) > 0) {
     AutoRoot* root = new AutoRoot(context_, evtFunc);
     functions_[evtName].push_back(root);
   }
-  LeaveCriticalSection(&lock_);
 }
 
 bool Script::IsRegisteredEvent(const char* evtName, jsval evtFunc) {
@@ -376,10 +368,9 @@ bool Script::IsRegisteredEvent(const char* evtName, jsval evtFunc) {
 }
 
 void Script::UnregisterEvent(const char* evtName, jsval evtFunc) {
-  EnterCriticalSection(&lock_);
+  std::lock_guard<std::mutex> lock(mutex_);
 
   if (strlen(evtName) < 1 || !functions_.contains(evtName)) {
-    LeaveCriticalSection(&lock_);
     return;
   }
 
@@ -398,26 +389,24 @@ void Script::UnregisterEvent(const char* evtName, jsval evtFunc) {
   if (functions_.count(evtName) > 0 && functions_[evtName].size() == 0) {
     functions_.erase(evtName);
   }
-
-  LeaveCriticalSection(&lock_);
 }
 
 void Script::ClearEvent(const char* evtName) {
-  EnterCriticalSection(&lock_);
+  std::lock_guard<std::mutex> lock(mutex_);
+
   for (FunctionList::iterator it = functions_[evtName].begin(); it != functions_[evtName].end(); it++) {
     AutoRoot* func = *it;
     func->Release();
     delete func;
   }
   functions_[evtName].clear();
-  LeaveCriticalSection(&lock_);
 }
 
 void Script::ClearAllEvents() {
-  EnterCriticalSection(&lock_);
+  std::lock_guard<std::mutex> lock(mutex_);
+
   for (FunctionMap::iterator it = functions_.begin(); it != functions_.end(); it++) ClearEvent(it->first.c_str());
   functions_.clear();
-  LeaveCriticalSection(&lock_);
 }
 
 void Script::FireEvent(Event* evt) {
@@ -478,7 +467,7 @@ DWORD WINAPI ScriptThread(void* data) {
 #ifdef DEBUG
     SetThreadName(0xFFFFFFFF, script->filename_short());
 #endif
-    script->Run();
+    script->run();
     if (Vars.bDisableCache) {
       sScriptEngine->DisposeScript(script);
     }

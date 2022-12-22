@@ -30,17 +30,17 @@ class Script {
   // not sure if we want to keep using friend class ~ ejt
   friend class ScriptEngine;
 
-  void Run();
-  void Join();
-  void Pause();
-  void Resume();
+  void run();
+  void stop(bool force = false, bool reallyForce = false);
+  void join();
+  void pause();
+  void resume();
   bool is_running();
   bool is_paused();
   bool is_stopped();
 
   bool BeginThread(LPTHREAD_START_ROUTINE ThreadFunc);
   void RunCommand(const wchar_t* command);
-  void Stop(bool force = false, bool reallyForce = false);
 
   int GetExecutionCount();
 
@@ -133,7 +133,7 @@ class Script {
   HANDLE thread_handle_ = INVALID_HANDLE_VALUE;
   DWORD thread_id_ = 0;
 
-  CRITICAL_SECTION lock_;
+  std::mutex mutex_;
 
   FunctionMap functions_;
 
