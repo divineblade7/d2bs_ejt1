@@ -11,14 +11,14 @@
 #include <algorithm>
 #include <io.h>
 
-Script::Script(const wchar_t* file, ScriptType state, uint argc, JSAutoStructuredCloneBuffer** argv)
-    : type_(state), argv_(argv), argc_(argc) {
+Script::Script(const wchar_t* file, ScriptType type, uint argc, JSAutoStructuredCloneBuffer** argv)
+    : type_(type), argv_(argv), argc_(argc) {
   InitializeCriticalSection(&lock_);
 
   eventSignal_ = CreateEvent(nullptr, true, false, nullptr);
 
   if (type_ == ScriptType::Command && wcslen(file) < 1) {
-    fileName_ = std::wstring(L"Command Line");
+    filename_ = std::wstring(L"Command Line");
   } else {
     if (_waccess(file, 0) != 0) {
       DEBUG_LOG(file);
@@ -32,14 +32,14 @@ Script::Script(const wchar_t* file, ScriptType state, uint argc, JSAutoStructure
     }
 
     _wcslwr_s(tmpName, wcslen(file) + 1);
-    fileName_ = std::wstring(tmpName);
-    replace(fileName_.begin(), fileName_.end(), L'/', L'\\');
+    filename_ = std::wstring(tmpName);
+    replace(filename_.begin(), filename_.end(), L'/', L'\\');
     free(tmpName);
   }
 }
 
-Script::~Script(void) {
-  isAborted_ = true;
+Script::~Script() {
+  state_ = ScriptState::Stopped;
   hasActiveCX_ = false;
   // JS_SetPendingException(context, JSVAL_NULL);
   if (JS_IsInRequest(runtime_)) {
@@ -64,7 +64,7 @@ Script::~Script(void) {
   DeleteCriticalSection(&lock_);
 }
 
-void Script::Run(void) {
+void Script::Run() {
   try {
     runtime_ = JS_NewRuntime(Vars.dwMemUsage, JS_NO_HELPER_THREADS);
     JS_SetNativeStackQuota(runtime_, (size_t)50000);
@@ -95,14 +95,14 @@ void Script::Run(void) {
 
     if (type_ == ScriptType::Command) {
       if (wcslen(Vars.szConsole) > 0) {
-        script_ = JS_CompileFile(context_, globals_, fileName_);
+        script_ = JS_CompileFile(context_, globals_, filename_);
       } else {
         const char* cmd = "function main() {print('ÿc2D2BSÿc0 :: Started Console'); while (true){delay(10000)};}  ";
         script_ = JS_CompileScript(context_, globals_, cmd, strlen(cmd), "Command Line", 1);
       }
       JS_AddNamedScriptRoot(context_, &script_, "console script");
     } else {
-      script_ = JS_CompileFile(context_, globals_, fileName_);
+      script_ = JS_CompileFile(context_, globals_, filename_);
     }
 
     if (!script_) {
@@ -121,9 +121,11 @@ void Script::Run(void) {
     throw;
   }
   // only let the script run if it's not already running
-  if (IsRunning()) return;
+  if (is_running()) {
+    return;
+  }
   hasActiveCX_ = true;
-  isAborted_ = false;
+  state_ = ScriptState::Running;
 
   jsval main = INT_TO_JSVAL(1), dummy = INT_TO_JSVAL(1);
   JS_BeginRequest(context_);
@@ -172,24 +174,32 @@ void Script::Join() {
   }
 }
 
-void Script::Pause(void) {
-  if (!IsAborted() && !IsPaused()) {
-    isPaused_ = true;
+void Script::Pause() {
+  if (!is_stopped() && !is_paused()) {
+    state_ = ScriptState::Paused;
   }
   TriggerOperationCallback();
   SetEvent(eventSignal_);
 }
 
-void Script::Resume(void) {
-  if (!IsAborted() && IsPaused()) {
-    isPaused_ = false;
+void Script::Resume() {
+  if (!is_stopped() && is_paused()) {
+    state_ = ScriptState::Running;
   }
   TriggerOperationCallback();
   SetEvent(eventSignal_);
 }
 
-bool Script::IsPaused(void) {
-  return isPaused_;
+bool Script::is_running() {
+  return context_ && !(is_stopped() || is_paused() || !hasActiveCX_);
+}
+
+bool Script::is_paused() {
+  return state_ == ScriptState::Paused;
+}
+
+bool Script::is_stopped() {
+  return state_ == ScriptState::Stopped;
 }
 
 bool Script::BeginThread(LPTHREAD_START_ROUTINE ThreadFunc) {
@@ -212,7 +222,7 @@ void Script::RunCommand(const wchar_t* command) {
   // rcs->script = this;
   // rcs->command = _wcsdup(command);
 
-  if (isAborted_) {  // this should never happen -bob
+  if (state_ == ScriptState::Stopped) {  // this should never happen -bob
     // RUNCOMMANDSTRUCT* rcs = new RUNCOMMANDSTRUCT;
 
     // rcs->script = this;
@@ -236,16 +246,14 @@ void Script::RunCommand(const wchar_t* command) {
 
 void Script::Stop(bool force, bool reallyForce) {
   // if we've already stopped, just return
-  if (isAborted_) {
+  if (state_ == ScriptState::Stopped) {
     return;
   }
   EnterCriticalSection(&lock_);
   // tell everyone else that the script is aborted FIRST
-  isAborted_ = true;
-  isPaused_ = false;
-  isReallyPaused_ = false;
+  state_ = ScriptState::Stopped;
   if (type_ != ScriptType::Command) {
-    const wchar_t* displayName = fileName_.c_str() + wcslen(Vars.szScriptPath) + 1;
+    const wchar_t* displayName = filename_.c_str() + wcslen(Vars.szScriptPath) + 1;
     Print(L"Script %s ended", displayName);
   }
 
@@ -265,27 +273,19 @@ void Script::Stop(bool force, bool reallyForce) {
   LeaveCriticalSection(&lock_);
 }
 
-const wchar_t* Script::GetShortFilename() {
-  if (wcscmp(fileName_.c_str(), L"Command Line") == 0)
-    return fileName_.c_str();
+const wchar_t* Script::filename_short() {
+  if (wcscmp(filename_.c_str(), L"Command Line") == 0)
+    return filename_.c_str();
   else
-    return (fileName_.c_str() + wcslen(Vars.szScriptPath) + 1);
+    return (filename_.c_str() + wcslen(Vars.szScriptPath) + 1);
 }
 
-int Script::GetExecutionCount(void) {
+int Script::GetExecutionCount() {
   return execCount_;
 }
 
-void Script::UpdatePlayerGid(void) {
+void Script::UpdatePlayerGid() {
   me_->dwUnitId = (D2CLIENT_GetPlayerUnit() == NULL ? NULL : D2CLIENT_GetPlayerUnit()->dwUnitId);
-}
-
-bool Script::IsRunning(void) {
-  return context_ && !(IsAborted() || IsPaused() || !hasActiveCX_);
-}
-
-bool Script::IsAborted() {
-  return isAborted_;
 }
 
 bool Script::IsIncluded(const wchar_t* file) {
@@ -312,7 +312,7 @@ bool Script::Include(const wchar_t* file) {
   // don't invoke the string ctor more than once...
   std::wstring currentFileName = std::wstring(fname);
   // ignore already included, 'in-progress' includes, and self-inclusion
-  if (!!includes_.count(fname) || !!inProgress_.count(fname) || (currentFileName.compare(fileName_.c_str()) == 0)) {
+  if (!!includes_.count(fname) || !!inProgress_.count(fname) || (currentFileName.compare(filename_.c_str()) == 0)) {
     LeaveCriticalSection(&lock_);
     free(fname);
     return true;
@@ -411,7 +411,7 @@ void Script::ClearEvent(const char* evtName) {
   LeaveCriticalSection(&lock_);
 }
 
-void Script::ClearAllEvents(void) {
+void Script::ClearAllEvents() {
   EnterCriticalSection(&lock_);
   for (FunctionMap::iterator it = functions_.begin(); it != functions_.end(); it++) ClearEvent(it->first.c_str());
   functions_.clear();
@@ -423,7 +423,7 @@ void Script::FireEvent(Event* evt) {
   evt->owner->events().push_front(evt);
   LeaveCriticalSection(&Vars.cEventSection);
 
-  if (evt->owner && evt->owner->IsRunning()) {
+  if (evt->owner && evt->owner->is_running()) {
     evt->owner->TriggerOperationCallback();
   }
   SetEvent(eventSignal_);
@@ -474,7 +474,7 @@ DWORD WINAPI ScriptThread(void* data) {
   Script* script = (Script*)data;
   if (script) {
 #ifdef DEBUG
-    SetThreadName(0xFFFFFFFF, script->GetShortFilename());
+    SetThreadName(0xFFFFFFFF, script->filename_short());
 #endif
     script->Run();
     if (Vars.bDisableCache) {

@@ -139,7 +139,7 @@ void Genhook::Clean(Script* owner) {
 
   HookIterator it = visible.begin();
   while (it != visible.end()) {
-    if ((*it)->owner->IsAborted()) {
+    if ((*it)->owner->is_stopped()) {
       // Genhook* i = *it;
       it = invisible.erase(it);
       //	delete(i);

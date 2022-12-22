@@ -149,7 +149,7 @@ void ScriptEngine::RunCommand(const wchar_t* command) {
 void ScriptEngine::DisposeScript(Script* script) {
   auto lock = lock_script_list("DisposeScript");
 
-  const wchar_t* nFilename = script->GetFilename();
+  const wchar_t* nFilename = script->filename();
 
   if (scripts_.count(nFilename)) {
     scripts_.erase(nFilename);
@@ -198,8 +198,8 @@ unsigned int ScriptEngine::GetCount(bool active, bool unexecuted) {
 
   int count = scripts_.size();
   for (const auto& [_, script] : scripts_) {
-    if ((!active && script->IsRunning() && !script->IsAborted()) ||
-        !unexecuted && script->GetExecutionCount() == 0 && !script->IsRunning()) {
+    if ((!active && script->is_running() && !script->is_stopped()) ||
+        !unexecuted && script->GetExecutionCount() == 0 && !script->is_running()) {
       --count;
     }
   }
@@ -326,23 +326,16 @@ JSBool operationCallback(JSContext* cx) {
     }
     JS_EndRequest(cx);
   }
-  bool pause = script->IsPaused();
 
-  if (pause) {
-    script->SetPauseState(true);
-  }
-  while (script->IsPaused()) {
+  while (script->is_paused()) {
     Sleep(50);
     JS_MaybeGC(cx);
   }
-  if (pause) {
-    script->SetPauseState(false);
-  }
 
-  if (!!!(JSBool)(script->IsAborted() ||
+  if (!!!(JSBool)(script->is_stopped() ||
                   ((script->type() == ScriptType::InGame) && ClientState() == ClientStateMenu))) {
     auto& events = script->events();
-    while (events.size() > 0 && !!!(JSBool)(script->IsAborted() || ((script->type() == ScriptType::InGame) &&
+    while (events.size() > 0 && !!!(JSBool)(script->is_stopped() || ((script->type() == ScriptType::InGame) &&
                                                                     ClientState() == ClientStateMenu))) {
       EnterCriticalSection(&Vars.cEventSection);
       Event* evt = events.back();
@@ -350,7 +343,7 @@ JSBool operationCallback(JSContext* cx) {
       LeaveCriticalSection(&Vars.cEventSection);
       ExecScriptEvent(evt, false);
     }
-    return !!!(JSBool)(script->IsAborted() ||
+    return !!!(JSBool)(script->is_stopped() ||
                        ((script->type() == ScriptType::InGame) && ClientState() == ClientStateMenu));
   } else {
     return false;

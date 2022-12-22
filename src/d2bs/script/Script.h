@@ -13,13 +13,14 @@
 #include <windows.h>
 
 enum class ScriptType { InGame, OutOfGame, Command };
+enum class ScriptState { Stopped, Running, Paused };
 
+// This should be typdef'd inside Script but is used by JSSandbox
 typedef std::map<std::wstring, bool> IncludeList;
-typedef std::list<Script*> ScriptList;
 
 class Script {
-  Script(const wchar_t* file, ScriptType state, uint argc = 0, JSAutoStructuredCloneBuffer** argv = NULL);
-  ~Script(void);
+  Script(const wchar_t* file, ScriptType type, uint argc = 0, JSAutoStructuredCloneBuffer** argv = NULL);
+  ~Script();
 
   Script(const Script&) = delete;
   Script& operator=(const Script&) = delete;
@@ -28,22 +29,22 @@ class Script {
   // not sure if we want to keep using friend class ~ ejt
   friend class ScriptEngine;
 
-  void Run(void);
-  void Join(void);
-  void Pause(void);
-  void Resume(void);
-  bool IsPaused(void);
+  void Run();
+  void Join();
+  void Pause();
+  void Resume();
+  bool is_running();
+  bool is_paused();
+  bool is_stopped();
+
   bool BeginThread(LPTHREAD_START_ROUTINE ThreadFunc);
   void RunCommand(const wchar_t* command);
   void Stop(bool force = false, bool reallyForce = false);
 
-  int GetExecutionCount(void);
+  int GetExecutionCount();
 
   // UGLY HACK to fix up the player gid on game join for cached scripts/oog scripts
-  void UpdatePlayerGid(void);
-
-  bool IsRunning(void);
-  bool IsAborted(void);
+  void UpdatePlayerGid();
 
   bool IsIncluded(const wchar_t* file);
   bool Include(const wchar_t* file);
@@ -53,42 +54,28 @@ class Script {
   bool IsRegisteredEvent(const char* evtName, jsval evtFunc);
   void UnregisterEvent(const char* evtName, jsval evtFunc);
   void ClearEvent(const char* evtName);
-  void ClearAllEvents(void);
+  void ClearAllEvents();
   void FireEvent(Event*);
 
-  // Hack. Include from console needs to run on the RunCommandThread / cx.
-  //		 a better solution may be to keep a list of threadId / cx and have a GetCurrentThreadCX()
-  inline void SetContext(JSContext* cx) {
-    context_ = cx;
+  inline const wchar_t* filename() {
+    return filename_.c_str();
   }
 
-  inline void SetPauseState(bool reallyPaused) {
-    isReallyPaused_ = reallyPaused;
-  }
+  const wchar_t* filename_short();
 
-  inline bool IsReallyPaused(void) {
-    return isReallyPaused_;
-  }
-
-  inline const wchar_t* GetFilename(void) {
-    return fileName_.c_str();
-  }
-
-  const wchar_t* GetShortFilename(void);
-
-  inline JSContext* context(void) {
+  inline JSContext* context() {
     return context_;
   }
 
-  inline JSRuntime* runtime(void) {
+  inline JSRuntime* runtime() {
     return runtime_;
   }
 
-  inline ScriptType type(void) {
+  inline ScriptType type() {
     return type_;
   }
 
-  inline void TriggerOperationCallback(void) {
+  inline void TriggerOperationCallback() {
     if (hasActiveCX_) {
       JS_TriggerOperationCallback(runtime_);
     }
@@ -136,14 +123,12 @@ class Script {
   uint argc_;
 
   ScriptType type_;
-  std::wstring fileName_;
+  ScriptState state_ = ScriptState::Stopped;
+
+  std::wstring filename_;
   int execCount_ = 0;
   myUnit* me_ = nullptr;
   std::list<Event*> EventList_;
-
-  bool isPaused_ = false;
-  bool isReallyPaused_ = false;
-  bool isAborted_ = false;
 
   IncludeList includes_;
   IncludeList inProgress_;

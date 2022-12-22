@@ -26,13 +26,13 @@ JSAPI_PROP(script_getProperty) {
 
   switch (JSVAL_TO_INT(ID)) {
     case SCRIPT_FILENAME:
-      vp.setString(JS_InternUCString(cx, script->GetShortFilename()));
+      vp.setString(JS_InternUCString(cx, script->filename_short()));
       break;
     case SCRIPT_GAMETYPE:
       vp.setBoolean(script->type() == ScriptType::InGame ? false : true);
       break;
     case SCRIPT_RUNNING:
-      vp.setBoolean(script->IsRunning());
+      vp.setBoolean(script->is_running());
       break;
     case SCRIPT_THREADID:
       vp.setInt32(script->thread_id());
@@ -72,7 +72,9 @@ JSAPI_FUNC(script_getNext) {
 JSAPI_FUNC(script_stop) {
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
   Script* script = (Script*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &script_class, NULL);
-  if (script->IsRunning()) script->Stop();
+  if (script->is_running()) {
+    script->Stop();
+  }
 
   return JS_TRUE;
 }
@@ -81,7 +83,9 @@ JSAPI_FUNC(script_pause) {
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
   Script* script = (Script*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &script_class, NULL);
 
-  if (script->IsRunning()) script->Pause();
+  if (script->is_running()) {
+    script->Pause();
+  }
 
   return JS_TRUE;
 }
@@ -90,7 +94,9 @@ JSAPI_FUNC(script_resume) {
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
   Script* script = (Script*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &script_class, NULL);
 
-  if (script->IsPaused()) script->Resume();
+  if (script->is_paused()) {
+    script->Resume();
+  }
 
   return JS_TRUE;
 }
@@ -99,7 +105,7 @@ JSAPI_FUNC(script_send) {
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
   Script* script = (Script*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &script_class, NULL);
   Event* evt = new Event;
-  if (!script || !script->IsRunning()) {
+  if (!script || !script->is_running()) {
     return JS_TRUE;
   }
 
@@ -136,8 +142,7 @@ JSAPI_FUNC(my_getScript) {
   Script* iterp = NULL;
   if (argc == 1 && JSVAL_IS_BOOLEAN(JS_ARGV(cx, vp)[0]) && JSVAL_TO_BOOLEAN(JS_ARGV(cx, vp)[0]) == JS_TRUE) {
     iterp = (Script*)JS_GetContextPrivate(cx);
-  }
-  else if (argc == 1 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0])) {
+  } else if (argc == 1 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0])) {
     // loop over the Scripts in ScriptEngine and find the one with the right threadid
     DWORD tid = (DWORD)JSVAL_TO_INT(JS_ARGV(cx, vp)[0]);
     FindHelper args = {tid, NULL, NULL};
@@ -199,7 +204,7 @@ JSAPI_FUNC(my_getScripts) {
 bool __fastcall FindScriptByName(Script* script, void* argv, uint) {
   FindHelper* helper = (FindHelper*)argv;
   // static uint pathlen = wcslen(Vars.szScriptPath) + 1;
-  const wchar_t* fname = script->GetShortFilename();
+  const wchar_t* fname = script->filename_short();
   if (_wcsicmp(fname, helper->name) == 0) {
     helper->script = script;
     return false;
