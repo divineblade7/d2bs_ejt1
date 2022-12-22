@@ -5,9 +5,11 @@
 AutoRoot::AutoRoot(JSContext* ncx, jsval nvar) : cx(ncx), var(nvar), count(0) {
   Take();
 }
+
 AutoRoot::AutoRoot(jsval nvar) : cx(sScriptEngine->GetGlobalContext()), var(nvar), count(0) {
   Take();
 }
+
 AutoRoot::~AutoRoot() {
   if (count < 0) {
     fprintf(stderr, "AutoRoot failed: Count is still %i, but the root is being destroyed", count);

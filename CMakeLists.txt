@@ -28,7 +28,6 @@ set(D2BS_SRCS
   src/d2bs/core/ActMap.cpp
   src/d2bs/core/Control.cpp
   src/d2bs/core/Core.cpp
-  src/d2bs/core/dde.cpp
   src/d2bs/core/File.cpp
   src/d2bs/core/Game.cpp
   src/d2bs/core/Hash.cpp
@@ -73,6 +72,7 @@ set(D2BS_SRCS
 
   src/d2bs/utils/CommandLine.cpp
   src/d2bs/utils/Console.cpp
+  src/d2bs/utils/dde.cpp
   src/d2bs/utils/Events.cpp
   src/d2bs/utils/Helpers.cpp
   src/d2bs/utils/Offset.cpp

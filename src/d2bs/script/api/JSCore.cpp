@@ -2,12 +2,12 @@
 
 #include "d2bs/core/Core.h"
 #include "d2bs/core/File.h"
-#include "d2bs/core/dde.h"
 #include "d2bs/diablo/D2Ptrs.h"
 #include "d2bs/script/api/JSScript.h"
 #include "d2bs/utils/Console.h"
 #include "d2bs/utils/Events.h"
 #include "d2bs/utils/Helpers.h"
+#include "d2bs/utils/dde.h"
 
 #include <ddeml.h>
 #include <io.h>
@@ -60,12 +60,12 @@ JSAPI_FUNC(my_print) {
         return JS_FALSE;
       }
 
-      // bob20				jsrefcount depth = JS_SuspendRequest(cx);
+      // bob20      jsrefcount depth = JS_SuspendRequest(cx);
       if (!Text)
         Print(L"undefined");
       else
         Print(L"%s", Text);
-      // bob20				JS_ResumeRequest(cx, depth);
+      // bob20      JS_ResumeRequest(cx, depth);
     }
   }
   return JS_TRUE;

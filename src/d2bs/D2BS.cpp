@@ -2,7 +2,6 @@
 
 #include "D2BS.h"
 
-#include "d2bs/core/dde.h"
 #include "d2bs/diablo/D2Ptrs.h"
 #include "d2bs/diablo/handlers/D2Handlers.h"
 #include "d2bs/script/ScriptEngine.h"
@@ -10,6 +9,7 @@
 #include "d2bs/utils/Console.h"
 #include "d2bs/utils/Helpers.h"
 #include "d2bs/utils/Offset.h"
+#include "d2bs/utils/dde.h"
 
 #include <fcntl.h>
 #include <io.h>
@@ -25,6 +25,7 @@ BOOL WINAPI DllMain(HINSTANCE hDll, DWORD dwReason, LPVOID lpReserved) {
   switch (dwReason) {
     case DLL_PROCESS_ATTACH: {
       DisableThreadLibraryCalls(hDll);
+
       if (lpReserved != NULL) {
         Vars.pModule = (Module*)lpReserved;
 
