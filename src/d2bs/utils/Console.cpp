@@ -8,17 +8,70 @@
 #include <sstream>
 #include <string>
 
-bool Console::visible = false;
-bool Console::enabled = false;
-std::deque<std::wstring> Console::history = std::deque<std::wstring>();
-std::deque<std::wstring> Console::lines = std::deque<std::wstring>();
-std::deque<std::wstring> Console::commands = std::deque<std::wstring>();
-std::wstringstream Console::cmd = std::wstringstream();
-unsigned int Console::lineCount = 14;
-unsigned int Console::lineWidth = 625;
-unsigned int Console::commandPos = 0;
-unsigned int Console::height = 0;
-unsigned int Console::scrollIndex = 0;
+void Console::Toggle(void) {
+  EnterCriticalSection(&Vars.cConsoleSection);
+  ToggleBuffer();
+  TogglePrompt();
+  LeaveCriticalSection(&Vars.cConsoleSection);
+}
+
+void Console::TogglePrompt(void) {
+  EnterCriticalSection(&Vars.cConsoleSection);
+  if (!IsEnabled())
+    ShowPrompt();
+  else
+    HidePrompt();
+  LeaveCriticalSection(&Vars.cConsoleSection);
+}
+
+void Console::ToggleBuffer(void) {
+  EnterCriticalSection(&Vars.cConsoleSection);
+  if (!IsVisible())
+    ShowBuffer();
+  else
+    HideBuffer();
+  LeaveCriticalSection(&Vars.cConsoleSection);
+}
+
+void Console::Hide(void) {
+  EnterCriticalSection(&Vars.cConsoleSection);
+  HidePrompt();
+  HideBuffer();
+  LeaveCriticalSection(&Vars.cConsoleSection);
+}
+
+void Console::HidePrompt(void) {
+  EnterCriticalSection(&Vars.cConsoleSection);
+  enabled = false;
+  LeaveCriticalSection(&Vars.cConsoleSection);
+}
+
+void Console::HideBuffer(void) {
+  EnterCriticalSection(&Vars.cConsoleSection);
+  visible = false;
+  if (IsEnabled()) HidePrompt();
+  LeaveCriticalSection(&Vars.cConsoleSection);
+}
+
+void Console::Show(void) {
+  EnterCriticalSection(&Vars.cConsoleSection);
+  ShowBuffer();
+  ShowPrompt();
+  LeaveCriticalSection(&Vars.cConsoleSection);
+}
+
+void Console::ShowPrompt(void) {
+  EnterCriticalSection(&Vars.cConsoleSection);
+  enabled = true;
+  if (!IsVisible()) ShowBuffer();
+  LeaveCriticalSection(&Vars.cConsoleSection);
+}
+
+void Console::ShowBuffer(void) {
+  EnterCriticalSection(&Vars.cConsoleSection);
+  visible = true;
+  LeaveCriticalSection(&Vars.cConsoleSection);
+}
 
 void Console::AddKey(unsigned int key) {
   EnterCriticalSection(&Vars.cConsoleSection);
@@ -121,71 +174,6 @@ void Console::UpdateLines(void) {
 void Console::Clear(void) {
   EnterCriticalSection(&Vars.cConsoleSection);
   lines.clear();
-  LeaveCriticalSection(&Vars.cConsoleSection);
-}
-
-void Console::Toggle(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
-  ToggleBuffer();
-  TogglePrompt();
-  LeaveCriticalSection(&Vars.cConsoleSection);
-}
-
-void Console::TogglePrompt(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
-  if (!IsEnabled())
-    ShowPrompt();
-  else
-    HidePrompt();
-  LeaveCriticalSection(&Vars.cConsoleSection);
-}
-
-void Console::ToggleBuffer(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
-  if (!IsVisible())
-    ShowBuffer();
-  else
-    HideBuffer();
-  LeaveCriticalSection(&Vars.cConsoleSection);
-}
-
-void Console::Hide(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
-  HidePrompt();
-  HideBuffer();
-  LeaveCriticalSection(&Vars.cConsoleSection);
-}
-
-void Console::HidePrompt(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
-  enabled = false;
-  LeaveCriticalSection(&Vars.cConsoleSection);
-}
-
-void Console::HideBuffer(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
-  visible = false;
-  if (IsEnabled()) HidePrompt();
-  LeaveCriticalSection(&Vars.cConsoleSection);
-}
-
-void Console::Show(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
-  ShowBuffer();
-  ShowPrompt();
-  LeaveCriticalSection(&Vars.cConsoleSection);
-}
-
-void Console::ShowPrompt(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
-  enabled = true;
-  if (!IsVisible()) ShowBuffer();
-  LeaveCriticalSection(&Vars.cConsoleSection);
-}
-
-void Console::ShowBuffer(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
-  visible = true;
   LeaveCriticalSection(&Vars.cConsoleSection);
 }
 

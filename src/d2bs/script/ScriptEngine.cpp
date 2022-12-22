@@ -466,7 +466,7 @@ void reportError(JSContext*, const char* message, JSErrorReport* report) {
   if (Vars.bQuitOnError && !JSREPORT_IS_WARNING(report->flags) && ClientState() == ClientStateInGame)
     D2CLIENT_ExitGame();
   else
-    Console::ShowBuffer();
+    sConsole->ShowBuffer();
 }
 
 bool ExecScriptEvent(Event* evt, bool clearList) {

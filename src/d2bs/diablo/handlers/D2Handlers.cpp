@@ -224,43 +224,43 @@ LRESULT CALLBACK KeyPress(int code, WPARAM wParam, LPARAM lParam) {
     if (wParam == VK_HOME && !(chatBoxOpen || escMenuOpen)) {
       if (isDown && !isRepeat && code == HC_ACTION) {
         if (!altState)
-          Console::ToggleBuffer();
+          sConsole->ToggleBuffer();
         else
-          Console::TogglePrompt();
+          sConsole->TogglePrompt();
 
         return CallNextHookEx(NULL, code, wParam, lParam);
       }
-    } else if (wParam == VK_ESCAPE && Console::IsVisible()) {
+    } else if (wParam == VK_ESCAPE && sConsole->IsVisible()) {
       if (isDown && !isRepeat && code == HC_ACTION) {
-        Console::Hide();
+        sConsole->Hide();
         return 1;
       }
       return CallNextHookEx(NULL, code, wParam, lParam);
-    } else if (Console::IsEnabled()) {
+    } else if (sConsole->IsEnabled()) {
       BYTE layout[256] = {0};
       WORD out[2] = {0};
       switch (wParam) {
         case VK_TAB:
           if (isUp)
-            for (int i = 0; i < 5; i++) Console::AddKey(' ');
+            for (int i = 0; i < 5; i++) sConsole->AddKey(' ');
           break;
         case VK_RETURN:
-          if (isUp && !isRepeat && !escMenuOpen) Console::ExecuteCommand();
+          if (isUp && !isRepeat && !escMenuOpen) sConsole->ExecuteCommand();
           break;
         case VK_BACK:
-          if (isDown) Console::RemoveLastKey();
+          if (isDown) sConsole->RemoveLastKey();
           break;
         case VK_UP:
-          if (isUp && !isRepeat) Console::PrevCommand();
+          if (isUp && !isRepeat) sConsole->PrevCommand();
           break;
         case VK_DOWN:
-          if (isUp && !isRepeat) Console::NextCommand();
+          if (isUp && !isRepeat) sConsole->NextCommand();
           break;
         case VK_NEXT:
-          if (isDown) Console::ScrollDown();
+          if (isDown) sConsole->ScrollDown();
           break;
         case VK_PRIOR:
-          if (isDown) Console::ScrollUp();
+          if (isDown) sConsole->ScrollUp();
           break;
         case VK_MENU:  // alt
           // Send the alt to the scripts to fix sticky alt. There may be a better way.
@@ -270,7 +270,7 @@ LRESULT CALLBACK KeyPress(int code, WPARAM wParam, LPARAM lParam) {
         default:
           if (isDown) {
             if (GetKeyboardState(layout) && ToAscii(wParam, (lParam & 0xFF0000), layout, out, 0) != 0) {
-              for (int i = 0; i < repeatCount; i++) Console::AddKey(out[0]);
+              for (int i = 0; i < repeatCount; i++) sConsole->AddKey(out[0]);
             }
           }
           break;
@@ -356,8 +356,8 @@ void FlushPrint() {
 
     if (Vars.bUseGamePrint && ClientState() == ClientStateInGame) {
       while (getline(ss, temp)) {
-        SplitLines(temp.c_str(), Console::MaxWidth() - 100, L' ', lines);
-        Console::AddLine(temp);
+        SplitLines(temp.c_str(), sConsole->MaxWidth() - 100, L' ', lines);
+        sConsole->AddLine(temp);
       }
 
       // Convert and send every line.
@@ -365,12 +365,12 @@ void FlushPrint() {
         D2CLIENT_PrintGameString((wchar_t*)it->c_str(), 0);
       }
       /*} else if (Vars.bUseGamePrint && ClientState() == ClientStateMenu && findControl(4, (const wchar_t*)NULL, -1,
-         28, 410, 354, 298)) { while (getline(ss, temp)) SplitLines(temp, Console::MaxWidth() - 100, ' ', lines);
+         28, 410, 354, 298)) { while (getline(ss, temp)) SplitLines(temp, sConsole->MaxWidth() - 100, ' ', lines);
               // TODO: Double check this function, make sure it is working as intended.
               for (list<string>::iterator it = lines.begin(); it != lines.end(); ++it)
                   D2MULTI_PrintChannelText((char*)it->c_str(), 0);*/
     } else {
-      while (getline(ss, temp)) Console::AddLine(temp);
+      while (getline(ss, temp)) sConsole->AddLine(temp);
     }
 
     clean.pop();
@@ -382,7 +382,7 @@ void GameDraw(void) {
     FlushPrint();
     Genhook::DrawAll(IG);
     DrawLogo();
-    Console::Draw();
+    sConsole->Draw();
   }
   if (Vars.bTakeScreenshot) {
     Vars.bTakeScreenshot = false;
@@ -405,7 +405,7 @@ void GameDrawOOG(void) {
     FlushPrint();
     Genhook::DrawAll(OOG);
     DrawLogo();
-    Console::Draw();
+    sConsole->Draw();
   }
   if (Vars.bTakeScreenshot) {
     Vars.bTakeScreenshot = false;

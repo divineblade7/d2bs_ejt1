@@ -522,13 +522,13 @@ JSAPI_FUNC(my_scriptBroadcast) {
 
 JSAPI_FUNC(my_showConsole) {
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
-  Console::Show();
+  sConsole->Show();
   return JS_TRUE;
 }
 
 JSAPI_FUNC(my_hideConsole) {
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
-  Console::Hide();
+  sConsole->Hide();
   return JS_TRUE;
 }
 
@@ -683,9 +683,9 @@ JSAPI_FUNC(my_sendKey) {
     return JS_FALSE;
   }
   JS_EndRequest(cx);
-  BOOL prompt = Console::IsEnabled();
+  BOOL prompt = sConsole->IsEnabled();
   if (prompt) {
-    Console::HidePrompt();
+    sConsole->HidePrompt();
   }
   Sleep(100);
   SendKeyPress(WM_KEYDOWN, key, 0);
@@ -693,7 +693,7 @@ JSAPI_FUNC(my_sendKey) {
   SendKeyPress(WM_KEYUP, key, 0);
   Sleep(100);
   if (prompt) {
-    Console::ShowPrompt();
+    sConsole->ShowPrompt();
   }
   return JS_TRUE;
 }

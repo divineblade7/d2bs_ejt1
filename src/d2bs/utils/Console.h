@@ -8,44 +8,66 @@
 #include <windows.h>
 
 class Console {
- private:
-  static bool visible, enabled;
-  static std::deque<std::wstring> lines, commands, history;
-  static unsigned int lineCount, lineWidth, commandPos, height, scrollIndex;
-  static std::wstringstream cmd;
+  Console() noexcept = default;
+  ~Console() noexcept = default;
 
  public:
-  static void Toggle(void);
-  static void TogglePrompt(void);
-  static void ToggleBuffer(void);
-  static void Hide(void);
-  static void HidePrompt(void);
-  static void HideBuffer(void);
-  static void Show(void);
-  static void ShowPrompt(void);
-  static void ShowBuffer(void);
-  static bool IsVisible(void) {
+  static Console* instance() {
+    static Console _instance;
+    return &_instance;
+  }
+
+  Console(const Console&) = delete;
+  Console& operator=(const Console&) = delete;
+
+  void Toggle(void);
+  void TogglePrompt(void);
+  void ToggleBuffer(void);
+  void Hide(void);
+  void HidePrompt(void);
+  void HideBuffer(void);
+  void Show(void);
+  void ShowPrompt(void);
+  void ShowBuffer(void);
+
+  void AddKey(unsigned int key);
+  void ExecuteCommand(void);
+  void RemoveLastKey(void);
+  void PrevCommand(void);
+  void NextCommand(void);
+  void ScrollUp(void);
+  void ScrollDown(void);
+  void AddLine(std::wstring line);
+  void UpdateLines(void);
+  void Clear(void);
+  void Draw(void);
+
+  bool IsVisible(void) {
     return visible;
   }
-  static bool IsEnabled(void) {
+
+  bool IsEnabled(void) {
     return enabled;
   }
-  static unsigned int MaxWidth(void) {
+
+  unsigned int MaxWidth(void) {
     return lineWidth;
   }
-  static unsigned int GetHeight(void) {
+
+  unsigned int GetHeight(void) {
     return height;
   }
 
-  static void AddKey(unsigned int key);
-  static void ExecuteCommand(void);
-  static void RemoveLastKey(void);
-  static void PrevCommand(void);
-  static void NextCommand(void);
-  static void ScrollUp(void);
-  static void ScrollDown(void);
-  static void AddLine(std::wstring line);
-  static void UpdateLines(void);
-  static void Clear(void);
-  static void Draw(void);
+ private:
+  bool visible = false;
+  bool enabled = false;
+  std::deque<std::wstring> lines, commands, history;
+  unsigned int lineCount = 14;
+  unsigned int lineWidth = 625;
+  unsigned int commandPos = 0;
+  unsigned int height = 0;
+  unsigned int scrollIndex = 0;
+  std::wstringstream cmd;
 };
+
+#define sConsole Console::instance()
