@@ -11,25 +11,13 @@
 #include <algorithm>
 #include <io.h>
 
-Script::Script(const wchar_t* file, ScriptState state, uint argc, JSAutoStructuredCloneBuffer** argv)
-    : context_(NULL),
-      globalObject_(NULL),
-      scriptObject_(NULL),
-      script_(NULL),
-      execCount_(0),
-      isAborted_(false),
-      isPaused_(false),
-      isReallyPaused_(false),
-      scriptState_(state),
-      argc_(argc),
-      argv_(argv) {
+Script::Script(const wchar_t* file, ScriptType state, uint argc, JSAutoStructuredCloneBuffer** argv)
+    : type_(state), argv_(argv), argc_(argc) {
   InitializeCriticalSection(&lock_);
-  // moved the runtime initilization to thread start
-  LastGC_ = 0;
-  hasActiveCX_ = false;
+
   eventSignal_ = CreateEvent(nullptr, true, false, nullptr);
 
-  if (scriptState_ == Command && wcslen(file) < 1) {
+  if (type_ == ScriptType::Command && wcslen(file) < 1) {
     fileName_ = std::wstring(L"Command Line");
   } else {
     if (_waccess(file, 0) != 0) {
@@ -64,10 +52,9 @@ Script::~Script(void) {
   // JS_ClearRuntimeThread(rt);
   JS_DestroyRuntime(runtime_);
 
-  context_ = NULL;
-  scriptObject_ = NULL;
-  globalObject_ = NULL;
-  script_ = NULL;
+  context_ = nullptr;
+  globals_ = nullptr;
+  script_ = nullptr;
   CloseHandle(eventSignal_);
   includes_.clear();
   if (thread_handle_ != INVALID_HANDLE_VALUE) {
@@ -99,23 +86,23 @@ void Script::Run(void) {
 
     JS_BeginRequest(context_);
 
-    globalObject_ = JS_GetGlobalObject(context_);
+    globals_ = JS_GetGlobalObject(context_);
     jsval meVal = JSVAL_VOID;
-    if (JS_GetProperty(GetContext(), globalObject_, "me", &meVal) != JS_FALSE) {
+    if (JS_GetProperty(context_, globals_, "me", &meVal) != JS_FALSE) {
       JSObject* meObject = JSVAL_TO_OBJECT(meVal);
-      me_ = (myUnit*)JS_GetPrivate(GetContext(), meObject);
+      me_ = (myUnit*)JS_GetPrivate(context_, meObject);
     }
 
-    if (scriptState_ == Command) {
+    if (type_ == ScriptType::Command) {
       if (wcslen(Vars.szConsole) > 0) {
-        script_ = JS_CompileFile(context_, globalObject_, fileName_);
+        script_ = JS_CompileFile(context_, globals_, fileName_);
       } else {
         const char* cmd = "function main() {print('ÿc2D2BSÿc0 :: Started Console'); while (true){delay(10000)};}  ";
-        script_ = JS_CompileScript(context_, globalObject_, cmd, strlen(cmd), "Command Line", 1);
+        script_ = JS_CompileScript(context_, globals_, cmd, strlen(cmd), "Command Line", 1);
       }
       JS_AddNamedScriptRoot(context_, &script_, "console script");
     } else {
-      script_ = JS_CompileFile(context_, globalObject_, fileName_);
+      script_ = JS_CompileFile(context_, globals_, fileName_);
     }
 
     if (!script_) {
@@ -126,9 +113,6 @@ void Script::Run(void) {
     // JS_RemoveScriptRoot(context, &script);
 
   } catch (std::exception&) {
-    if (scriptObject_) {
-      JS_RemoveRoot(context_, &scriptObject_);
-    }
     if (context_) {
       JS_EndRequest(context_);
       JS_DestroyContext(context_);
@@ -142,7 +126,7 @@ void Script::Run(void) {
   isAborted_ = false;
 
   jsval main = INT_TO_JSVAL(1), dummy = INT_TO_JSVAL(1);
-  JS_BeginRequest(GetContext());
+  JS_BeginRequest(context_);
 
   // args passed from load
   jsval* argvalue = new jsval[argc_];
@@ -154,16 +138,16 @@ void Script::Run(void) {
     JS_AddValueRoot(context_, &argvalue[j]);
   }
 
-  JS_AddValueRoot(GetContext(), &main);
-  JS_AddValueRoot(GetContext(), &dummy);
-  if (JS_ExecuteScript(GetContext(), globalObject_, script_, &dummy) != JS_FALSE &&
-      JS_GetProperty(GetContext(), globalObject_, "main", &main) != JS_FALSE && JSVAL_IS_FUNCTION(GetContext(), main)) {
-    JS_CallFunctionValue(GetContext(), globalObject_, main, this->argc_, argvalue, &dummy);
+  JS_AddValueRoot(context_, &main);
+  JS_AddValueRoot(context_, &dummy);
+  if (JS_ExecuteScript(context_, globals_, script_, &dummy) != JS_FALSE &&
+      JS_GetProperty(context_, globals_, "main", &main) != JS_FALSE && JSVAL_IS_FUNCTION(context_, main)) {
+    JS_CallFunctionValue(context_, globals_, main, this->argc_, argvalue, &dummy);
   }
-  JS_RemoveValueRoot(GetContext(), &main);
-  JS_RemoveValueRoot(GetContext(), &dummy);
+  JS_RemoveValueRoot(context_, &main);
+  JS_RemoveValueRoot(context_, &dummy);
   for (uint j = 0; j < argc_; j++) {
-    JS_RemoveValueRoot(GetContext(), &argvalue[j]);
+    JS_RemoveValueRoot(context_, &argvalue[j]);
   }
 
   /*for(uint i = 0; i < argc; i++)  //crashes spidermonkey cleans itself up?
@@ -172,7 +156,7 @@ void Script::Run(void) {
           delete argv[i];
   }*/
 
-  JS_EndRequest(GetContext());
+  JS_EndRequest(context_);
 
   execCount_++;
   // Stop();
@@ -260,7 +244,7 @@ void Script::Stop(bool force, bool reallyForce) {
   isAborted_ = true;
   isPaused_ = false;
   isReallyPaused_ = false;
-  if (GetState() != Command) {
+  if (type_ != ScriptType::Command) {
     const wchar_t* displayName = fileName_.c_str() + wcslen(Vars.szScriptPath) + 1;
     Print(L"Script %s ended", displayName);
   }
@@ -335,15 +319,15 @@ bool Script::Include(const wchar_t* file) {
   }
   bool rval = false;
 
-  JSContext* cx = GetContext();
+  JSContext* cx = context_;
 
   JS_BeginRequest(cx);
 
-  JSScript* _script = JS_CompileFile(cx, GetGlobalObject(), fname);
+  JSScript* _script = JS_CompileFile(cx, globals_, fname);
   if (_script) {
     jsval dummy;
     inProgress_[fname] = true;
-    rval = !!JS_ExecuteScript(cx, GetGlobalObject(), _script, &dummy);
+    rval = !!JS_ExecuteScript(cx, globals_, _script, &dummy);
     if (rval) {
       includes_[fname] = true;
     } else {
@@ -469,7 +453,7 @@ void SetThreadName(DWORD dwThreadID, LPCWSTR szThreadName) {
 
 DWORD WINAPI RunCommandThread(void* data) {
   RUNCOMMANDSTRUCT* rcs = (RUNCOMMANDSTRUCT*)data;
-  JSContext* cx = rcs->script->GetContext();
+  JSContext* cx = rcs->script->context();
   JS_BeginRequest(cx);
   jsval rval;
   JS_AddNamedValueRoot(cx, &rval, "Cmd line rtl");

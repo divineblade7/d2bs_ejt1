@@ -12,13 +12,13 @@
 #include <string>
 #include <windows.h>
 
-enum ScriptState { InGame, OutOfGame, Command };
+enum class ScriptType { InGame, OutOfGame, Command };
 
 typedef std::map<std::wstring, bool> IncludeList;
 typedef std::list<Script*> ScriptList;
 
 class Script {
-  Script(const wchar_t* file, ScriptState state, uint argc = 0, JSAutoStructuredCloneBuffer** argv = NULL);
+  Script(const wchar_t* file, ScriptType state, uint argc = 0, JSAutoStructuredCloneBuffer** argv = NULL);
   ~Script(void);
 
   Script(const Script&) = delete;
@@ -75,24 +75,17 @@ class Script {
   }
 
   const wchar_t* GetShortFilename(void);
-  inline JSContext* GetContext(void) {
+
+  inline JSContext* context(void) {
     return context_;
   }
 
-  inline JSRuntime* GetRuntime(void) {
+  inline JSRuntime* runtime(void) {
     return runtime_;
   }
 
-  inline JSObject* GetGlobalObject(void) {
-    return globalObject_;
-  }
-
-  inline JSObject* GetScriptObject(void) {
-    return scriptObject_;
-  }
-
-  inline ScriptState GetState(void) {
-    return scriptState_;
+  inline ScriptType type(void) {
+    return type_;
   }
 
   inline void TriggerOperationCallback(void) {
@@ -134,21 +127,26 @@ class Script {
   }
 
  private:
-  std::wstring fileName_;
-  int execCount_;
-  ScriptState scriptState_;
-  JSContext* context_;
-  JSScript* script_;
-  JSRuntime* runtime_;
-  myUnit* me_;
-  uint argc_;
+  JSRuntime* runtime_ = nullptr;
+  JSContext* context_ = nullptr;
+  JSScript* script_ = nullptr;
+  JSObject* globals_ = nullptr;
+
   JSAutoStructuredCloneBuffer** argv_;
+  uint argc_;
+
+  ScriptType type_;
+  std::wstring fileName_;
+  int execCount_ = 0;
+  myUnit* me_ = nullptr;
   std::list<Event*> EventList_;
 
-  JSObject *globalObject_, *scriptObject_;
-  bool isLocked_, isPaused_, isReallyPaused_, isAborted_;
+  bool isPaused_ = false;
+  bool isReallyPaused_ = false;
+  bool isAborted_ = false;
 
-  IncludeList includes_, inProgress_;
+  IncludeList includes_;
+  IncludeList inProgress_;
 
   HANDLE thread_handle_ = INVALID_HANDLE_VALUE;
   DWORD thread_id_ = 0;
@@ -157,8 +155,8 @@ class Script {
 
   FunctionMap functions_;
 
-  DWORD LastGC_;
-  bool hasActiveCX_;  // hack to get away from JS_IsRunning
+  DWORD LastGC_ = 0;
+  bool hasActiveCX_ = false;  // hack to get away from JS_IsRunning
   HANDLE eventSignal_;
 };
 

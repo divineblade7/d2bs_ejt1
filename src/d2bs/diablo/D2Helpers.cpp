@@ -264,8 +264,8 @@ BOOL SetSkill(JSContext* cx, WORD wSkillId, BOOL bLeft, DWORD dwItemId) {
       WaitForSingleObjectEx(script->event_signal(), amt, true);
       ResetEvent(script->event_signal());
       auto& events = script->events();
-      while (events.size() > 0 &&
-             !!!(JSBool)(script->IsAborted() || ((script->GetState() == InGame) && ClientState() == ClientStateMenu))) {
+      while (events.size() > 0 && !!!(JSBool)(script->IsAborted() || ((script->type() == ScriptType::InGame) &&
+                                                                      ClientState() == ClientStateMenu))) {
         EnterCriticalSection(&Vars.cEventSection);
         Event* evt = events.back();
         events.pop_back();

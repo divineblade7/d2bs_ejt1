@@ -202,9 +202,11 @@ const wchar_t* GetStarterScriptName(void) {
                                              : NULL);
 }
 
-ScriptState GetStarterScriptState(void) {
+ScriptType GetStarterScriptState(void) {
   // the default return is InGame because that's the least harmful of the options
-  return (ClientState() == ClientStateInGame ? InGame : ClientState() == ClientStateMenu ? OutOfGame : InGame);
+  return (ClientState() == ClientStateInGame ? ScriptType::InGame
+          : ClientState() == ClientStateMenu ? ScriptType::OutOfGame
+                                             : ScriptType::InGame);
 }
 
 bool ExecCommand(const wchar_t* command) {
@@ -212,10 +214,10 @@ bool ExecCommand(const wchar_t* command) {
   return true;
 }
 
-bool StartScript(const wchar_t* scriptname, ScriptState state) {
+bool StartScript(const wchar_t* scriptname, ScriptType type) {
   wchar_t file[_MAX_FNAME + _MAX_PATH];
   swprintf_s(file, _countof(file), L"%s\\%s", Vars.szScriptPath, scriptname);
-  Script* script = sScriptEngine->CompileFile(file, state);
+  Script* script = sScriptEngine->CompileFile(file, type);
   return (script && script->BeginThread(ScriptThread));
 }
 

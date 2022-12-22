@@ -23,7 +23,7 @@ bool __fastcall DisposeScript(Script* script, void*, uint) {
 
 bool __fastcall StopScript(Script* script, void* argv, uint) {
   script->TriggerOperationCallback();
-  if (script->GetState() != Command) {
+  if (script->type() != ScriptType::Command) {
     script->Stop(*(bool*)(argv), sScriptEngine->GetState() == Stopping);
   }
   return true;
@@ -38,9 +38,9 @@ BOOL ScriptEngine::Startup(void) {
     if (wcslen(Vars.szConsole) > 0) {
       wchar_t file[_MAX_FNAME + _MAX_PATH];
       swprintf_s(file, _countof(file), L"%s\\%s", Vars.szScriptPath, Vars.szConsole);
-      console = new Script(file, Command);
+      console = new Script(file, ScriptType::Command);
     } else {
-      console = new Script(L"", Command);
+      console = new Script(L"", ScriptType::Command);
     }
     console->BeginThread(ScriptThread);
     scripts_[L"console"] = console;
@@ -102,8 +102,8 @@ void ScriptEngine::FlushCache(void) {
   // LeaveCriticalSection(&lock);
 }
 
-Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptState _state, uint argc,
-                                  JSAutoStructuredCloneBuffer** argv, bool) {
+Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptType type, uint argc, JSAutoStructuredCloneBuffer** argv,
+                                  bool) {
   if (GetState() != Running) {
     return NULL;
   }
@@ -116,7 +116,7 @@ Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptState _state, uint 
       scripts_[fileName]->Stop();
     }
 
-    Script* script = new Script(fileName, _state, argc, argv);
+    Script* script = new Script(fileName, type, argc, argv);
     scripts_[fileName] = script;
     free(fileName);
     return script;
@@ -277,7 +277,7 @@ void ScriptEngine::RemoveDelayedEvent(int key) {
 }
 
 bool __fastcall StopIngameScript(Script* script, void*, uint) {
-  if (script->GetState() == InGame) {
+  if (script->type() == ScriptType::InGame) {
     script->Stop(true);
   }
   return true;
@@ -339,17 +339,19 @@ JSBool operationCallback(JSContext* cx) {
     script->SetPauseState(false);
   }
 
-  if (!!!(JSBool)(script->IsAborted() || ((script->GetState() == InGame) && ClientState() == ClientStateMenu))) {
+  if (!!!(JSBool)(script->IsAborted() ||
+                  ((script->type() == ScriptType::InGame) && ClientState() == ClientStateMenu))) {
     auto& events = script->events();
-    while (events.size() > 0 &&
-           !!!(JSBool)(script->IsAborted() || ((script->GetState() == InGame) && ClientState() == ClientStateMenu))) {
+    while (events.size() > 0 && !!!(JSBool)(script->IsAborted() || ((script->type() == ScriptType::InGame) &&
+                                                                    ClientState() == ClientStateMenu))) {
       EnterCriticalSection(&Vars.cEventSection);
       Event* evt = events.back();
       events.pop_back();
       LeaveCriticalSection(&Vars.cEventSection);
       ExecScriptEvent(evt, false);
     }
-    return !!!(JSBool)(script->IsAborted() || ((script->GetState() == InGame) && ClientState() == ClientStateMenu));
+    return !!!(JSBool)(script->IsAborted() ||
+                       ((script->type() == ScriptType::InGame) && ClientState() == ClientStateMenu));
   } else {
     return false;
   }
@@ -453,7 +455,7 @@ void reportError(JSContext*, const char* message, JSErrorReport* report) {
 bool ExecScriptEvent(Event* evt, bool clearList) {
   JSContext* cx = nullptr;
 
-  if (!clearList) cx = evt->owner->GetContext();
+  if (!clearList) cx = evt->owner->context();
   char* evtName = (char*)evt->name;
   if (strcmp(evtName, "itemaction") == 0) {
     if (!clearList) {

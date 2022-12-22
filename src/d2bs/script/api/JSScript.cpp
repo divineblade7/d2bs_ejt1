@@ -29,7 +29,7 @@ JSAPI_PROP(script_getProperty) {
       vp.setString(JS_InternUCString(cx, script->GetShortFilename()));
       break;
     case SCRIPT_GAMETYPE:
-      vp.setBoolean(script->GetState() == InGame ? false : true);
+      vp.setBoolean(script->type() == ScriptType::InGame ? false : true);
       break;
     case SCRIPT_RUNNING:
       vp.setBoolean(script->IsRunning());
@@ -38,7 +38,7 @@ JSAPI_PROP(script_getProperty) {
       vp.setInt32(script->thread_id());
       break;
     case SCRIPT_MEMORY:
-      vp.setInt32(JS_GetGCParameter(script->GetRuntime(), JSGC_BYTES));
+      vp.setInt32(JS_GetGCParameter(script->runtime(), JSGC_BYTES));
       break;
     default:
       break;

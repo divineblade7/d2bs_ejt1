@@ -135,18 +135,18 @@ JSAPI_FUNC(my_delay) {
       if (script->IsAborted()) break;
 
       auto& events = script->events();
-      while (events.size() > 0 &&
-             !!!(JSBool)(script->IsAborted() || ((script->GetState() == InGame) && ClientState() == ClientStateMenu))) {
+      while (events.size() > 0 && !!!(JSBool)(script->IsAborted() || ((script->type() == ScriptType::InGame) &&
+                                                                      ClientState() == ClientStateMenu))) {
         EnterCriticalSection(&Vars.cEventSection);
         Event* evt = events.back();
         events.pop_back();
         LeaveCriticalSection(&Vars.cEventSection);
         ExecScriptEvent(evt, false);
       }
-      if (JS_GetGCParameter(script->GetRuntime(), JSGC_BYTES) - script->last_gc() > 524288)  // gc every .5 mb
+      if (JS_GetGCParameter(script->runtime(), JSGC_BYTES) - script->last_gc() > 524288)  // gc every .5 mb
       {
         JS_GC(JS_GetRuntime(cx));
-        script->set_last_gc(JS_GetGCParameter(script->GetRuntime(), JSGC_BYTES));
+        script->set_last_gc(JS_GetGCParameter(script->runtime(), JSGC_BYTES));
       }
       /*else
               JS_MaybeGC(cx);*/
@@ -175,8 +175,10 @@ JSAPI_FUNC(my_load) {
     return JS_FALSE;
   }
 
-  ScriptState scriptState = script->GetState();
-  if (scriptState == Command) scriptState = (ClientState() == ClientStateInGame ? InGame : OutOfGame);
+  ScriptType type = script->type();
+  if (type == ScriptType::Command) {
+    type = (ClientState() == ClientStateInGame ? ScriptType::InGame : ScriptType::OutOfGame);
+  }
 
   wchar_t buf[_MAX_PATH + _MAX_FNAME];
   swprintf_s(buf, _countof(buf), L"%s\\%s", Vars.szScriptPath, file);
@@ -188,7 +190,7 @@ JSAPI_FUNC(my_load) {
     autoBuffer[i - 1]->write(cx, JS_ARGV(cx, vp)[i]);
   }
 
-  Script* newScript = sScriptEngine->CompileFile(buf, scriptState, argc - 1, autoBuffer);
+  Script* newScript = sScriptEngine->CompileFile(buf, type, argc - 1, autoBuffer);
 
   if (newScript) {
     newScript->BeginThread(ScriptThread);

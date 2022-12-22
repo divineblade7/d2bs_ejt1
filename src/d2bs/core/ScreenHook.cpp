@@ -211,7 +211,7 @@ bool Genhook::Click(int button, POINT* loc) {
   if (!IsInRange(loc)) return false;
 
   bool block = false;
-  if (owner && JSVAL_IS_FUNCTION(owner->GetContext(), clicked)) {
+  if (owner && JSVAL_IS_FUNCTION(owner->context(), clicked)) {
     Event* evt = new Event;
     evt->owner = owner;
     evt->argc = 3;
@@ -222,7 +222,7 @@ bool Genhook::Click(int button, POINT* loc) {
     evt->arg4 = new DWORD(false);
 
     ResetEvent(Vars.eventSignal);
-    AutoRoot* root = new AutoRoot(evt->owner->GetContext(), clicked);
+    AutoRoot* root = new AutoRoot(evt->owner->context(), clicked);
     evt->functions.push_back(root);
     owner->FireEvent(evt);
 
@@ -242,11 +242,11 @@ bool Genhook::Click(int button, POINT* loc) {
 void Genhook::Hover(POINT* loc) {
   if (!IsInRange(loc)) return;
 
-  if (owner && JSVAL_IS_FUNCTION(owner->GetContext(), hovered)) {
+  if (owner && JSVAL_IS_FUNCTION(owner->context(), hovered)) {
     Event* evt = new Event;
     evt->owner = owner;
     evt->argc = 2;
-    evt->functions.push_back(new AutoRoot((owner->GetContext(), hovered)));
+    evt->functions.push_back(new AutoRoot((owner->context(), hovered)));
     evt->name = _strdup("ScreenHookHover");
     evt->arg1 = new DWORD((DWORD)loc->x);
     evt->arg2 = new DWORD((DWORD)loc->y);
@@ -285,10 +285,10 @@ void Genhook::SetHoverHandler(jsval handler) {
   if (!owner) return;
   if (JSVAL_IS_VOID(handler)) return;
   Lock();
-  if (!JSVAL_IS_VOID(hovered)) JS_RemoveRoot(owner->GetContext(), &hovered);
-  if (JSVAL_IS_FUNCTION(owner->GetContext(), handler)) hovered = handler;
+  if (!JSVAL_IS_VOID(hovered)) JS_RemoveRoot(owner->context(), &hovered);
+  if (JSVAL_IS_FUNCTION(owner->context(), handler)) hovered = handler;
   if (!JSVAL_IS_VOID(hovered)) {
-    if (JS_AddRoot(owner->GetContext(), &hovered) == JS_FALSE) {
+    if (JS_AddRoot(owner->context(), &hovered) == JS_FALSE) {
       Unlock();
       return;
     }
