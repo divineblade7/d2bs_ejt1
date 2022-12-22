@@ -155,7 +155,7 @@ void ScriptEngine::DisposeScript(Script* script) {
     scripts_.erase(nFilename);
   }
 
-  if (GetCurrentThreadId() == script->threadId_) {
+  if (GetCurrentThreadId() == script->thread_id_) {
     delete script;
   } else {
     // bad things happen if we delete from another thread

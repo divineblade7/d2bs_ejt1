@@ -35,7 +35,7 @@ JSAPI_PROP(script_getProperty) {
       vp.setBoolean(script->IsRunning());
       break;
     case SCRIPT_THREADID:
-      vp.setInt32(script->GetThreadId());
+      vp.setInt32(script->thread_id());
       break;
     case SCRIPT_MEMORY:
       vp.setInt32(JS_GetGCParameter(script->GetRuntime(), JSGC_BYTES));
@@ -209,7 +209,7 @@ bool __fastcall FindScriptByName(Script* script, void* argv, uint) {
 
 bool __fastcall FindScriptByTid(Script* script, void* argv, uint) {
   FindHelper* helper = (FindHelper*)argv;
-  if (script->GetThreadId() == helper->tid) {
+  if (script->thread_id() == helper->tid) {
     helper->script = script;
     return false;
   }

@@ -38,21 +38,12 @@ class Script {
   void Stop(bool force = false, bool reallyForce = false);
 
   int GetExecutionCount(void);
-  DWORD GetThreadId(void);
 
   // UGLY HACK to fix up the player gid on game join for cached scripts/oog scripts
   void UpdatePlayerGid(void);
 
   bool IsRunning(void);
   bool IsAborted(void);
-
-  void Lock() {
-    EnterCriticalSection(&lock_);
-  }  // needed for events walking function list
-
-  void Unlock() {
-    LeaveCriticalSection(&lock_);
-  }
 
   bool IsIncluded(const wchar_t* file);
   bool Include(const wchar_t* file);
@@ -115,7 +106,7 @@ class Script {
   }
 
   DWORD thread_id() {
-    return threadId_;
+    return (thread_handle_ == INVALID_HANDLE_VALUE ? -1 : thread_id_);
   }
 
   FunctionMap& functions() {
@@ -159,11 +150,11 @@ class Script {
 
   IncludeList includes_, inProgress_;
 
-  HANDLE threadHandle_;
+  HANDLE thread_handle_ = INVALID_HANDLE_VALUE;
+  DWORD thread_id_ = 0;
 
   CRITICAL_SECTION lock_;
 
-  DWORD threadId_;
   FunctionMap functions_;
 
   DWORD LastGC_;

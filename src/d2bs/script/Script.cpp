@@ -21,8 +21,6 @@ Script::Script(const wchar_t* file, ScriptState state, uint argc, JSAutoStructur
       isPaused_(false),
       isReallyPaused_(false),
       scriptState_(state),
-      threadHandle_(INVALID_HANDLE_VALUE),
-      threadId_(0),
       argc_(argc),
       argv_(argv) {
   InitializeCriticalSection(&lock_);
@@ -72,8 +70,8 @@ Script::~Script(void) {
   script_ = NULL;
   CloseHandle(eventSignal_);
   includes_.clear();
-  if (threadHandle_ != INVALID_HANDLE_VALUE) {
-    CloseHandle(threadHandle_);
+  if (thread_handle_ != INVALID_HANDLE_VALUE) {
+    CloseHandle(thread_handle_);
   }
   LeaveCriticalSection(&lock_);
   DeleteCriticalSection(&lock_);
@@ -128,7 +126,9 @@ void Script::Run(void) {
     // JS_RemoveScriptRoot(context, &script);
 
   } catch (std::exception&) {
-    if (scriptObject_) JS_RemoveRoot(context_, &scriptObject_);
+    if (scriptObject_) {
+      JS_RemoveRoot(context_, &scriptObject_);
+    }
     if (context_) {
       JS_EndRequest(context_);
       JS_DestroyContext(context_);
@@ -180,7 +180,7 @@ void Script::Run(void) {
 
 void Script::Join() {
   EnterCriticalSection(&lock_);
-  HANDLE hThread = threadHandle_;
+  HANDLE hThread = thread_handle_;
   LeaveCriticalSection(&lock_);
 
   if (hThread != INVALID_HANDLE_VALUE) {
@@ -212,13 +212,13 @@ bool Script::BeginThread(LPTHREAD_START_ROUTINE ThreadFunc) {
   EnterCriticalSection(&lock_);
   DWORD dwExitCode = STILL_ACTIVE;
 
-  if ((!GetExitCodeThread(threadHandle_, &dwExitCode) || dwExitCode != STILL_ACTIVE) &&
-      (threadHandle_ = CreateThread(0, 0, ThreadFunc, this, 0, &threadId_)) != NULL) {
+  if ((!GetExitCodeThread(thread_handle_, &dwExitCode) || dwExitCode != STILL_ACTIVE) &&
+      (thread_handle_ = CreateThread(0, 0, ThreadFunc, this, 0, &thread_id_)) != NULL) {
     LeaveCriticalSection(&lock_);
     return true;
   }
 
-  threadHandle_ = INVALID_HANDLE_VALUE;
+  thread_handle_ = INVALID_HANDLE_VALUE;
   LeaveCriticalSection(&lock_);
   return false;
 }
@@ -271,7 +271,7 @@ void Script::Stop(bool force, bool reallyForce) {
 
   // normal wait: 500ms, forced wait: 300ms, really forced wait: 100ms
   int maxCount = (force ? (reallyForce ? 10 : 30) : 50);
-  if (GetCurrentThreadId() != GetThreadId()) {
+  if (GetCurrentThreadId() != thread_id()) {
     for (int i = 0; hasActiveCX_ == true; i++) {
       // if we pass the time frame, just ignore the wait because the thread will end forcefully anyway
       if (i >= maxCount) break;
@@ -290,10 +290,6 @@ const wchar_t* Script::GetShortFilename() {
 
 int Script::GetExecutionCount(void) {
   return execCount_;
-}
-
-DWORD Script::GetThreadId(void) {
-  return (threadHandle_ == INVALID_HANDLE_VALUE ? -1 : threadId_);
 }
 
 void Script::UpdatePlayerGid(void) {
@@ -380,23 +376,27 @@ void Script::RegisterEvent(const char* evtName, jsval evtFunc) {
 }
 
 bool Script::IsRegisteredEvent(const char* evtName, jsval evtFunc) {
-  // nothing can be registered under an empty name
-  if (strlen(evtName) < 1) return false;
+  if (strlen(evtName) < 1 || !functions_.contains(evtName)) {
+    return false;
+  }
 
-  // if there are no events registered under that name at all, then obviously there
-  // can't be a specific one registered under that name
-  if (functions_.count(evtName) < 1) return false;
-
-  for (FunctionList::iterator it = functions_[evtName].begin(); it != functions_[evtName].end(); it++)
-    if (*(*it)->value() == evtFunc) return true;
+  for (auto* root : functions_[evtName]) {
+    if (*(root->value()) == evtFunc) {
+      return true;
+    }
+  }
 
   return false;
 }
 
 void Script::UnregisterEvent(const char* evtName, jsval evtFunc) {
-  if (strlen(evtName) < 1) return;
-
   EnterCriticalSection(&lock_);
+
+  if (strlen(evtName) < 1 || !functions_.contains(evtName)) {
+    LeaveCriticalSection(&lock_);
+    return;
+  }
+
   AutoRoot* func = NULL;
   for (FunctionList::iterator it = functions_[evtName].begin(); it != functions_[evtName].end(); it++) {
     if (*(*it)->value() == evtFunc) {
@@ -409,7 +409,9 @@ void Script::UnregisterEvent(const char* evtName, jsval evtFunc) {
   delete func;
 
   // Remove event completely if there are no listeners for it.
-  if (functions_.count(evtName) > 0 && functions_[evtName].size() == 0) functions_.erase(evtName);
+  if (functions_.count(evtName) > 0 && functions_[evtName].size() == 0) {
+    functions_.erase(evtName);
+  }
 
   LeaveCriticalSection(&lock_);
 }
