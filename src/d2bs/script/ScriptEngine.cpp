@@ -64,7 +64,9 @@ void ScriptEngine::Shutdown(void) {
     // clear all scripts now that they're stopped
     ForEachScript(::DisposeScript, NULL, 0);
 
-    if (!scripts_.empty()) scripts_.clear();
+    if (!scripts_.empty()) {
+      scripts_.clear();
+    }
 
     if (runtime_) {
       JS_DestroyContext(context_);
@@ -80,11 +82,15 @@ void ScriptEngine::Shutdown(void) {
 }
 
 void ScriptEngine::FlushCache(void) {
-  if (GetState() != Running) return;
+  if (GetState() != Running) {
+    return;
+  }
 
   static bool isFlushing = false;
 
-  if (isFlushing || Vars.bDisableCache) return;
+  if (isFlushing || Vars.bDisableCache) {
+    return;
+  }
 
   // EnterCriticalSection(&lock);
   // TODO: examine if this lock is necessary any more
@@ -102,13 +108,17 @@ void ScriptEngine::FlushCache(void) {
 
 Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptState _state, uint argc,
                                   JSAutoStructuredCloneBuffer** argv, bool) {
-  if (GetState() != Running) return NULL;
+  if (GetState() != Running) {
+    return NULL;
+  }
 
   wchar_t* fileName = _wcsdup(file);
   _wcslwr_s(fileName, wcslen(file) + 1);
 
   try {
-    if (scripts_.count(fileName)) scripts_[fileName]->Stop();
+    if (scripts_.count(fileName)) {
+      scripts_[fileName]->Stop();
+    }
 
     Script* script = new Script(fileName, _state, argc, argv);
     scripts_[fileName] = script;
@@ -125,7 +135,10 @@ Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptState _state, uint 
 }
 
 void ScriptEngine::RunCommand(const wchar_t* command) {
-  if (GetState() != Running) return;
+  if (GetState() != Running) {
+    return;
+  }
+
   try {
     // EnterCriticalSection(&lock);
     console_->RunCommand(command);
@@ -143,13 +156,15 @@ void ScriptEngine::DisposeScript(Script* script) {
 
   const wchar_t* nFilename = script->GetFilename();
 
-  if (scripts_.count(nFilename)) scripts_.erase(nFilename);
+  if (scripts_.count(nFilename)) {
+    scripts_.erase(nFilename);
+  }
 
   UnLockScriptList("DisposeScript");
 
-  if (GetCurrentThreadId() == script->threadId_)
+  if (GetCurrentThreadId() == script->threadId_) {
     delete script;
-  else {
+  } else {
     // bad things happen if we delete from another thread
     Event* evt = new Event;
     evt->owner = script;
@@ -169,63 +184,62 @@ void ScriptEngine::UnLockScriptList(const char*) {
 }
 
 bool ScriptEngine::ForEachScript(ScriptCallback callback, void* argv, uint argc) {
-  if (callback == NULL || scripts_.size() < 1) return false;
-  bool block = false;
-  // EnterCriticalSection(&lock);
+  if (!callback || scripts_.empty()) {
+    return false;
+  }
 
   LockScriptList("forEachScript");
 
-  // damn std::list not supporting operator[]...
-  std::vector<Script*> list;
-  for (ScriptMap::iterator it = scripts_.begin(); it != scripts_.end(); it++) list.push_back(it->second);
+  bool block = false;
+  for (const auto& [_, script] : scripts_) {
+    if (callback(script, argv, argc)) {
+      block = true;
+    }
+  }
 
   UnLockScriptList("forEachScript");
-
-  int count = list.size();
-  // damn std::iterator not supporting manipulating the list...
-  for (int i = 0; i < count; i++) {
-    if (callback(list[i], argv, argc)) block = true;
-  }
-  // LeaveCriticalSection(&lock);  // was previously locked after callback calls.
 
   return block;
 }
 
 unsigned int ScriptEngine::GetCount(bool active, bool unexecuted) {
-  if (GetState() != Running) return 0;
-  LockScriptList("getCount");
-  // EnterCriticalSection(&lock);
-  int count = scripts_.size();
-  for (ScriptMap::iterator it = scripts_.begin(); it != scripts_.end(); it++) {
-    if (!active && it->second->IsRunning() && !it->second->IsAborted()) count--;
-    if (!unexecuted && it->second->GetExecutionCount() == 0 && !it->second->IsRunning()) count--;
+  if (GetState() != Running) {
+    return 0;
   }
-  assert(count >= 0);
+
+  LockScriptList("getCount");
+
+  int count = scripts_.size();
+  for (const auto& [_, script] : scripts_) {
+    if ((!active && script->IsRunning() && !script->IsAborted()) ||
+        !unexecuted && script->GetExecutionCount() == 0 && !script->IsRunning()) {
+      --count;
+    }
+  }
+
   UnLockScriptList("getCount");
-  // LeaveCriticalSection(&lock);
+
+  assert(count >= 0);
   return count;
 }
 
 void ScriptEngine::InitClass(JSContext* cx, JSObject* globalObject, JSClass* classp, JSFunctionSpec* methods,
                              JSPropertySpec* props, JSFunctionSpec* s_methods, JSPropertySpec* s_props) {
-  if (!JS_InitClass(cx, globalObject, NULL, classp, classp->construct, 0, props, methods, s_props, s_methods))
+  if (!JS_InitClass(cx, globalObject, NULL, classp, classp->construct, 0, props, methods, s_props, s_methods)) {
     throw std::exception("Couldn't initialize the class");
+  }
 }
 
 void ScriptEngine::DefineConstant(JSContext* cx, JSObject* globalObject, const char* name, int value) {
-  if (!JS_DefineProperty(cx, globalObject, name, INT_TO_JSVAL(value), NULL, NULL, JSPROP_PERMANENT_VAR))
+  if (!JS_DefineProperty(cx, globalObject, name, INT_TO_JSVAL(value), NULL, NULL, JSPROP_PERMANENT_VAR)) {
     throw std::exception("Couldn't initialize the constant");
+  }
 }
 
 void ScriptEngine::StopAll(bool forceStop) {
-  if (GetState() != Running) {
-    return;
+  if (GetState() == Running) {
+    ForEachScript(StopScript, &forceStop, 1);
   }
-
-  // EnterCriticalSection(&lock);
-  ForEachScript(StopScript, &forceStop, 1);
-
-  // LeaveCriticalSection(&lock);
 }
 
 void ScriptEngine::UpdateConsole() {
@@ -266,14 +280,17 @@ void ScriptEngine::RemoveDelayedEvent(int key) {
       free(evt->name);
       delete evt;
       it = DelayedExecList_.erase(it);
-    } else
+    } else {
       it++;
+    }
   }
   LeaveCriticalSection(&Vars.cEventSection);
 }
 
 bool __fastcall StopIngameScript(Script* script, void*, uint) {
-  if (script->GetState() == InGame) script->Stop(true);
+  if (script->GetState() == InGame) {
+    script->Stop(true);
+  }
   return true;
 }
 
@@ -322,12 +339,16 @@ JSBool operationCallback(JSContext* cx) {
   }
   bool pause = script->IsPaused();
 
-  if (pause) script->SetPauseState(true);
+  if (pause) {
+    script->SetPauseState(true);
+  }
   while (script->IsPaused()) {
     Sleep(50);
     JS_MaybeGC(cx);
   }
-  if (pause) script->SetPauseState(false);
+  if (pause) {
+    script->SetPauseState(false);
+  }
 
   if (!!!(JSBool)(script->IsAborted() || ((script->GetState() == InGame) && ClientState() == ClientStateMenu))) {
     auto& events = script->events();
@@ -381,8 +402,9 @@ JSBool contextCallback(JSContext* cx, uint contextOp) {
     if (!meObject) return JS_FALSE;
 
     if (JS_DefineProperty(cx, globalObject, "me", OBJECT_TO_JSVAL(meObject), NULL, NULL, JSPROP_PERMANENT_VAR) ==
-        JS_FALSE)
+        JS_FALSE) {
       return JS_FALSE;
+    }
 
 #define DEFCONST(vp) sScriptEngine->DefineConstant(cx, globalObject, #vp, vp)
     DEFCONST(FILE_READ);
@@ -410,41 +432,6 @@ JSBool contextCallback(JSContext* cx, uint contextOp) {
   return JS_TRUE;
 }
 
-// JSGCCallback gcCallback(JSRuntime *rt, JSGCStatus status)
-//{
-//	//Script* script = (Script*)JS_GetContextPrivate(cx);
-//	DWORD cur =GetCurrentThreadId() ;
-//	//if (cur != script->GetThreadId())
-//	//	return JS_FALSE;
-//	if(status == JSGC_BEGIN)
-//	{
-//
-//		//Script* script = (Script*)JS_GetContextPrivate(cx);
-//		//Print("Entering GC %s",script->GetShortFilename());
-////		EnterCriticalSection(&ScriptEngine::lock);
-//
-// #ifdef DEBUG
-//		Log("*** ENTERING GC ***");
-// #ifdef lord2800_INFO
-//		Print("*** ENTERING GC ***");
-// #endif
-// #endif
-//	}
-//	else if(status == JSGC_END)
-//	{
-//	//	Script* script = (Script*)JS_GetContextPrivate(cx);
-//	//	Print("Leaving GC %s",script->GetShortFilename());
-// #ifdef DEBUG
-//		Log("*** LEAVING GC ***");
-// #ifdef lord2800_INFO
-//		Print("*** LEAVING GC ***");
-// #endif
-// #endif
-////		LeaveCriticalSection(&ScriptEngine::lock);
-//	}
-//	//return JS_TRUE;
-//}
-
 void reportError(JSContext*, const char* message, JSErrorReport* report) {
   bool warn = JSREPORT_IS_WARNING(report->flags);
   bool isStrict = JSREPORT_IS_STRICT(report->flags);
@@ -452,23 +439,26 @@ void reportError(JSContext*, const char* message, JSErrorReport* report) {
   const char* strict = (isStrict ? "Strict " : "");
   wchar_t* filename = report->filename ? AnsiToUnicode(report->filename) : _wcsdup(L"<unknown>");
   wchar_t* displayName = filename;
-  if (_wcsicmp(L"Command Line", filename) != 0 && _wcsicmp(L"<unknown>", filename) != 0)
+  if (_wcsicmp(L"Command Line", filename) != 0 && _wcsicmp(L"<unknown>", filename) != 0) {
     displayName = filename + wcslen(Vars.szPath);
+  }
 
   Log(L"[%hs%hs] Code(%d) File(%s:%d) %hs\nLine: %hs", strict, type, report->errorNumber, filename, report->lineno,
       message, report->linebuf);
   Print(L"[\u00FFc%d%hs%hs\u00FFc0 (%d)] File(%s:%d) %hs", (warn ? 9 : 1), strict, type, report->errorNumber,
         displayName, report->lineno, message);
 
-  if (filename[0] == L'<')
+  if (filename[0] == L'<') {
     free(filename);
-  else
+  } else {
     delete[] filename;
+  }
 
-  if (Vars.bQuitOnError && !JSREPORT_IS_WARNING(report->flags) && ClientState() == ClientStateInGame)
+  if (Vars.bQuitOnError && !JSREPORT_IS_WARNING(report->flags) && ClientState() == ClientStateInGame) {
     D2CLIENT_ExitGame();
-  else
+  } else {
     sConsole->ShowBuffer();
+  }
 }
 
 bool ExecScriptEvent(Event* evt, bool clearList) {
