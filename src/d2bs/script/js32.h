@@ -1,15 +1,8 @@
 #pragma once
 
-#pragma comment(lib, "psapi.lib")  // Added to support GetProcessMemoryInfo()
-
 #ifndef XP_WIN
 #define XP_WIN
 #endif
-
-// #ifndef DEBUG
-// #define DEBUG
-// #define WDEBUG
-// #endif
 
 // Disable all warnings emitted from mozjs
 // it is a dependency so we dont care. ~ ejt
@@ -18,11 +11,6 @@
 #include "jsfriendapi.h"
 #pragma warning(pop)
 
-// #ifdef WDEBUG
-// #undef DEBUG
-// #undef WDEBUG
-// #endif
-// #include "Exports.hpp"
 #include <fstream>
 #include <io.h>
 #include <streambuf>
@@ -76,7 +64,6 @@ struct JSModuleSpec {
 
 class JSAutoRoot {
  private:
-
   JSContext* cx;
   jsval* ref;
 
@@ -110,7 +97,7 @@ class JSAutoRoot {
 
 // #define EMPTY_CTOR(name) JSBool name##_ctor (JSContext* cx, uint argc, jsval* vp) { return THROW_ERROR(cx, #name " is
 // not constructable."); }
-//         #define EMPTY_CTOR(name) \
+//          #define EMPTY_CTOR(name) \
 //JSBool name##_ctor (JSContext *cx, JSObject* obj, uint argc, jsval *argv, jsval *rval) { \
 //	THROW_ERROR(cx, "Invalid Operation"); }
 
@@ -130,9 +117,9 @@ JSScript* JS_CompileFile(JSContext* cx, JSObject* globalObject, std::wstring fil
   }
 
 // EXPORT JSBool JS_ThrowError(JSContext* cx, const char* message, ...);
-//EXPORT void JS_DefineClasses(JSContext* cx, JSObject* obj, JSClassSpec* classes);
-//EXPORT JSObject* JS_GetProtoForClass(JSContext* cx, JSClass* classp);
-//EXPORT JSObject* JS_NewObjectWithProto(JSContext* cx, JSObject* obj, JSClassSpec* classp, JSClassSpec* proto,
+// EXPORT void JS_DefineClasses(JSContext* cx, JSObject* obj, JSClassSpec* classes);
+// EXPORT JSObject* JS_GetProtoForClass(JSContext* cx, JSClass* classp);
+// EXPORT JSObject* JS_NewObjectWithProto(JSContext* cx, JSObject* obj, JSClassSpec* classp, JSClassSpec* proto,
 //                                       JSObject* parent);
 
 #define JSPROP_DEFAULT JSPROP_ENUMERATE | JSPROP_PERMANENT

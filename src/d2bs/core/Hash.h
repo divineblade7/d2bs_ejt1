@@ -5,8 +5,6 @@
 #include <wincrypt.h>
 // clang-format on
 
-#pragma comment(lib, "Crypt32")
-
 char* HashString(char* string, ALG_ID algo);
 char* HashFile(wchar_t* file, ALG_ID algo);
 char* md5(char* string);

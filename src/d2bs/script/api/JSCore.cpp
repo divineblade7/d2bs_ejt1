@@ -639,7 +639,6 @@ JSAPI_FUNC(my_getPacket) {
   return JS_TRUE;
 }
 
-#pragma comment(lib, "wininet")
 JSAPI_FUNC(my_getIP) {
   HINTERNET hInternet, hFile;
   DWORD rSize;

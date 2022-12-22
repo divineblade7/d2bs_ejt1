@@ -16,7 +16,6 @@ AutoRoot::~AutoRoot() {
     DebugBreak();
     exit(3);
   }
-  // JS_RemoveRoot(cx, &var);
   JS_BeginRequest(cx);
   JS_RemoveValueRoot(cx, &var);
   JS_EndRequest(cx);

@@ -119,6 +119,8 @@ endforeach()
 target_link_libraries(${PROJECT_NAME} PRIVATE
   dbghelp
   shlwapi
+  wininet
+  ws2_32
 
   js)
 
