@@ -1,13 +1,18 @@
 #pragma once
 
-#include "d2bs/cguard.h"
-#include "d2bs/diablo/D2Structs.h"
+#include "d2bs/cguard.h"            // Module
+#include "d2bs/diablo/D2Structs.h"  // CellFile
 
-#include <Windows.h>
-#include <cstdint>
-#include <map>
-#include <queue>
-#include <string>
+#include <Windows.h>  // CRITICAL_SECTION, DWORD, HANDLE, HHOOK, HMODULE, POINT, UINT_PTR, WNDPROC
+#include <map>        // std::map
+#include <queue>      // std::queue
+#include <string>     // std::wstring
+#include <vector>     // std::vector
+#include <utility>    // std::pair
+
+// Temporarily adding these here until I can untangle the great web och inclusions.
+// ArraySize, PRIVATE_ITEM, PRIVATE_UNIT and Private should be moved. ~ ejt
+#define ArraySize(x) (sizeof((x)) / sizeof((x)[0]))
 
 #define PRIVATE_ITEM 1
 #define PRIVATE_UNIT 3

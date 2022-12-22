@@ -12,7 +12,5 @@
 #include <vector>
 #include <windows.h>
 
-#define ArraySize(x) (sizeof((x)) / sizeof((x)[0]))
-
 BOOL Startup(void);
 void Shutdown(void);
