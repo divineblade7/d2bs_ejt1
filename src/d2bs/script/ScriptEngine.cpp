@@ -424,7 +424,7 @@ void reportError(JSContext*, const char* message, JSErrorReport* report) {
   wchar_t* filename = report->filename ? AnsiToUnicode(report->filename) : _wcsdup(L"<unknown>");
   wchar_t* displayName = filename;
   if (_wcsicmp(L"Command Line", filename) != 0 && _wcsicmp(L"<unknown>", filename) != 0) {
-    displayName = filename + wcslen(Vars.szPath);
+    displayName = filename + Vars.working_dir.wstring().length();
   }
 
   Log(L"[%hs%hs] Code(%d) File(%s:%d) %hs\nLine: %hs", strict, type, report->errorNumber, filename, report->lineno,

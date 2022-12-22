@@ -38,7 +38,7 @@ void LogNoFormat(const wchar_t* szString) {
   time(&tTime);
   localtime_s(&timestamp, &tTime);
   strftime(szTime, sizeof(szTime), "%Y%m%d", &timestamp);
-  swprintf_s(path, _countof(path), L"%sd2bs-%s-%S.log", Vars.szLogPath, Vars.szProfile, szTime);
+  swprintf_s(path, _countof(path), L"%s\\d2bs-%s-%S.log", Vars.log_dir.wstring().c_str(), Vars.szProfile, szTime);
 #ifdef DEBUG
   FILE* log = stderr;
 #else

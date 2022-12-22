@@ -31,7 +31,6 @@ DWORD WINAPI D2Thread(LPVOID) {
   bool bInGame = false;
 
   if (!InitHooks()) {
-    wcscpy_s(Vars.szPath, MAX_PATH, L"common");
     Log(L"D2BS Engine startup failed. %s", Vars.szCommandLine);
     Print(L"\u00FFc2D2BS\u00FFc0 :: Engine startup failed!");
     return FALSE;

@@ -44,9 +44,10 @@ JSAPI_FUNC(my_selectChar) {
   const wchar_t* profile = JS_GetStringCharsZ(cx, JS_ValueToString(cx, JS_ARGV(cx, vp)[0]));
 
   if (!Profile::ProfileExists(profile)) THROW_ERROR(cx, "Invalid profile specified");
-  wchar_t charname[24], file[_MAX_FNAME + MAX_PATH];
-  swprintf_s(file, _countof(file), L"%sd2bs.ini", Vars.szPath);
-  GetPrivateProfileStringW(profile, L"character", L"ERROR", charname, _countof(file), file);
+  wchar_t charname[24];
+  auto path = (Vars.working_dir / "d2bs.ini").wstring();
+  auto file = path.c_str();
+  GetPrivateProfileStringW(profile, L"character", L"ERROR", charname, path.length(), file);
 
   JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(OOG_SelectCharacter(charname)));
 
@@ -120,9 +121,8 @@ JSAPI_FUNC(my_addProfile) {
 
   if (spdifficulty > 3 || spdifficulty < 0) THROW_ERROR(cx, "Invalid argument passed to addProfile");
 
-  wchar_t file[_MAX_FNAME + _MAX_PATH];
-
-  swprintf_s(file, _countof(file), L"%sd2bs.ini", Vars.szPath);
+  auto path = (Vars.working_dir / "d2bs.ini").wstring();
+  auto file = path.c_str();
   if (!Profile::ProfileExists(*args[0])) {
     wchar_t settings[600] = L"";
     swprintf_s(settings, _countof(settings),

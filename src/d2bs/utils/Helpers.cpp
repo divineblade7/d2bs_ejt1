@@ -78,9 +78,10 @@ void StringReplace(wchar_t* str, const wchar_t find, const wchar_t replace, size
 bool SwitchToProfile(const wchar_t* profile) {
   if (Vars.bUseProfileScript != TRUE || !Profile::ProfileExists(profile)) return false;
 
-  wchar_t file[_MAX_FNAME + _MAX_PATH] = L"", defaultStarter[_MAX_FNAME] = L"", defaultConsole[_MAX_FNAME] = L"",
-                            defaultGame[_MAX_FNAME] = L"", scriptPath[_MAX_PATH] = L"";
-  swprintf_s(file, _countof(file), L"%sd2bs.ini", Vars.szPath);
+  wchar_t defaultStarter[_MAX_FNAME] = L"", defaultConsole[_MAX_FNAME] = L"", defaultGame[_MAX_FNAME] = L"",
+          scriptPath[_MAX_PATH] = L"";
+  auto path = (Vars.working_dir / "d2bs.ini").wstring();
+  auto file = path.c_str();
 
   GetPrivateProfileStringW(profile, L"ScriptPath", L"scripts", scriptPath, _MAX_PATH, file);
   GetPrivateProfileStringW(profile, L"DefaultConsoleScript", L"", defaultConsole, _MAX_FNAME, file);
@@ -88,7 +89,8 @@ bool SwitchToProfile(const wchar_t* profile) {
   GetPrivateProfileStringW(profile, L"DefaultStarterScript", L"", defaultStarter, _MAX_FNAME, file);
 
   wcscpy_s(Vars.szProfile, 256, profile);
-  swprintf_s(Vars.szScriptPath, _MAX_PATH, L"%s%s", Vars.szPath, scriptPath);
+  swprintf_s(Vars.szScriptPath, _MAX_PATH, L"%s", (Vars.working_dir / scriptPath).wstring().c_str());
+
   if (wcslen(defaultConsole) > 0) wcscpy_s(Vars.szConsole, _MAX_FNAME, defaultConsole);
   if (wcslen(defaultGame) > 0) wcscpy_s(Vars.szDefault, _MAX_FNAME, defaultGame);
   if (wcslen(defaultStarter) > 0) wcscpy_s(Vars.szStarter, _MAX_FNAME, defaultStarter);
@@ -99,12 +101,13 @@ bool SwitchToProfile(const wchar_t* profile) {
 }
 
 void InitSettings(void) {
-  wchar_t fname[_MAX_FNAME + _MAX_PATH], scriptPath[_MAX_PATH], defaultStarter[_MAX_FNAME], defaultGame[_MAX_FNAME],
+  wchar_t scriptPath[_MAX_PATH], defaultStarter[_MAX_FNAME], defaultGame[_MAX_FNAME],
       defaultConsole[_MAX_FNAME], hosts[256], debug[6], quitOnHostile[6], quitOnError[6], maxGameTime[6],
       gameTimeout[6], startAtMenu[6], disableCache[6], memUsage[6], gamePrint[6], useProfilePath[6], logConsole[6],
       enableUnsupported[6], forwardMessageBox[6], consoleFont[6];
 
-  swprintf_s(fname, _countof(fname), L"%sd2bs.ini", Vars.szPath);
+  auto path = (Vars.working_dir / "d2bs.ini").wstring();
+  auto fname = path.c_str();
 
   GetPrivateProfileStringW(L"settings", L"ScriptPath", L"scripts", scriptPath, _MAX_PATH, fname);
   GetPrivateProfileStringW(L"settings", L"DefaultConsoleScript", L"", defaultConsole, _MAX_FNAME, fname);
@@ -125,7 +128,7 @@ void InitSettings(void) {
   GetPrivateProfileStringW(L"settings", L"EnableUnsupported", L"false", enableUnsupported, 6, fname);
   GetPrivateProfileStringW(L"settings", L"ForwardMessageBox", L"false", forwardMessageBox, 6, fname);
   GetPrivateProfileStringW(L"settings", L"ConsoleFont", L"0", consoleFont, 6, fname);
-  swprintf_s(Vars.szScriptPath, _MAX_PATH, L"%s%s", Vars.szPath, scriptPath);
+  swprintf_s(Vars.szScriptPath, _MAX_PATH, L"%s", (Vars.working_dir / scriptPath).wstring().c_str());
   wcscpy_s(Vars.szStarter, _MAX_FNAME, defaultStarter);
   wcscpy_s(Vars.szConsole, _MAX_FNAME, defaultConsole);
   wcscpy_s(Vars.szDefault, _MAX_FNAME, defaultGame);

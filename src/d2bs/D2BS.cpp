@@ -29,18 +29,22 @@ BOOL WINAPI DllMain(HINSTANCE hDll, DWORD dwReason, LPVOID lpReserved) {
 
       if (lpReserved) {
         Vars.pModule = (Module*)lpReserved;
-        wcscpy_s(Vars.szPath, MAX_PATH, Vars.pModule->szPath);
+        Vars.working_dir = Vars.pModule->szPath;
         Vars.bLoadedWithCGuard = true;
       } else {
         Vars.hModule = hDll;
-        GetModuleFileNameW(hDll, Vars.szPath, MAX_PATH);
-        PathRemoveFileSpecW(Vars.szPath);
-        wcscat_s(Vars.szPath, MAX_PATH, L"\\");
+        wchar_t path[MAX_PATH]{};
+        GetModuleFileNameW(hDll, path, MAX_PATH);
+        Vars.working_dir = path;
+        Vars.working_dir.remove_filename().make_preferred();
         Vars.bLoadedWithCGuard = false;
       }
 
-      swprintf_s(Vars.szLogPath, _countof(Vars.szLogPath), L"%slogs\\", Vars.szPath);
-      CreateDirectoryW(Vars.szLogPath, NULL);
+      Vars.log_dir = Vars.working_dir / "logs";
+      if (!std::filesystem::exists(Vars.log_dir)) {
+        std::filesystem::create_directory(Vars.log_dir);
+      }
+
       InitCommandLine();
       ParseCommandLine(Vars.szCommandLine);
       InitSettings();

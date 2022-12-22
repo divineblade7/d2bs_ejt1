@@ -5,14 +5,19 @@
 #include "d2bs/utils/Helpers.h"
 
 void Profile::init(const wchar_t* profileName) {
-  wchar_t file[_MAX_FNAME + MAX_PATH], difficulty[10], _maxLoginTime[10], _maxCharTime[10], mode[256];
+  wchar_t difficulty[10], _maxLoginTime[10], _maxCharTime[10], mode[256];
   int tmp;
 
-  if (profileName == NULL) throw "Can't open null profile name.";
+  if (profileName == NULL) {
+    throw "Can't open null profile name.";
+  }
 
-  if (profileName[0] == L'\0') throw "Can't open empty profile name.";
+  if (profileName[0] == L'\0') {
+    throw "Can't open empty profile name.";
+  }
 
-  swprintf_s(file, _countof(file), L"%sd2bs.ini", Vars.szPath);
+  auto path = (Vars.working_dir / "d2bs.ini").wstring();
+  auto file = path.c_str();
 
   GetPrivateProfileStringW(profileName, L"mode", L"single", mode, _countof(mode), file);
   GetPrivateProfileStringW(profileName, L"character", L"ERROR", charname, _countof(charname), file);
@@ -55,8 +60,9 @@ void Profile::init(const wchar_t* profileName) {
 }
 
 bool Profile::ProfileExists(const wchar_t* profile) {
-  wchar_t file[_MAX_FNAME + _MAX_PATH], profiles[65535] = L"";
-  swprintf_s(file, _countof(file), L"%sd2bs.ini", Vars.szPath);
+  wchar_t profiles[65535] = L"";
+  auto path = (Vars.working_dir / "d2bs.ini").wstring();
+  auto file = path.c_str();
 
   int count = GetPrivateProfileStringW(NULL, NULL, NULL, profiles, 65535, file);
   if (count > 0) {

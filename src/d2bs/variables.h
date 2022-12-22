@@ -7,6 +7,7 @@
 #include <map>        // std::map
 #include <queue>      // std::queue
 #include <string>     // std::wstring
+#include <filesystem> // std::filesystem::path
 #include <vector>     // std::vector
 #include <utility>    // std::pair
 
@@ -64,8 +65,8 @@ struct Variables {
   HMODULE hModule;
   HWND hHandle;
 
-  wchar_t szPath[_MAX_PATH];
-  wchar_t szLogPath[_MAX_PATH];
+  std::filesystem::path working_dir;
+  std::filesystem::path log_dir;
   wchar_t szScriptPath[_MAX_PATH];
   wchar_t szProfile[256];
   wchar_t szStarter[_MAX_FNAME];
