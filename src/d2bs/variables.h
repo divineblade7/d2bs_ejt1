@@ -67,7 +67,7 @@ struct Variables {
 
   std::filesystem::path working_dir;
   std::filesystem::path log_dir;
-  wchar_t szScriptPath[_MAX_PATH];
+  std::filesystem::path script_dir;
   wchar_t szProfile[256];
   wchar_t szStarter[_MAX_FNAME];
   wchar_t szConsole[_MAX_FNAME];

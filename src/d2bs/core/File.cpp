@@ -162,31 +162,12 @@ bool writeValue(FILE* fptr, JSContext* cx, jsval value, bool isBinary, bool lock
   return false;
 }
 
-/** Safely open a file relative to the script dir.
- *
- * In theory this is the only function used to open files that is exposed to
- * javascript.
- *
- * \param filename Name of the file to open relative to the script folder
- *
- * \param mode Mode to open in. See fopen_s.
- *
- * \param cx JSContext that is running. Used to throw errors.
- *
- * \return The file pointer.
- */
 FILE* fileOpenRelScript(const wchar_t* filename, const wchar_t* mode, JSContext* cx) {
   FILE* f;
-  wchar_t fullPath[_MAX_PATH + _MAX_FNAME];
-
-  // Get the relative path
-  if (getPathRelScript(filename, _MAX_PATH + _MAX_FNAME, fullPath) == NULL) {
-    JS_ReportError(cx, "Invalid file name");
-    return NULL;
-  }
+  auto path = getPathRelScript(filename);
 
   // Open the file
-  if (_wfopen_s(&f, fullPath, mode) != 0 || f == NULL) {
+  if (_wfopen_s(&f, path.c_str(), mode) != 0 || f == NULL) {
     char message[128];
     _strerror_s(message, 128, NULL);
     JS_ReportError(cx, "Couldn't open file %ls: %s", filename, message);
@@ -207,36 +188,8 @@ FILE* fileOpenRelScript(const wchar_t* filename, const wchar_t* mode, JSContext*
  *
  * \return fullPath on success or NULL on failure.
  */
-wchar_t* getPathRelScript(const wchar_t* filename, int bufLen, wchar_t* fullPath) {
-  wchar_t fullScriptPath[_MAX_PATH + _MAX_FNAME];
-  wchar_t* relPath;
-  int strLenScript;
-  DWORD scrPathLen;
-
-  strLenScript = wcslen(Vars.szScriptPath);
-
-  // Make the filename relative to the script path
-  relPath = (wchar_t*)_alloca((strLenScript + wcslen(filename) + 2) * 2);  // *2 for wide chars
-  wcscpy_s(relPath, strLenScript + wcslen(filename) + 2, Vars.szScriptPath);
-  relPath[strLenScript] = L'\\';
-  wcscpy_s(relPath + strLenScript + 1, wcslen(filename) + 1, filename);
-
-  // Transform to the full pathname
-  GetFullPathNameW(relPath, bufLen, fullPath, NULL);
-
-  // Get the full path of the script path, check it is the prefix of fullPath
-  scrPathLen = GetFullPathNameW(Vars.szScriptPath, _MAX_PATH + _MAX_FNAME, fullScriptPath, NULL);
-
-  // Check that fullScriptPath is the prefix of fullPath
-  // As GetFullPathName seems to not add a trailing \, if there is not a
-  // trailing \ in fullScriptPath check for it in fullPath
-  if (wcsncmp(fullPath, fullScriptPath, scrPathLen) != 0 ||
-      (fullScriptPath[scrPathLen - 1] != '\\' && fullPath[scrPathLen] != '\\')) {
-    fullPath[0] = '\0';
-    return NULL;
-  }
-
-  return fullPath;
+std::wstring getPathRelScript(const wchar_t* filename) {
+  return (Vars.script_dir / filename).make_preferred().wstring();
 }
 
 /** Check that the full path of the script path is the prefix of the fullpath
@@ -247,10 +200,9 @@ wchar_t* getPathRelScript(const wchar_t* filename, int bufLen, wchar_t* fullPath
  * \return true if path is valid, false otherwise.
  */
 bool isValidPath(const wchar_t* name) {
-  wchar_t fullPath[_MAX_PATH + _MAX_FNAME];
-
-  // Use getPathRelScript to validate based on full paths
-  if (getPathRelScript(name, _MAX_PATH + _MAX_FNAME, fullPath) == NULL) return false;
+  if (getPathRelScript(name).empty()) {
+    return false;
+  }
 
   return (!wcsstr(name, L"..\\") && !wcsstr(name, L"../") && (wcscspn(name, L"\":?*<>|") == wcslen(name)));
 }

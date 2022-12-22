@@ -29,7 +29,7 @@ typedef std::set<DBStmt*> StmtList;
 struct SqliteDB {
   sqlite3* db;
   bool open;
-  wchar_t* path;
+  std::wstring path;
   StmtList stmts;
 };
 
@@ -77,21 +77,20 @@ EMPTY_CTOR(sqlite_stmt)
 
 JSAPI_FUNC(sqlite_ctor) {
   if (argc > 0 && !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) THROW_ERROR(cx, "Invalid parameters in SQLite constructor");
-  wchar_t* path;
+  std::wstring path;
 
   if (argc > 0)
-    path = _wcsdup(JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0])));
+    path = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
   else
-    path = _wcsdup(L":memory:");
+    path = L":memory:";
 
   // if the path is not a special placeholder (:memory:, et. al.), sandbox it
   if (path[0] != ':') {
-    if (!isValidPath(path)) THROW_ERROR(cx, "Invalid characters in database name");
+    if (!isValidPath(path.c_str())) {
+      THROW_ERROR(cx, "Invalid characters in database name");
+    }
 
-    wchar_t* tmp = (wchar_t*)malloc(sizeof(wchar_t) * (_MAX_PATH + _MAX_FNAME));
-    swprintf_s(tmp, _MAX_PATH + _MAX_FNAME, L"%s\\%s", Vars.szScriptPath, path);
-    free(path);
-    path = tmp;
+    path = (Vars.script_dir / path).make_preferred().wstring();
   }
 
   bool autoOpen = true;
@@ -99,7 +98,7 @@ JSAPI_FUNC(sqlite_ctor) {
 
   sqlite3* db = NULL;
   if (autoOpen) {
-    if (SQLITE_OK != sqlite3_open16(path, &db)) {
+    if (SQLITE_OK != sqlite3_open16(path.c_str(), &db)) {
       char msg[1024];
       sprintf_s(msg, sizeof(msg), "Could not open database: %s", sqlite3_errmsg(db));
       THROW_ERROR(cx, msg);
@@ -114,7 +113,6 @@ JSAPI_FUNC(sqlite_ctor) {
   JSObject* jsdb = BuildObject(cx, &sqlite_db, sqlite_methods, sqlite_props, dbobj);
   if (!jsdb) {
     sqlite3_close(db);
-    free(dbobj->path);
     delete dbobj;
     THROW_ERROR(cx, "Could not create the sqlite object");
   }
@@ -222,7 +220,7 @@ JSAPI_FUNC(sqlite_close) {
 JSAPI_FUNC(sqlite_open) {
   SqliteDB* dbobj = (SqliteDB*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &sqlite_db, NULL);
   if (!dbobj->open) {
-    if (SQLITE_OK != sqlite3_open16(dbobj->path, &dbobj->db)) {
+    if (SQLITE_OK != sqlite3_open16(dbobj->path.c_str(), &dbobj->db)) {
       char msg[1024];
       sprintf_s(msg, sizeof(msg), "Could not open database: %s", sqlite3_errmsg(dbobj->db));
       THROW_ERROR(cx, msg);
@@ -239,7 +237,7 @@ JSAPI_PROP(sqlite_getProperty) {
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case SQLITE_PATH:
-      vp.setString(JS_NewUCStringCopyZ(cx, dbobj->path));
+      vp.setString(JS_NewUCStringCopyZ(cx, dbobj->path.c_str()));
       break;
     case SQLITE_OPEN:
       vp.setBoolean(dbobj->open);
@@ -274,7 +272,6 @@ void sqlite_finalize(JSFreeOp*, JSObject* obj) {
   JS_SetPrivate(obj, NULL);
   if (dbobj) {
     clean_sqlite_db(dbobj);
-    free(dbobj->path);  //_wcsdup reqires free not delete
     delete dbobj;
   }
 }

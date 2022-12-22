@@ -519,14 +519,9 @@ CellFile* LoadCellFile(const wchar_t* lpszPath, DWORD bMPQ) {
   // AutoDetect the Cell File
   if (bMPQ == 3) {
     // Check in our directory first
-    wchar_t path[_MAX_FNAME + _MAX_PATH];
-    swprintf_s(path, _countof(path), L"%s\\%s", Vars.szScriptPath, lpszPath);
-
-    HANDLE hFile = OpenFileRead(path);
-
-    if (hFile != INVALID_HANDLE_VALUE) {
-      CloseHandle(hFile);
-      return LoadCellFile(path, FALSE);
+    auto path = (Vars.script_dir / lpszPath).wstring();
+    if (std::filesystem::exists(path)) {
+      return LoadCellFile(path.c_str(), FALSE);
     } else {
       return LoadCellFile(lpszPath, TRUE);
     }

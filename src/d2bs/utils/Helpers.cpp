@@ -89,7 +89,7 @@ bool SwitchToProfile(const wchar_t* profile) {
   GetPrivateProfileStringW(profile, L"DefaultStarterScript", L"", defaultStarter, _MAX_FNAME, file);
 
   wcscpy_s(Vars.szProfile, 256, profile);
-  swprintf_s(Vars.szScriptPath, _MAX_PATH, L"%s", (Vars.working_dir / scriptPath).wstring().c_str());
+  Vars.script_dir = Vars.working_dir / scriptPath;
 
   if (wcslen(defaultConsole) > 0) wcscpy_s(Vars.szConsole, _MAX_FNAME, defaultConsole);
   if (wcslen(defaultGame) > 0) wcscpy_s(Vars.szDefault, _MAX_FNAME, defaultGame);
@@ -128,7 +128,7 @@ void InitSettings(void) {
   GetPrivateProfileStringW(L"settings", L"EnableUnsupported", L"false", enableUnsupported, 6, fname);
   GetPrivateProfileStringW(L"settings", L"ForwardMessageBox", L"false", forwardMessageBox, 6, fname);
   GetPrivateProfileStringW(L"settings", L"ConsoleFont", L"0", consoleFont, 6, fname);
-  swprintf_s(Vars.szScriptPath, _MAX_PATH, L"%s", (Vars.working_dir / scriptPath).wstring().c_str());
+  Vars.script_dir = Vars.working_dir / scriptPath;
   wcscpy_s(Vars.szStarter, _MAX_FNAME, defaultStarter);
   wcscpy_s(Vars.szConsole, _MAX_FNAME, defaultConsole);
   wcscpy_s(Vars.szDefault, _MAX_FNAME, defaultGame);
@@ -218,9 +218,8 @@ bool ExecCommand(const wchar_t* command) {
 }
 
 bool StartScript(const wchar_t* scriptname, ScriptType type) {
-  wchar_t file[_MAX_FNAME + _MAX_PATH];
-  swprintf_s(file, _countof(file), L"%s\\%s", Vars.szScriptPath, scriptname);
-  Script* script = sScriptEngine->CompileFile(file, type);
+  auto path = (Vars.script_dir / scriptname).make_preferred().wstring();
+  Script* script = sScriptEngine->CompileFile(path.c_str(), type);
   return (script && script->BeginThread(ScriptThread));
 }
 

@@ -36,9 +36,8 @@ BOOL ScriptEngine::Startup(void) {
 
     Script* console = nullptr;
     if (wcslen(Vars.szConsole) > 0) {
-      wchar_t file[_MAX_FNAME + _MAX_PATH];
-      swprintf_s(file, _countof(file), L"%s\\%s", Vars.szScriptPath, Vars.szConsole);
-      console = new Script(file, ScriptType::Command);
+      auto path = (Vars.script_dir / Vars.szConsole).make_preferred().wstring();
+      console = new Script(path.c_str(), ScriptType::Command);
     } else {
       console = new Script(L"", ScriptType::Command);
     }

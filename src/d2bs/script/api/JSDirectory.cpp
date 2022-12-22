@@ -38,7 +38,6 @@ EMPTY_CTOR(dir)
 JSAPI_FUNC(my_openDir) {
   if (argc != 1) return JS_TRUE;
 
-  wchar_t path[_MAX_PATH];
   const wchar_t* name = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
 
   if (!isValidPath(name)) {
@@ -46,11 +45,12 @@ JSAPI_FUNC(my_openDir) {
     return JS_FALSE;
   }
 
-  swprintf_s(path, _MAX_PATH, L"%s\\%s", Vars.szScriptPath, name);
+  auto path = (Vars.script_dir / name).make_preferred().wstring();
 
-  if ((_wmkdir(path) == -1) && (errno == ENOENT)) {
+  // TODO: Rewrite this shit
+  if ((_wmkdir(path.c_str()) == -1) && (errno == ENOENT)) {
     char* n = UnicodeToAnsi(name);
-    char* p = UnicodeToAnsi(path);
+    char* p = UnicodeToAnsi(path.c_str());
     JS_ReportError(cx, "Couldn't get directory %s, path '%s' not found", n, p);
     delete[] n;
     delete[] p;
@@ -72,23 +72,29 @@ JSAPI_FUNC(my_openDir) {
 ////////////////////////////////////////////////////////////////////////////////
 
 JSAPI_FUNC(dir_getFiles) {
-  if (argc > 1) return JS_FALSE;
-  if (argc < 1) JS_ARGV(cx, vp)[0] = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, L"*.*"));
+  if (argc > 1) {
+    return JS_FALSE;
+  }
+  if (argc < 1) {
+    JS_ARGV(cx, vp)[0] = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, L"*.*"));
+  }
 
   DirData* d = (DirData*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
   const wchar_t* search = JS_GetStringCharsZ(cx, JS_ValueToString(cx, JS_ARGV(cx, vp)[0]));
-  if (!search) THROW_ERROR(cx, "Failed to get search string");
+  if (!search) {
+    THROW_ERROR(cx, "Failed to get search string");
+  }
 
   long hFile;
-  wchar_t path[_MAX_PATH], oldpath[_MAX_PATH];
-  swprintf_s(path, _MAX_PATH, L"%s\\%s", Vars.szScriptPath, d->name);
+  wchar_t oldpath[_MAX_PATH];
+  auto path = (Vars.script_dir / d->name).make_preferred().wstring();
 
   if (!_wgetcwd(oldpath, _MAX_PATH)) {
     Log(L"Error getting current working directory. (%s, %s)", L"JSDirectory.cpp", L"dir_getFiles");
     return JS_FALSE;
   }
-  if (_wchdir(path) == -1) {
-    Log(L"Changing directory to %s. (%s, %s)", path, L"JSDirectory.cpp", L"dir_getFiles");
+  if (_wchdir(path.c_str()) == -1) {
+    Log(L"Changing directory to %s. (%s, %s)", path.c_str(), L"JSDirectory.cpp", L"dir_getFiles");
     return JS_FALSE;
   }
 
@@ -124,15 +130,15 @@ JSAPI_FUNC(dir_getFolders) {
   if (!search) THROW_ERROR(cx, "Failed to get search string");
 
   long hFile;
-  wchar_t path[_MAX_PATH], oldpath[_MAX_PATH];
-  swprintf_s(path, _MAX_PATH, L"%s\\%s", Vars.szScriptPath, d->name);
+  wchar_t oldpath[_MAX_PATH];
+  auto path = (Vars.script_dir / d->name).make_preferred().wstring();
 
   if (!_wgetcwd(oldpath, _MAX_PATH)) {
     Log(L"Error getting current working directory. (%s, %s)", L"JSDirectory.cpp", L"dir_getFolders");
     return JS_FALSE;
   }
-  if (_wchdir(path) == -1) {
-    Log(L"Changing directory to %s. (%s, %s)", path, L"JSDirectory.cpp", L"dir_getFolders");
+  if (_wchdir(path.c_str()) == -1) {
+    Log(L"Changing directory to %s. (%s, %s)", path.c_str(), L"JSDirectory.cpp", L"dir_getFolders");
     return JS_FALSE;
   }
 
@@ -161,7 +167,6 @@ JSAPI_FUNC(dir_getFolders) {
 
 JSAPI_FUNC(dir_create) {
   DirData* d = (DirData*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
-  wchar_t path[_MAX_PATH];
   if (!JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) THROW_ERROR(cx, "No path passed to dir.create()");
   const wchar_t* name = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
 
@@ -169,9 +174,9 @@ JSAPI_FUNC(dir_create) {
     return JS_FALSE;
   }
 
-  swprintf_s(path, _MAX_PATH, L"%s\\%s\\%s", Vars.szScriptPath, d->name, name);
-  if (_wmkdir(path) == -1 && (errno == ENOENT)) {
-    JS_ReportError(cx, "Couldn't create directory %s, path %s not found", name, path);
+  auto path = (Vars.script_dir / d->name / name).make_preferred().wstring();
+  if (_wmkdir(path.c_str()) == -1 && (errno == ENOENT)) {
+    JS_ReportError(cx, "Couldn't create directory %s, path %s not found", name, path.c_str());
     return JS_FALSE;
   } else {
     d = new DirData(name);
@@ -184,10 +189,9 @@ JSAPI_FUNC(dir_create) {
 JSAPI_FUNC(dir_delete) {
   DirData* d = (DirData*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
 
-  wchar_t path[_MAX_PATH];
-  swprintf_s(path, _MAX_PATH, L"%s\\%s", Vars.szScriptPath, d->name);
+  auto path = (Vars.script_dir / d->name).make_preferred().wstring();
 
-  if (_wrmdir(path) == -1) {
+  if (_wrmdir(path.c_str()) == -1) {
     // TODO: Make an optional param that specifies recursive delete
     if (errno == ENOTEMPTY)
       THROW_ERROR(cx, "Tried to delete directory, but it is not empty or is the current working directory");

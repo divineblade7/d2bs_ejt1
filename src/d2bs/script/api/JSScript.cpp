@@ -203,7 +203,6 @@ JSAPI_FUNC(my_getScripts) {
 }
 bool __fastcall FindScriptByName(Script* script, void* argv, uint) {
   FindHelper* helper = (FindHelper*)argv;
-  // static uint pathlen = wcslen(Vars.szScriptPath) + 1;
   const wchar_t* fname = script->filename_short();
   if (_wcsicmp(fname, helper->name) == 0) {
     helper->script = script;

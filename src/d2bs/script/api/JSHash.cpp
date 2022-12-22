@@ -66,10 +66,9 @@ JSAPI_FUNC(my_md5_file) {
   const wchar_t* file = JS_GetStringCharsZ(cx, JS_ValueToString(cx, JS_ARGV(cx, vp)[0]));
   if (!(file && file[0] && isValidPath(file))) THROW_ERROR(cx, "Invalid file path!");
 
-  wchar_t path[_MAX_FNAME + _MAX_PATH];
-  swprintf_s(path, _countof(path), L"%s\\%s", Vars.szScriptPath, file);
+  auto path = (Vars.script_dir / file).make_preferred().wstring();
 
-  char* result = md5_file(path);
+  char* result = md5_file(&path[0]);
   if (result && result[0]) JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(JS_NewStringCopyZ(cx, result)));
   delete[] result;
   return JS_TRUE;
@@ -81,10 +80,9 @@ JSAPI_FUNC(my_sha1_file) {
   const wchar_t* file = JS_GetStringCharsZ(cx, JS_ValueToString(cx, JS_ARGV(cx, vp)[0]));
   if (!(file && file[0] && isValidPath(file))) THROW_ERROR(cx, "Invalid file path!");
 
-  wchar_t path[_MAX_FNAME + _MAX_PATH];
-  swprintf_s(path, _countof(path), L"%s\\%s", Vars.szScriptPath, file);
+  auto path = (Vars.script_dir / file).make_preferred().wstring();
 
-  char* result = sha1_file(path);
+  char* result = sha1_file(&path[0]);
   if (result && result[0]) JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(JS_NewStringCopyZ(cx, result)));
   delete[] result;
   return JS_TRUE;
@@ -96,10 +94,9 @@ JSAPI_FUNC(my_sha256_file) {
   const wchar_t* file = JS_GetStringCharsZ(cx, JS_ValueToString(cx, JS_ARGV(cx, vp)[0]));
   if (!(file && file[0] && isValidPath(file))) THROW_ERROR(cx, "Invalid file path!");
 
-  wchar_t path[_MAX_FNAME + _MAX_PATH];
-  swprintf_s(path, _countof(path), L"%s\\%s", Vars.szScriptPath, file);
+  auto path = (Vars.script_dir / file).make_preferred().wstring();
 
-  char* result = sha256_file(path);
+  char* result = sha256_file(&path[0]);
   if (result && result[0]) JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(JS_NewStringCopyZ(cx, result)));
   delete[] result;
   return JS_TRUE;
@@ -111,10 +108,9 @@ JSAPI_FUNC(my_sha384_file) {
   const wchar_t* file = JS_GetStringCharsZ(cx, JS_ValueToString(cx, JS_ARGV(cx, vp)[0]));
   if (!(file && file[0] && isValidPath(file))) THROW_ERROR(cx, "Invalid file path!");
 
-  wchar_t path[_MAX_FNAME + _MAX_PATH];
-  swprintf_s(path, _countof(path), L"%s\\%s", Vars.szScriptPath, file);
+  auto path = (Vars.script_dir / file).make_preferred().wstring();
 
-  char* result = sha384_file(path);
+  char* result = sha384_file(&path[0]);
   if (result && result[0]) JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(JS_NewStringCopyZ(cx, result)));
   delete[] result;
   return JS_TRUE;
@@ -126,10 +122,9 @@ JSAPI_FUNC(my_sha512_file) {
   const wchar_t* file = JS_GetStringCharsZ(cx, JS_ValueToString(cx, JS_ARGV(cx, vp)[0]));
   if (!(file && file[0] && isValidPath(file))) THROW_ERROR(cx, "Invalid file path!");
 
-  wchar_t path[_MAX_FNAME + _MAX_PATH];
-  swprintf_s(path, _countof(path), L"%s\\%s", Vars.szScriptPath, file);
+  auto path = (Vars.script_dir / file).make_preferred().wstring();
 
-  char* result = sha512_file(path);
+  char* result = sha512_file(&path[0]);
   if (result && result[0]) JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(JS_NewStringCopyZ(cx, result)));
   delete[] result;
   return JS_TRUE;

@@ -33,11 +33,11 @@ JSAPI_FUNC(filetools_remove) {
   if (argc < 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) THROW_ERROR(cx, "You must supply a file name");
 
   const wchar_t* file = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
-  wchar_t fullpath[_MAX_PATH + _MAX_FNAME];
-
-  if (getPathRelScript(file, _MAX_PATH + _MAX_FNAME, fullpath) == NULL) THROW_ERROR(cx, "Invalid file name");
-
-  _wremove(fullpath);
+  auto path = getPathRelScript(file);
+  if (path.empty()) {
+    THROW_ERROR(cx, "Invalid file name");
+  }
+  std::filesystem::remove(path);
   return JS_TRUE;
 }
 
@@ -48,31 +48,44 @@ JSAPI_FUNC(filetools_rename) {
   const wchar_t* orig = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
   const wchar_t* newName = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[1]));
 
-  wchar_t porig[_MAX_PATH + _MAX_FNAME];
-  wchar_t pnewName[_MAX_PATH + _MAX_FNAME];
+  auto porig = getPathRelScript(orig);
+  if (getPathRelScript(orig).empty()) {
+    THROW_ERROR(cx, "Invalid original file name");
+  }
 
-  if (getPathRelScript(orig, _MAX_PATH + _MAX_FNAME, porig) == NULL) THROW_ERROR(cx, "Invalid original file name");
+  auto pnewName = getPathRelScript(newName);
+  if (getPathRelScript(newName).empty()) {
+    THROW_ERROR(cx, "Invalid new file name");
+  }
 
-  if (getPathRelScript(newName, _MAX_PATH + _MAX_FNAME, pnewName) == NULL) THROW_ERROR(cx, "Invalid new file name");
-
-  _wrename(porig, pnewName);
+  std::filesystem::rename(porig, pnewName);
   return JS_TRUE;
 }
 
 JSAPI_FUNC(filetools_copy) {
-  if (argc < 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) THROW_ERROR(cx, "You must supply an original file name");
-  if (argc < 2 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[1])) THROW_ERROR(cx, "You must supply a new file name");
+  if (argc < 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
+    THROW_ERROR(cx, "You must supply an original file name");
+  }
+  if (argc < 2 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[1])) {
+    THROW_ERROR(cx, "You must supply a new file name");
+  }
 
   const wchar_t* orig = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
   const wchar_t* newName = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[1]));
-  wchar_t pnewName[_MAX_PATH + _MAX_FNAME];
   bool overwrite = false;
 
-  if (argc > 2 && JSVAL_IS_BOOLEAN(JS_ARGV(cx, vp)[2])) overwrite = !!JSVAL_TO_BOOLEAN(JS_ARGV(cx, vp)[2]);
+  if (argc > 2 && JSVAL_IS_BOOLEAN(JS_ARGV(cx, vp)[2])) {
+    overwrite = !!JSVAL_TO_BOOLEAN(JS_ARGV(cx, vp)[2]);
+  }
 
-  if (getPathRelScript(newName, _MAX_PATH + _MAX_FNAME, pnewName) == NULL) THROW_ERROR(cx, "Invalid new file name");
+  auto pnewName = getPathRelScript(newName);
+  if (getPathRelScript(newName).empty()) {
+    THROW_ERROR(cx, "Invalid new file name");
+  }
 
-  if (overwrite && _waccess(pnewName, 0) == 0) return JS_TRUE;
+  if (overwrite && _waccess(pnewName.c_str(), 0) == 0) {
+    return JS_TRUE;
+  }
 
   FILE* fptr1 = fileOpenRelScript(orig, L"r", cx);
   FILE* fptr2 = fileOpenRelScript(newName, L"w", cx);
@@ -99,7 +112,7 @@ JSAPI_FUNC(filetools_copy) {
     fflush(fptr2);
     fclose(fptr2);
     fclose(fptr1);
-    _wremove(pnewName);  // delete the partial file so it doesnt look like we succeeded
+    std::filesystem::remove(pnewName);  // delete the partial file so it doesnt look like we succeeded
     THROW_ERROR(cx, "File copy failed");
   }
 
@@ -112,11 +125,13 @@ JSAPI_FUNC(filetools_copy) {
 JSAPI_FUNC(filetools_exists) {
   if (argc < 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) THROW_ERROR(cx, "Invalid file name");
   const wchar_t* file = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
-  wchar_t fullpath[_MAX_PATH + _MAX_FNAME];
 
-  if (getPathRelScript(file, _MAX_PATH + _MAX_FNAME, fullpath) == NULL) THROW_ERROR(cx, "Invalid file name");
+  auto fullpath = getPathRelScript(file);
+  if (getPathRelScript(file).empty()) {
+    THROW_ERROR(cx, "Invalid file name");
+  }
 
-  JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(!(_waccess(fullpath, 0) != 0 && errno == ENOENT)));
+  JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(!(_waccess(fullpath.c_str(), 0) != 0 && errno == ENOENT)));
 
   return JS_TRUE;
 }

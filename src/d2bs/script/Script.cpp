@@ -169,7 +169,7 @@ void Script::stop(bool force, bool reallyForce) {
   //  tell everyone else that the script is aborted FIRST
   state_ = ScriptState::Stopped;
   if (type_ != ScriptType::Command) {
-    const wchar_t* displayName = filename_.c_str() + wcslen(Vars.szScriptPath) + 1;
+    const wchar_t* displayName = filename_.c_str() + Vars.script_dir.wstring().length() + 1;
     Print(L"Script %s ended", displayName);
   }
 
@@ -272,7 +272,7 @@ const wchar_t* Script::filename_short() {
   if (wcscmp(filename_.c_str(), L"Command Line") == 0)
     return filename_.c_str();
   else
-    return (filename_.c_str() + wcslen(Vars.szScriptPath) + 1);
+    return (filename_.c_str() + Vars.script_dir.wstring().length() + 1);
 }
 
 int Script::GetExecutionCount() {

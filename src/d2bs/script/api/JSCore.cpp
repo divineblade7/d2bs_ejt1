@@ -171,8 +171,9 @@ JSAPI_FUNC(my_load) {
   }
 
   const wchar_t* file = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+  auto path = (Vars.script_dir / file).make_preferred().wstring();
 
-  if (wcslen(file) > (_MAX_FNAME + _MAX_PATH - wcslen(Vars.szScriptPath))) {
+  if (path.length() > (_MAX_FNAME + _MAX_PATH)) {
     JS_ReportError(cx, "File name too long!");
     return JS_FALSE;
   }
@@ -182,17 +183,13 @@ JSAPI_FUNC(my_load) {
     type = (ClientState() == ClientStateInGame ? ScriptType::InGame : ScriptType::OutOfGame);
   }
 
-  wchar_t buf[_MAX_PATH + _MAX_FNAME];
-  swprintf_s(buf, _countof(buf), L"%s\\%s", Vars.szScriptPath, file);
-  StringReplace(buf, L'/', L'\\', _countof(buf));
-
   JSAutoStructuredCloneBuffer** autoBuffer = new JSAutoStructuredCloneBuffer*[argc - 1];
   for (uint i = 1; i < argc; i++) {
     autoBuffer[i - 1] = new JSAutoStructuredCloneBuffer;
     autoBuffer[i - 1]->write(cx, JS_ARGV(cx, vp)[i]);
   }
 
-  Script* newScript = sScriptEngine->CompileFile(buf, type, argc - 1, autoBuffer);
+  Script* newScript = sScriptEngine->CompileFile(path.c_str(), type, argc - 1, autoBuffer);
 
   if (newScript) {
     newScript->BeginThread(ScriptThread);
@@ -217,16 +214,15 @@ JSAPI_FUNC(my_include) {
   }
 
   const wchar_t* file = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
-
-  if (wcslen(file) > (_MAX_FNAME + _MAX_PATH - wcslen(Vars.szScriptPath) - 6)) {
+  auto path = (Vars.script_dir / "libs" / file).make_preferred().wstring();
+  if (path.length() > (_MAX_FNAME + _MAX_PATH)) {
     JS_ReportError(cx, "File name too long!");
     return JS_FALSE;
   }
 
-  wchar_t buf[_MAX_PATH + _MAX_FNAME];
-  swprintf_s(buf, _countof(buf), L"%s\\libs\\%s", Vars.szScriptPath, file);
-
-  if (_waccess(buf, 0) == 0) JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(script->Include(buf)));
+  if (_waccess(path.c_str(), 0) == 0) {
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(script->Include(path.c_str())));
+  }
 
   return JS_TRUE;
 }
@@ -274,16 +270,15 @@ JSAPI_FUNC(my_getThreadPriority) {
 
 JSAPI_FUNC(my_isIncluded) {
   const wchar_t* file = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+  auto path = (Vars.script_dir / "libs" / file).make_preferred().wstring();
 
-  if (wcslen(file) > (_MAX_FNAME + _MAX_PATH - wcslen(Vars.szScriptPath) - 6)) {
+  if (path.length() > (_MAX_FNAME + _MAX_PATH)) {
     JS_ReportError(cx, "File name too long");
     return JS_FALSE;
   }
 
-  wchar_t path[_MAX_FNAME + _MAX_PATH];
-  swprintf_s(path, _countof(path), L"%s\\libs\\%s", Vars.szScriptPath, file);
   Script* script = (Script*)JS_GetContextPrivate(cx);
-  JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(script->IsIncluded(path)));
+  JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(script->IsIncluded(path.c_str())));
   return JS_TRUE;
 }
 
