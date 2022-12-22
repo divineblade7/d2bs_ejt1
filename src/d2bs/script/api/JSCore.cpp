@@ -130,22 +130,23 @@ JSAPI_FUNC(my_delay) {
 
   if (nDelay) {        // loop so we can exec events while in delay
     while (amt > 0) {  // had a script deadlock here, make sure were positve with amt
-      WaitForSingleObjectEx(script->eventSignal, amt, true);
-      ResetEvent(script->eventSignal);
+      WaitForSingleObjectEx(script->event_signal(), amt, true);
+      ResetEvent(script->event_signal());
       if (script->IsAborted()) break;
 
-      while (script->EventList.size() > 0 &&
+      auto& events = script->events();
+      while (events.size() > 0 &&
              !!!(JSBool)(script->IsAborted() || ((script->GetState() == InGame) && ClientState() == ClientStateMenu))) {
         EnterCriticalSection(&Vars.cEventSection);
-        Event* evt = script->EventList.back();
-        script->EventList.pop_back();
+        Event* evt = events.back();
+        events.pop_back();
         LeaveCriticalSection(&Vars.cEventSection);
         ExecScriptEvent(evt, false);
       }
-      if (JS_GetGCParameter(script->GetRuntime(), JSGC_BYTES) - script->LastGC > 524288)  // gc every .5 mb
+      if (JS_GetGCParameter(script->GetRuntime(), JSGC_BYTES) - script->last_gc() > 524288)  // gc every .5 mb
       {
         JS_GC(JS_GetRuntime(cx));
-        script->LastGC = JS_GetGCParameter(script->GetRuntime(), JSGC_BYTES);
+        script->set_last_gc(JS_GetGCParameter(script->GetRuntime(), JSGC_BYTES));
       }
       /*else
               JS_MaybeGC(cx);*/

@@ -22,10 +22,6 @@ class ScriptEngine {
   // should this use friendship? ~ ejt
   friend class Script;
 
-  // private these
-  ScriptMap scripts{};
-  CRITICAL_SECTION lock{};
-
   ScriptEngine(const ScriptEngine&) = delete;
   ScriptEngine& operator=(const ScriptEngine&) = delete;
 
@@ -36,9 +32,6 @@ class ScriptEngine {
 
   BOOL Startup(void);
   void Shutdown(void);
-  EngineState GetState(void) {
-    return state;
-  }
 
   void FlushCache(void);
 
@@ -53,13 +46,6 @@ class ScriptEngine {
   bool ForEachScript(ScriptCallback callback, void* argv, uint argc);
   unsigned int GetCount(bool active = true, bool unexecuted = false);
 
-  JSRuntime* GetRuntime(void) {
-    return runtime;
-  }
-  JSContext* GetGlobalContext(void) {
-    return context;
-  }
-
   void InitClass(JSContext* context, JSObject* globalObject, JSClass* classp, JSFunctionSpec* methods,
                  JSPropertySpec* props, JSFunctionSpec* s_methods, JSPropertySpec* s_props);
   void DefineConstant(JSContext* context, JSObject* globalObject, const char* name, int value);
@@ -70,14 +56,32 @@ class ScriptEngine {
   int AddDelayedEvent(Event* evt, int freq);
   void RemoveDelayedEvent(int key);
 
+  JSRuntime* GetRuntime(void) {
+    return runtime_;
+  }
+
+  JSContext* GetGlobalContext(void) {
+    return context_;
+  }
+
+  EngineState GetState(void) {
+    return state_;
+  }
+
+  ScriptMap& scripts() {
+    return scripts_;
+  }
+
  private:
-  JSRuntime* runtime = nullptr;
-  JSContext* context = nullptr;
-  Script* console = nullptr;
-  EngineState state = Stopped;
-  std::list<Event*> DelayedExecList;
-  int delayedExecKey;
-  CRITICAL_SECTION scriptListLock{};
+  JSRuntime* runtime_ = nullptr;
+  JSContext* context_ = nullptr;
+  Script* console_ = nullptr;
+  EngineState state_ = Stopped;
+  ScriptMap scripts_{};
+  CRITICAL_SECTION lock_{};
+  std::list<Event*> DelayedExecList_;
+  int delayedExecKey_;
+  CRITICAL_SECTION scriptListLock_{};
 };
 
 #define sScriptEngine ScriptEngine::instance()

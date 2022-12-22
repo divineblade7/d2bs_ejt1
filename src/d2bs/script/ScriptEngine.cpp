@@ -31,21 +31,21 @@ bool __fastcall StopScript(Script* script, void* argv, uint) {
 
 BOOL ScriptEngine::Startup(void) {
   if (GetState() == Stopped) {
-    state = Starting;
-    InitializeCriticalSection(&scriptListLock);
+    state_ = Starting;
+    InitializeCriticalSection(&scriptListLock_);
     // InitializeCriticalSection(&lock);
     // EnterCriticalSection(&lock);
     LockScriptList("startup - enter");
     if (wcslen(Vars.szConsole) > 0) {
       wchar_t file[_MAX_FNAME + _MAX_PATH];
       swprintf_s(file, _countof(file), L"%s\\%s", Vars.szScriptPath, Vars.szConsole);
-      console = new Script(file, Command);
+      console_ = new Script(file, Command);
     } else {
-      console = new Script(L"", Command);
+      console_ = new Script(L"", Command);
     }
-    scripts[L"console"] = console;
-    console->BeginThread(ScriptThread);
-    state = Running;
+    scripts_[L"console"] = console_;
+    console_->BeginThread(ScriptThread);
+    state_ = Running;
     // LeaveCriticalSection(&lock);
     UnLockScriptList("startup - leave");
   }
@@ -57,25 +57,25 @@ void ScriptEngine::Shutdown(void) {
     // bring the engine down properly
     // EnterCriticalSection(&lock);
     LockScriptList("Shutdown");
-    state = Stopping;
+    state_ = Stopping;
     StopAll(true);
-    console->Stop(true, true);
+    console_->Stop(true, true);
 
     // clear all scripts now that they're stopped
     ForEachScript(::DisposeScript, NULL, 0);
 
-    if (!scripts.empty()) scripts.clear();
+    if (!scripts_.empty()) scripts_.clear();
 
-    if (runtime) {
-      JS_DestroyContext(context);
-      JS_DestroyRuntime(runtime);
+    if (runtime_) {
+      JS_DestroyContext(context_);
+      JS_DestroyRuntime(runtime_);
       JS_ShutDown();
-      runtime = NULL;
+      runtime_ = NULL;
     }
     UnLockScriptList("shutdown");
     // LeaveCriticalSection(&lock);
-    DeleteCriticalSection(&lock);
-    state = Stopped;
+    DeleteCriticalSection(&lock_);
+    state_ = Stopped;
   }
 }
 
@@ -108,14 +108,14 @@ Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptState _state, uint 
   _wcslwr_s(fileName, wcslen(file) + 1);
 
   try {
-    if (scripts.count(fileName)) scripts[fileName]->Stop();
+    if (scripts_.count(fileName)) scripts_[fileName]->Stop();
 
     Script* script = new Script(fileName, _state, argc, argv);
-    scripts[fileName] = script;
+    scripts_[fileName] = script;
     free(fileName);
     return script;
   } catch (std::exception e) {
-    LeaveCriticalSection(&lock);
+    LeaveCriticalSection(&lock_);
     wchar_t* what = AnsiToUnicode(e.what());
     Print(what);
     delete[] what;
@@ -128,7 +128,7 @@ void ScriptEngine::RunCommand(const wchar_t* command) {
   if (GetState() != Running) return;
   try {
     // EnterCriticalSection(&lock);
-    console->RunCommand(command);
+    console_->RunCommand(command);
     // LeaveCriticalSection(&lock);
   } catch (std::exception e) {
     // LeaveCriticalSection(&lock);
@@ -143,11 +143,11 @@ void ScriptEngine::DisposeScript(Script* script) {
 
   const wchar_t* nFilename = script->GetFilename();
 
-  if (scripts.count(nFilename)) scripts.erase(nFilename);
+  if (scripts_.count(nFilename)) scripts_.erase(nFilename);
 
   UnLockScriptList("DisposeScript");
 
-  if (GetCurrentThreadId() == script->threadId)
+  if (GetCurrentThreadId() == script->threadId_)
     delete script;
   else {
     // bad things happen if we delete from another thread
@@ -159,17 +159,17 @@ void ScriptEngine::DisposeScript(Script* script) {
 }
 
 void ScriptEngine::LockScriptList(const char*) {
-  EnterCriticalSection(&scriptListLock);
+  EnterCriticalSection(&scriptListLock_);
   // Log(loc);
 }
 
 void ScriptEngine::UnLockScriptList(const char*) {
   // Log(loc);
-  LeaveCriticalSection(&scriptListLock);
+  LeaveCriticalSection(&scriptListLock_);
 }
 
 bool ScriptEngine::ForEachScript(ScriptCallback callback, void* argv, uint argc) {
-  if (callback == NULL || scripts.size() < 1) return false;
+  if (callback == NULL || scripts_.size() < 1) return false;
   bool block = false;
   // EnterCriticalSection(&lock);
 
@@ -177,7 +177,7 @@ bool ScriptEngine::ForEachScript(ScriptCallback callback, void* argv, uint argc)
 
   // damn std::list not supporting operator[]...
   std::vector<Script*> list;
-  for (ScriptMap::iterator it = scripts.begin(); it != scripts.end(); it++) list.push_back(it->second);
+  for (ScriptMap::iterator it = scripts_.begin(); it != scripts_.end(); it++) list.push_back(it->second);
 
   UnLockScriptList("forEachScript");
 
@@ -195,8 +195,8 @@ unsigned int ScriptEngine::GetCount(bool active, bool unexecuted) {
   if (GetState() != Running) return 0;
   LockScriptList("getCount");
   // EnterCriticalSection(&lock);
-  int count = scripts.size();
-  for (ScriptMap::iterator it = scripts.begin(); it != scripts.end(); it++) {
+  int count = scripts_.size();
+  for (ScriptMap::iterator it = scripts_.begin(); it != scripts_.end(); it++) {
     if (!active && it->second->IsRunning() && !it->second->IsAborted()) count--;
     if (!unexecuted && it->second->GetExecutionCount() == 0 && !it->second->IsRunning()) count--;
   }
@@ -229,12 +229,12 @@ void ScriptEngine::StopAll(bool forceStop) {
 }
 
 void ScriptEngine::UpdateConsole() {
-  console->UpdatePlayerGid();
+  console_->UpdatePlayerGid();
 }
 
 int ScriptEngine::AddDelayedEvent(Event* evt, int freq) {
-  delayedExecKey++;
-  evt->arg1 = new DWORD(delayedExecKey);
+  delayedExecKey_++;
+  evt->arg1 = new DWORD(delayedExecKey_);
   evt->arg2 = CreateWaitableTimer(NULL, true, NULL);
 
   __int64 start;
@@ -245,17 +245,17 @@ int ScriptEngine::AddDelayedEvent(Event* evt, int freq) {
   lStart.HighPart = (LONG)(start >> 32);
   freq = (strcmp(evt->name, "setInterval") == 0) ? freq : 0;
   EnterCriticalSection(&Vars.cEventSection);
-  DelayedExecList.push_back(evt);
+  DelayedExecList_.push_back(evt);
   SetWaitableTimer((HANDLE*)evt->arg2, &lStart, freq, &EventTimerProc, evt, false);
   LeaveCriticalSection(&Vars.cEventSection);
 
-  return delayedExecKey;
+  return delayedExecKey_;
 }
 
 void ScriptEngine::RemoveDelayedEvent(int key) {
   std::list<Event*>::iterator it;
-  it = DelayedExecList.begin();
-  while (it != DelayedExecList.end()) {
+  it = DelayedExecList_.begin();
+  while (it != DelayedExecList_.end()) {
     if (*(DWORD*)(*it)->arg1 == static_cast<DWORD>(key)) {
       CancelWaitableTimer((HANDLE*)(*it)->arg2);
       CloseHandle((HANDLE*)(*it)->arg2);
@@ -265,7 +265,7 @@ void ScriptEngine::RemoveDelayedEvent(int key) {
       delete evt->arg3;
       free(evt->name);
       delete evt;
-      it = DelayedExecList.erase(it);
+      it = DelayedExecList_.erase(it);
     } else
       it++;
   }
@@ -330,11 +330,12 @@ JSBool operationCallback(JSContext* cx) {
   if (pause) script->SetPauseState(false);
 
   if (!!!(JSBool)(script->IsAborted() || ((script->GetState() == InGame) && ClientState() == ClientStateMenu))) {
-    while (script->EventList.size() > 0 &&
+    auto& events = script->events();
+    while (events.size() > 0 &&
            !!!(JSBool)(script->IsAborted() || ((script->GetState() == InGame) && ClientState() == ClientStateMenu))) {
       EnterCriticalSection(&Vars.cEventSection);
-      Event* evt = script->EventList.back();
-      script->EventList.pop_back();
+      Event* evt = events.back();
+      events.pop_back();
       LeaveCriticalSection(&Vars.cEventSection);
       ExecScriptEvent(evt, false);
     }
@@ -393,11 +394,12 @@ JSBool contextCallback(JSContext* cx, uint contextOp) {
   }
   if (contextOp == JSCONTEXT_DESTROY) {
     Script* script = (Script*)JS_GetContextPrivate(cx);
-    script->hasActiveCX = false;
-    while (script->EventList.size() > 0) {
+    script->set_has_active_cx(false);
+    auto& events = script->events();
+    while (events.size() > 0) {
       EnterCriticalSection(&Vars.cEventSection);
-      Event* evt = script->EventList.back();
-      script->EventList.pop_back();
+      Event* evt = events.back();
+      events.pop_back();
       LeaveCriticalSection(&Vars.cEventSection);
       ExecScriptEvent(evt, true);  // clean list and pop events
     }
@@ -491,8 +493,8 @@ bool ExecScriptEvent(Event* evt, bool clearList) {
       for (int j = 0; j < 4; j++) JS_AddValueRoot(cx, &argv[j]);
       jsval rval;
       bool block;
-      for (FunctionList::iterator it = evt->owner->functions[evtName].begin();
-           it != evt->owner->functions[evtName].end(); it++) {
+      for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
+           it != evt->owner->functions()[evtName].end(); it++) {
         JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 4, argv, &rval);
         block |= (JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
       }
@@ -520,8 +522,8 @@ bool ExecScriptEvent(Event* evt, bool clearList) {
       for (int j = 0; j < 5; j++) JS_AddValueRoot(cx, &argv[j]);
 
       jsval rval;
-      for (FunctionList::iterator it = evt->owner->functions[evtName].begin();
-           it != evt->owner->functions[evtName].end(); it++) {
+      for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
+           it != evt->owner->functions()[evtName].end(); it++) {
         JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 5, argv, &rval);
       }
       JS_EndRequest(cx);
@@ -546,8 +548,8 @@ bool ExecScriptEvent(Event* evt, bool clearList) {
       for (int j = 0; j < 2; j++) JS_AddValueRoot(cx, &argv[j]);
 
       jsval rval;
-      for (FunctionList::iterator it = evt->owner->functions[evtName].begin();
-           it != evt->owner->functions[evtName].end(); it++) {
+      for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
+           it != evt->owner->functions()[evtName].end(); it++) {
         JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 2, argv, &rval);
       }
       JS_EndRequest(cx);
@@ -572,8 +574,8 @@ bool ExecScriptEvent(Event* evt, bool clearList) {
       for (int j = 0; j < 2; j++) JS_AddValueRoot(cx, &argv[j]);
 
       jsval rval;
-      for (FunctionList::iterator it = evt->owner->functions[evtName].begin();
-           it != evt->owner->functions[evtName].end(); it++) {
+      for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
+           it != evt->owner->functions()[evtName].end(); it++) {
         JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 2, argv, &rval);
         block |= (JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
       }
@@ -606,8 +608,8 @@ bool ExecScriptEvent(Event* evt, bool clearList) {
         for (FunctionList::iterator it = evt->functions.begin(); it != evt->functions.end(); it++)
           JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), evt->argc + 1, argv, &rval);
       } else {
-        for (FunctionList::iterator it = evt->owner->functions[evtName].begin();
-             it != evt->owner->functions[evtName].end(); it++)
+        for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
+             it != evt->owner->functions()[evtName].end(); it++)
           JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 2, argv, &rval);
       }
       JS_EndRequest(cx);
@@ -631,8 +633,8 @@ bool ExecScriptEvent(Event* evt, bool clearList) {
       for (uint j = 0; j < evt->argc; j++) JS_AddValueRoot(cx, &argv[j]);
 
       jsval rval;
-      for (FunctionList::iterator it = evt->owner->functions[evtName].begin();
-           it != evt->owner->functions[evtName].end(); it++) {
+      for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
+           it != evt->owner->functions()[evtName].end(); it++) {
         JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 4, argv, &rval);
       }
       JS_EndRequest(cx);
@@ -655,8 +657,8 @@ bool ExecScriptEvent(Event* evt, bool clearList) {
       argv[0] = JS_NumberValue(*(DWORD*)evt->arg1);
       JS_AddValueRoot(cx, &argv[0]);
       jsval rval;
-      for (FunctionList::iterator it = evt->owner->functions[evtName].begin();
-           it != evt->owner->functions[evtName].end(); it++) {
+      for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
+           it != evt->owner->functions()[evtName].end(); it++) {
         JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 1, argv, &rval);
         block |= (JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
       }
@@ -730,8 +732,8 @@ bool ExecScriptEvent(Event* evt, bool clearList) {
       for (uint j = 0; j < *argc; j++) JS_AddValueRoot(cx, &argv[j]);
 
       jsval rval;
-      for (FunctionList::iterator it = evt->owner->functions[evtName].begin();
-           it != evt->owner->functions[evtName].end(); it++) {
+      for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
+           it != evt->owner->functions()[evtName].end(); it++) {
         JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), *argc, argv, &rval);
       }
       JS_EndRequest(cx);
@@ -769,8 +771,8 @@ bool ExecScriptEvent(Event* evt, bool clearList) {
       // JS_AddValueRoot(cx, &argv[0]);
 
       jsval rval;
-      for (FunctionList::iterator it = evt->owner->functions[evtName].begin();
-           it != evt->owner->functions[evtName].end(); it++) {
+      for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
+           it != evt->owner->functions()[evtName].end(); it++) {
         JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 1, &argv, &rval);
         block |= (JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
       }
@@ -791,8 +793,8 @@ bool ExecScriptEvent(Event* evt, bool clearList) {
     if (!clearList) {
       JS_BeginRequest(cx);
       jsval rval;
-      for (FunctionList::iterator it = evt->owner->functions[evtName].begin();
-           it != evt->owner->functions[evtName].end(); it++) {
+      for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
+           it != evt->owner->functions()[evtName].end(); it++) {
         JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 0, &rval, &rval);
       }
       JS_EndRequest(cx);

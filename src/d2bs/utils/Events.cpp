@@ -301,7 +301,7 @@ bool __fastcall PacketEventCallback(Script* script, void* argv, uint argc) {
     evt->arg4 = new DWORD(false);
     memcpy(evt->arg1, helper->pPacket, helper->dwSize);
 
-    if (GetCurrentThreadId() == evt->owner->threadId)
+    if (GetCurrentThreadId() == evt->owner->thread_id())
       ExecScriptEvent(evt, false);
     else {
       ResetEvent(Vars.eventSignal);

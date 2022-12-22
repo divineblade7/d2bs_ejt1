@@ -28,10 +28,6 @@ class Script {
   // not sure if we want to keep using friend class ~ ejt
   friend class ScriptEngine;
 
-  // private these
-  DWORD threadId;
-  FunctionMap functions;
-
   void Run(void);
   void Join(void);
   void Pause(void);
@@ -39,57 +35,25 @@ class Script {
   bool IsPaused(void);
   bool BeginThread(LPTHREAD_START_ROUTINE ThreadFunc);
   void RunCommand(const wchar_t* command);
-  inline void SetPauseState(bool reallyPaused) {
-    isReallyPaused = reallyPaused;
-  }
-  inline bool IsReallyPaused(void) {
-    return isReallyPaused;
-  }
   void Stop(bool force = false, bool reallyForce = false);
 
-  inline const wchar_t* GetFilename(void) {
-    return fileName.c_str();
-  }
-  const wchar_t* GetShortFilename(void);
-  inline JSContext* GetContext(void) {
-    return context;
-  }
-  inline JSRuntime* GetRuntime(void) {
-    return runtime;
-  }
-  inline JSObject* GetGlobalObject(void) {
-    return globalObject;
-  }
-  inline JSObject* GetScriptObject(void) {
-    return scriptObject;
-  }
-  inline ScriptState GetState(void) {
-    return scriptState;
-  }
-  inline void TriggerOperationCallback(void) {
-    if (hasActiveCX) JS_TriggerOperationCallback(runtime);
-  }
   int GetExecutionCount(void);
   DWORD GetThreadId(void);
-  DWORD LastGC;
-  bool hasActiveCX;  // hack to get away from JS_IsRunning
-  HANDLE eventSignal;
 
   // UGLY HACK to fix up the player gid on game join for cached scripts/oog scripts
   void UpdatePlayerGid(void);
-  // Hack. Include from console needs to run on the RunCommandThread / cx.
-  //		 a better solution may be to keep a list of threadId / cx and have a GetCurrentThreadCX()
-  inline void SetContext(JSContext* cx) {
-    context = cx;
-  }
+
   bool IsRunning(void);
   bool IsAborted(void);
+
   void Lock() {
-    EnterCriticalSection(&lock);
+    EnterCriticalSection(&lock_);
   }  // needed for events walking function list
+
   void Unlock() {
-    LeaveCriticalSection(&lock);
+    LeaveCriticalSection(&lock_);
   }
+
   bool IsIncluded(const wchar_t* file);
   bool Include(const wchar_t* file);
 
@@ -100,27 +64,111 @@ class Script {
   void ClearEvent(const char* evtName);
   void ClearAllEvents(void);
   void FireEvent(Event*);
-  std::list<Event*> EventList;
+
+  // Hack. Include from console needs to run on the RunCommandThread / cx.
+  //		 a better solution may be to keep a list of threadId / cx and have a GetCurrentThreadCX()
+  inline void SetContext(JSContext* cx) {
+    context_ = cx;
+  }
+
+  inline void SetPauseState(bool reallyPaused) {
+    isReallyPaused_ = reallyPaused;
+  }
+
+  inline bool IsReallyPaused(void) {
+    return isReallyPaused_;
+  }
+
+  inline const wchar_t* GetFilename(void) {
+    return fileName_.c_str();
+  }
+
+  const wchar_t* GetShortFilename(void);
+  inline JSContext* GetContext(void) {
+    return context_;
+  }
+
+  inline JSRuntime* GetRuntime(void) {
+    return runtime_;
+  }
+
+  inline JSObject* GetGlobalObject(void) {
+    return globalObject_;
+  }
+
+  inline JSObject* GetScriptObject(void) {
+    return scriptObject_;
+  }
+
+  inline ScriptState GetState(void) {
+    return scriptState_;
+  }
+
+  inline void TriggerOperationCallback(void) {
+    if (hasActiveCX_) {
+      JS_TriggerOperationCallback(runtime_);
+    }
+  }
+
+  std::list<Event*>& events() {
+    return EventList_;
+  }
+
+  DWORD thread_id() {
+    return threadId_;
+  }
+
+  FunctionMap& functions() {
+    return functions_;
+  }
+
+  DWORD last_gc() {
+    return LastGC_;
+  }
+
+  void set_last_gc(DWORD val) {
+    LastGC_ = val;
+  }
+
+  bool get_has_active_cx() {
+    return hasActiveCX_;
+  }
+
+  void set_has_active_cx(bool val) {
+    hasActiveCX_ = val;
+  }
+
+  HANDLE event_signal() {
+    return eventSignal_;
+  }
 
  private:
-  std::wstring fileName;
-  int execCount;
-  ScriptState scriptState;
-  JSContext* context;
-  JSScript* script;
-  JSRuntime* runtime;
-  myUnit* me;
-  uint argc;
-  JSAutoStructuredCloneBuffer** argv;
+  std::wstring fileName_;
+  int execCount_;
+  ScriptState scriptState_;
+  JSContext* context_;
+  JSScript* script_;
+  JSRuntime* runtime_;
+  myUnit* me_;
+  uint argc_;
+  JSAutoStructuredCloneBuffer** argv_;
+  std::list<Event*> EventList_;
 
-  JSObject *globalObject, *scriptObject;
-  bool isLocked, isPaused, isReallyPaused, isAborted;
+  JSObject *globalObject_, *scriptObject_;
+  bool isLocked_, isPaused_, isReallyPaused_, isAborted_;
 
-  IncludeList includes, inProgress;
+  IncludeList includes_, inProgress_;
 
-  HANDLE threadHandle;
+  HANDLE threadHandle_;
 
-  CRITICAL_SECTION lock;
+  CRITICAL_SECTION lock_;
+
+  DWORD threadId_;
+  FunctionMap functions_;
+
+  DWORD LastGC_;
+  bool hasActiveCX_;  // hack to get away from JS_IsRunning
+  HANDLE eventSignal_;
 };
 
 struct RUNCOMMANDSTRUCT {

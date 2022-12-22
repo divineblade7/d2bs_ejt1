@@ -12,27 +12,27 @@
 #include <io.h>
 
 Script::Script(const wchar_t* file, ScriptState state, uint argc, JSAutoStructuredCloneBuffer** argv)
-    : context(NULL),
-      globalObject(NULL),
-      scriptObject(NULL),
-      script(NULL),
-      execCount(0),
-      isAborted(false),
-      isPaused(false),
-      isReallyPaused(false),
-      scriptState(state),
-      threadHandle(INVALID_HANDLE_VALUE),
-      threadId(0),
-      argc(argc),
-      argv(argv) {
-  InitializeCriticalSection(&lock);
+    : context_(NULL),
+      globalObject_(NULL),
+      scriptObject_(NULL),
+      script_(NULL),
+      execCount_(0),
+      isAborted_(false),
+      isPaused_(false),
+      isReallyPaused_(false),
+      scriptState_(state),
+      threadHandle_(INVALID_HANDLE_VALUE),
+      threadId_(0),
+      argc_(argc),
+      argv_(argv) {
+  InitializeCriticalSection(&lock_);
   // moved the runtime initilization to thread start
-  LastGC = 0;
-  hasActiveCX = false;
-  eventSignal = CreateEvent(nullptr, true, false, nullptr);
+  LastGC_ = 0;
+  hasActiveCX_ = false;
+  eventSignal_ = CreateEvent(nullptr, true, false, nullptr);
 
-  if (scriptState == Command && wcslen(file) < 1) {
-    fileName = std::wstring(L"Command Line");
+  if (scriptState_ == Command && wcslen(file) < 1) {
+    fileName_ = std::wstring(L"Command Line");
   } else {
     if (_waccess(file, 0) != 0) {
       DEBUG_LOG(file);
@@ -41,113 +41,130 @@ Script::Script(const wchar_t* file, ScriptState state, uint argc, JSAutoStructur
     }
 
     wchar_t* tmpName = _wcsdup(file);
-    if (!tmpName) throw std::exception("Could not dup filename");
+    if (!tmpName) {
+      throw std::exception("Could not dup filename");
+    }
 
     _wcslwr_s(tmpName, wcslen(file) + 1);
-    fileName = std::wstring(tmpName);
-    replace(fileName.begin(), fileName.end(), L'/', L'\\');
+    fileName_ = std::wstring(tmpName);
+    replace(fileName_.begin(), fileName_.end(), L'/', L'\\');
     free(tmpName);
   }
 }
 
 Script::~Script(void) {
-  isAborted = true;
-  hasActiveCX = false;
+  isAborted_ = true;
+  hasActiveCX_ = false;
   // JS_SetPendingException(context, JSVAL_NULL);
-  if (JS_IsInRequest(runtime)) JS_EndRequest(context);
+  if (JS_IsInRequest(runtime_)) {
+    JS_EndRequest(context_);
+  }
 
-  EnterCriticalSection(&lock);
+  EnterCriticalSection(&lock_);
   //    JS_SetRuntimeThread(rt);
-  JS_DestroyContext(context);
+  JS_DestroyContext(context_);
   // JS_ClearRuntimeThread(rt);
-  JS_DestroyRuntime(runtime);
+  JS_DestroyRuntime(runtime_);
 
-  context = NULL;
-  scriptObject = NULL;
-  globalObject = NULL;
-  script = NULL;
-  CloseHandle(eventSignal);
-  includes.clear();
-  if (threadHandle != INVALID_HANDLE_VALUE) CloseHandle(threadHandle);
-  LeaveCriticalSection(&lock);
-  DeleteCriticalSection(&lock);
+  context_ = NULL;
+  scriptObject_ = NULL;
+  globalObject_ = NULL;
+  script_ = NULL;
+  CloseHandle(eventSignal_);
+  includes_.clear();
+  if (threadHandle_ != INVALID_HANDLE_VALUE) {
+    CloseHandle(threadHandle_);
+  }
+  LeaveCriticalSection(&lock_);
+  DeleteCriticalSection(&lock_);
 }
 
 void Script::Run(void) {
   try {
-    runtime = JS_NewRuntime(Vars.dwMemUsage, JS_NO_HELPER_THREADS);
-    JS_SetNativeStackQuota(runtime, (size_t)50000);
+    runtime_ = JS_NewRuntime(Vars.dwMemUsage, JS_NO_HELPER_THREADS);
+    JS_SetNativeStackQuota(runtime_, (size_t)50000);
     // JS_SetRuntimeThread(runtime);
-    JS_SetContextCallback(runtime, contextCallback);
+    JS_SetContextCallback(runtime_, contextCallback);
 
-    context = JS_NewContext(runtime, 0x2000);
-    if (!context) throw std::exception("Couldn't create the context");
-
-    JS_SetErrorReporter(context, reportError);
-    JS_SetOperationCallback(context, operationCallback);
-    JS_SetOptions(context, JSOPTION_STRICT | JSOPTION_VAROBJFIX);
-    JS_SetVersion(context, JSVERSION_LATEST);
-    //
-
-    JS_SetContextPrivate(context, this);
-
-    JS_BeginRequest(context);
-
-    globalObject = JS_GetGlobalObject(context);
-    jsval meVal = JSVAL_VOID;
-    if (JS_GetProperty(GetContext(), globalObject, "me", &meVal) != JS_FALSE) {
-      JSObject* meObject = JSVAL_TO_OBJECT(meVal);
-      me = (myUnit*)JS_GetPrivate(GetContext(), meObject);
+    context_ = JS_NewContext(runtime_, 0x2000);
+    if (!context_) {
+      throw std::exception("Couldn't create the context");
     }
 
-    if (scriptState == Command) {
+    JS_SetErrorReporter(context_, reportError);
+    JS_SetOperationCallback(context_, operationCallback);
+    JS_SetOptions(context_, JSOPTION_STRICT | JSOPTION_VAROBJFIX);
+    JS_SetVersion(context_, JSVERSION_LATEST);
+    //
+
+    JS_SetContextPrivate(context_, this);
+
+    JS_BeginRequest(context_);
+
+    globalObject_ = JS_GetGlobalObject(context_);
+    jsval meVal = JSVAL_VOID;
+    if (JS_GetProperty(GetContext(), globalObject_, "me", &meVal) != JS_FALSE) {
+      JSObject* meObject = JSVAL_TO_OBJECT(meVal);
+      me_ = (myUnit*)JS_GetPrivate(GetContext(), meObject);
+    }
+
+    if (scriptState_ == Command) {
       if (wcslen(Vars.szConsole) > 0) {
-        script = JS_CompileFile(context, globalObject, fileName);
+        script_ = JS_CompileFile(context_, globalObject_, fileName_);
       } else {
         const char* cmd = "function main() {print('ÿc2D2BSÿc0 :: Started Console'); while (true){delay(10000)};}  ";
-        script = JS_CompileScript(context, globalObject, cmd, strlen(cmd), "Command Line", 1);
+        script_ = JS_CompileScript(context_, globalObject_, cmd, strlen(cmd), "Command Line", 1);
       }
-      JS_AddNamedScriptRoot(context, &script, "console script");
-    } else
-      script = JS_CompileFile(context, globalObject, fileName);
+      JS_AddNamedScriptRoot(context_, &script_, "console script");
+    } else {
+      script_ = JS_CompileFile(context_, globalObject_, fileName_);
+    }
 
-    if (!script) throw std::exception("Couldn't compile the script");
+    if (!script_) {
+      throw std::exception("Couldn't compile the script");
+    }
 
-    JS_EndRequest(context);
+    JS_EndRequest(context_);
     // JS_RemoveScriptRoot(context, &script);
 
   } catch (std::exception&) {
-    if (scriptObject) JS_RemoveRoot(context, &scriptObject);
-    if (context) {
-      JS_EndRequest(context);
-      JS_DestroyContext(context);
+    if (scriptObject_) JS_RemoveRoot(context_, &scriptObject_);
+    if (context_) {
+      JS_EndRequest(context_);
+      JS_DestroyContext(context_);
     }
-    LeaveCriticalSection(&lock);
+    LeaveCriticalSection(&lock_);
     throw;
   }
   // only let the script run if it's not already running
   if (IsRunning()) return;
-  hasActiveCX = true;
-  isAborted = false;
+  hasActiveCX_ = true;
+  isAborted_ = false;
 
   jsval main = INT_TO_JSVAL(1), dummy = INT_TO_JSVAL(1);
   JS_BeginRequest(GetContext());
 
   // args passed from load
-  jsval* argvalue = new jsval[argc];
-  for (uint i = 0; i < argc; i++) argv[i]->read(context, &argvalue[i]);
+  jsval* argvalue = new jsval[argc_];
+  for (uint i = 0; i < argc_; i++) {
+    argv_[i]->read(context_, &argvalue[i]);
+  }
 
-  for (uint j = 0; j < argc; j++) JS_AddValueRoot(context, &argvalue[j]);
+  for (uint j = 0; j < argc_; j++) {
+    JS_AddValueRoot(context_, &argvalue[j]);
+  }
 
   JS_AddValueRoot(GetContext(), &main);
   JS_AddValueRoot(GetContext(), &dummy);
-  if (JS_ExecuteScript(GetContext(), globalObject, script, &dummy) != JS_FALSE &&
-      JS_GetProperty(GetContext(), globalObject, "main", &main) != JS_FALSE && JSVAL_IS_FUNCTION(GetContext(), main)) {
-    JS_CallFunctionValue(GetContext(), globalObject, main, this->argc, argvalue, &dummy);
+  if (JS_ExecuteScript(GetContext(), globalObject_, script_, &dummy) != JS_FALSE &&
+      JS_GetProperty(GetContext(), globalObject_, "main", &main) != JS_FALSE && JSVAL_IS_FUNCTION(GetContext(), main)) {
+    JS_CallFunctionValue(GetContext(), globalObject_, main, this->argc_, argvalue, &dummy);
   }
   JS_RemoveValueRoot(GetContext(), &main);
   JS_RemoveValueRoot(GetContext(), &dummy);
-  for (uint j = 0; j < argc; j++) JS_RemoveValueRoot(GetContext(), &argvalue[j]);
+  for (uint j = 0; j < argc_; j++) {
+    JS_RemoveValueRoot(GetContext(), &argvalue[j]);
+  }
 
   /*for(uint i = 0; i < argc; i++)  //crashes spidermonkey cleans itself up?
   {
@@ -157,46 +174,52 @@ void Script::Run(void) {
 
   JS_EndRequest(GetContext());
 
-  execCount++;
+  execCount_++;
   // Stop();
 }
 
 void Script::Join() {
-  EnterCriticalSection(&lock);
-  HANDLE hThread = threadHandle;
-  LeaveCriticalSection(&lock);
+  EnterCriticalSection(&lock_);
+  HANDLE hThread = threadHandle_;
+  LeaveCriticalSection(&lock_);
 
-  if (hThread != INVALID_HANDLE_VALUE) WaitForSingleObject(hThread, INFINITE);
+  if (hThread != INVALID_HANDLE_VALUE) {
+    WaitForSingleObject(hThread, INFINITE);
+  }
 }
 
 void Script::Pause(void) {
-  if (!IsAborted() && !IsPaused()) isPaused = true;
+  if (!IsAborted() && !IsPaused()) {
+    isPaused_ = true;
+  }
   TriggerOperationCallback();
-  SetEvent(eventSignal);
+  SetEvent(eventSignal_);
 }
 
 void Script::Resume(void) {
-  if (!IsAborted() && IsPaused()) isPaused = false;
+  if (!IsAborted() && IsPaused()) {
+    isPaused_ = false;
+  }
   TriggerOperationCallback();
-  SetEvent(eventSignal);
+  SetEvent(eventSignal_);
 }
 
 bool Script::IsPaused(void) {
-  return isPaused;
+  return isPaused_;
 }
 
 bool Script::BeginThread(LPTHREAD_START_ROUTINE ThreadFunc) {
-  EnterCriticalSection(&lock);
+  EnterCriticalSection(&lock_);
   DWORD dwExitCode = STILL_ACTIVE;
 
-  if ((!GetExitCodeThread(threadHandle, &dwExitCode) || dwExitCode != STILL_ACTIVE) &&
-      (threadHandle = CreateThread(0, 0, ThreadFunc, this, 0, &threadId)) != NULL) {
-    LeaveCriticalSection(&lock);
+  if ((!GetExitCodeThread(threadHandle_, &dwExitCode) || dwExitCode != STILL_ACTIVE) &&
+      (threadHandle_ = CreateThread(0, 0, ThreadFunc, this, 0, &threadId_)) != NULL) {
+    LeaveCriticalSection(&lock_);
     return true;
   }
 
-  threadHandle = INVALID_HANDLE_VALUE;
-  LeaveCriticalSection(&lock);
+  threadHandle_ = INVALID_HANDLE_VALUE;
+  LeaveCriticalSection(&lock_);
   return false;
 }
 
@@ -205,7 +228,7 @@ void Script::RunCommand(const wchar_t* command) {
   // rcs->script = this;
   // rcs->command = _wcsdup(command);
 
-  if (isAborted) {  // this should never happen -bob
+  if (isAborted_) {  // this should never happen -bob
     // RUNCOMMANDSTRUCT* rcs = new RUNCOMMANDSTRUCT;
 
     // rcs->script = this;
@@ -217,70 +240,72 @@ void Script::RunCommand(const wchar_t* command) {
 
   Event* evt = new Event;
   evt->owner = this;
-  evt->argc = argc;
+  evt->argc = argc_;
   evt->name = _strdup("Command");
   evt->arg1 = _wcsdup(command);
   EnterCriticalSection(&Vars.cEventSection);
-  evt->owner->EventList.push_front(evt);
+  evt->owner->events().push_front(evt);
   LeaveCriticalSection(&Vars.cEventSection);
   evt->owner->TriggerOperationCallback();
-  SetEvent(evt->owner->eventSignal);
+  SetEvent(evt->owner->eventSignal_);
 }
 
 void Script::Stop(bool force, bool reallyForce) {
   // if we've already stopped, just return
-  if (isAborted) return;
-  EnterCriticalSection(&lock);
+  if (isAborted_) {
+    return;
+  }
+  EnterCriticalSection(&lock_);
   // tell everyone else that the script is aborted FIRST
-  isAborted = true;
-  isPaused = false;
-  isReallyPaused = false;
+  isAborted_ = true;
+  isPaused_ = false;
+  isReallyPaused_ = false;
   if (GetState() != Command) {
-    const wchar_t* displayName = fileName.c_str() + wcslen(Vars.szScriptPath) + 1;
+    const wchar_t* displayName = fileName_.c_str() + wcslen(Vars.szScriptPath) + 1;
     Print(L"Script %s ended", displayName);
   }
 
   // trigger call back so script ends
   TriggerOperationCallback();
-  SetEvent(eventSignal);
+  SetEvent(eventSignal_);
 
   // normal wait: 500ms, forced wait: 300ms, really forced wait: 100ms
   int maxCount = (force ? (reallyForce ? 10 : 30) : 50);
   if (GetCurrentThreadId() != GetThreadId()) {
-    for (int i = 0; hasActiveCX == true; i++) {
+    for (int i = 0; hasActiveCX_ == true; i++) {
       // if we pass the time frame, just ignore the wait because the thread will end forcefully anyway
       if (i >= maxCount) break;
       Sleep(10);
     }
   }
-  LeaveCriticalSection(&lock);
+  LeaveCriticalSection(&lock_);
 }
 
 const wchar_t* Script::GetShortFilename() {
-  if (wcscmp(fileName.c_str(), L"Command Line") == 0)
-    return fileName.c_str();
+  if (wcscmp(fileName_.c_str(), L"Command Line") == 0)
+    return fileName_.c_str();
   else
-    return (fileName.c_str() + wcslen(Vars.szScriptPath) + 1);
+    return (fileName_.c_str() + wcslen(Vars.szScriptPath) + 1);
 }
 
 int Script::GetExecutionCount(void) {
-  return execCount;
+  return execCount_;
 }
 
 DWORD Script::GetThreadId(void) {
-  return (threadHandle == INVALID_HANDLE_VALUE ? -1 : threadId);
+  return (threadHandle_ == INVALID_HANDLE_VALUE ? -1 : threadId_);
 }
 
 void Script::UpdatePlayerGid(void) {
-  me->dwUnitId = (D2CLIENT_GetPlayerUnit() == NULL ? NULL : D2CLIENT_GetPlayerUnit()->dwUnitId);
+  me_->dwUnitId = (D2CLIENT_GetPlayerUnit() == NULL ? NULL : D2CLIENT_GetPlayerUnit()->dwUnitId);
 }
 
 bool Script::IsRunning(void) {
-  return context && !(IsAborted() || IsPaused() || !hasActiveCX);
+  return context_ && !(IsAborted() || IsPaused() || !hasActiveCX_);
 }
 
 bool Script::IsAborted() {
-  return isAborted;
+  return isAborted_;
 }
 
 bool Script::IsIncluded(const wchar_t* file) {
@@ -290,7 +315,7 @@ bool Script::IsIncluded(const wchar_t* file) {
 
   _wcslwr_s(fname, wcslen(fname) + 1);
   StringReplace(fname, '/', '\\', wcslen(fname));
-  count = includes.count(std::wstring(fname));
+  count = includes_.count(std::wstring(fname));
   free(fname);
 
   return !!count;
@@ -298,7 +323,7 @@ bool Script::IsIncluded(const wchar_t* file) {
 
 bool Script::Include(const wchar_t* file) {
   // since includes will happen on the same thread, locking here is acceptable
-  EnterCriticalSection(&lock);
+  EnterCriticalSection(&lock_);
   wchar_t* fname = _wcsdup(file);
   if (!fname) return false;
   _wcslwr_s(fname, wcslen(fname) + 1);
@@ -307,8 +332,8 @@ bool Script::Include(const wchar_t* file) {
   // don't invoke the string ctor more than once...
   std::wstring currentFileName = std::wstring(fname);
   // ignore already included, 'in-progress' includes, and self-inclusion
-  if (!!includes.count(fname) || !!inProgress.count(fname) || (currentFileName.compare(fileName.c_str()) == 0)) {
-    LeaveCriticalSection(&lock);
+  if (!!includes_.count(fname) || !!inProgress_.count(fname) || (currentFileName.compare(fileName_.c_str()) == 0)) {
+    LeaveCriticalSection(&lock_);
     free(fname);
     return true;
   }
@@ -321,35 +346,37 @@ bool Script::Include(const wchar_t* file) {
   JSScript* _script = JS_CompileFile(cx, GetGlobalObject(), fname);
   if (_script) {
     jsval dummy;
-    inProgress[fname] = true;
+    inProgress_[fname] = true;
     rval = !!JS_ExecuteScript(cx, GetGlobalObject(), _script, &dummy);
-    if (rval)
-      includes[fname] = true;
-    else
+    if (rval) {
+      includes_[fname] = true;
+    } else {
       JS_ReportPendingException(cx);
-    inProgress.erase(fname);
+    }
+    inProgress_.erase(fname);
     // JS_RemoveRoot(&scriptObj);
-  } else
+  } else {
     JS_ReportPendingException(cx);
+  }
 
   JS_EndRequest(cx);
   // JS_RemoveScriptRoot(cx, &script);
-  LeaveCriticalSection(&lock);
+  LeaveCriticalSection(&lock_);
   free(fname);
   return rval;
 }
 
 bool Script::IsListenerRegistered(const char* evtName) {
-  return strlen(evtName) > 0 && functions.count(evtName) > 0;
+  return strlen(evtName) > 0 && functions_.count(evtName) > 0;
 }
 
 void Script::RegisterEvent(const char* evtName, jsval evtFunc) {
-  EnterCriticalSection(&lock);
-  if (JSVAL_IS_FUNCTION(context, evtFunc) && strlen(evtName) > 0) {
-    AutoRoot* root = new AutoRoot(context, evtFunc);
-    functions[evtName].push_back(root);
+  EnterCriticalSection(&lock_);
+  if (JSVAL_IS_FUNCTION(context_, evtFunc) && strlen(evtName) > 0) {
+    AutoRoot* root = new AutoRoot(context_, evtFunc);
+    functions_[evtName].push_back(root);
   }
-  LeaveCriticalSection(&lock);
+  LeaveCriticalSection(&lock_);
 }
 
 bool Script::IsRegisteredEvent(const char* evtName, jsval evtFunc) {
@@ -358,9 +385,9 @@ bool Script::IsRegisteredEvent(const char* evtName, jsval evtFunc) {
 
   // if there are no events registered under that name at all, then obviously there
   // can't be a specific one registered under that name
-  if (functions.count(evtName) < 1) return false;
+  if (functions_.count(evtName) < 1) return false;
 
-  for (FunctionList::iterator it = functions[evtName].begin(); it != functions[evtName].end(); it++)
+  for (FunctionList::iterator it = functions_[evtName].begin(); it != functions_[evtName].end(); it++)
     if (*(*it)->value() == evtFunc) return true;
 
   return false;
@@ -369,52 +396,52 @@ bool Script::IsRegisteredEvent(const char* evtName, jsval evtFunc) {
 void Script::UnregisterEvent(const char* evtName, jsval evtFunc) {
   if (strlen(evtName) < 1) return;
 
-  EnterCriticalSection(&lock);
+  EnterCriticalSection(&lock_);
   AutoRoot* func = NULL;
-  for (FunctionList::iterator it = functions[evtName].begin(); it != functions[evtName].end(); it++) {
+  for (FunctionList::iterator it = functions_[evtName].begin(); it != functions_[evtName].end(); it++) {
     if (*(*it)->value() == evtFunc) {
       func = *it;
       break;
     }
   }
-  functions[evtName].remove(func);
+  functions_[evtName].remove(func);
   // func->Release();
   delete func;
 
   // Remove event completely if there are no listeners for it.
-  if (functions.count(evtName) > 0 && functions[evtName].size() == 0) functions.erase(evtName);
+  if (functions_.count(evtName) > 0 && functions_[evtName].size() == 0) functions_.erase(evtName);
 
-  LeaveCriticalSection(&lock);
+  LeaveCriticalSection(&lock_);
 }
 
 void Script::ClearEvent(const char* evtName) {
-  EnterCriticalSection(&lock);
-  for (FunctionList::iterator it = functions[evtName].begin(); it != functions[evtName].end(); it++) {
+  EnterCriticalSection(&lock_);
+  for (FunctionList::iterator it = functions_[evtName].begin(); it != functions_[evtName].end(); it++) {
     AutoRoot* func = *it;
     func->Release();
     delete func;
   }
-  functions[evtName].clear();
-  LeaveCriticalSection(&lock);
+  functions_[evtName].clear();
+  LeaveCriticalSection(&lock_);
 }
 
 void Script::ClearAllEvents(void) {
-  EnterCriticalSection(&lock);
-  for (FunctionMap::iterator it = functions.begin(); it != functions.end(); it++) ClearEvent(it->first.c_str());
-  functions.clear();
-  LeaveCriticalSection(&lock);
+  EnterCriticalSection(&lock_);
+  for (FunctionMap::iterator it = functions_.begin(); it != functions_.end(); it++) ClearEvent(it->first.c_str());
+  functions_.clear();
+  LeaveCriticalSection(&lock_);
 }
 
 void Script::FireEvent(Event* evt) {
   // EnterCriticalSection(&ScriptEngine::lock);
   EnterCriticalSection(&Vars.cEventSection);
-  evt->owner->EventList.push_front(evt);
+  evt->owner->events().push_front(evt);
   LeaveCriticalSection(&Vars.cEventSection);
 
   if (evt->owner && evt->owner->IsRunning()) {
     evt->owner->TriggerOperationCallback();
   }
-  SetEvent(eventSignal);
+  SetEvent(eventSignal_);
   // LeaveCriticalSection(&ScriptEngine::lock);
 }
 

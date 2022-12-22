@@ -52,10 +52,13 @@ JSAPI_FUNC(script_getNext) {
   sScriptEngine->LockScriptList("scrip.getNext");
   // EnterCriticalSection(&ScriptEngine::lock);
 
-  for (ScriptMap::iterator it = sScriptEngine->scripts.begin(); it != sScriptEngine->scripts.end(); it++) {
+  auto& scripts = sScriptEngine->scripts();
+  for (ScriptMap::iterator it = scripts.begin(); it != scripts.end(); it++) {
     if (it->second == iterp) {
       it++;
-      if (it == sScriptEngine->scripts.end()) break;
+      if (it == scripts.end()) {
+        break;
+      }
       iterp = it->second;
       JS_SetPrivate(cx, JS_THIS_OBJECT(cx, vp), iterp);
       JS_SET_RVAL(cx, vp, JSVAL_TRUE);
@@ -115,7 +118,7 @@ JSAPI_FUNC(script_send) {
   }
 
   EnterCriticalSection(&Vars.cEventSection);
-  evt->owner->EventList.push_front(evt);
+  evt->owner->events().push_front(evt);
   LeaveCriticalSection(&Vars.cEventSection);
   evt->owner->TriggerOperationCallback();
   sScriptEngine->UnLockScriptList("script.send");
@@ -157,10 +160,10 @@ JSAPI_FUNC(my_getScript) {
     else
       return JS_TRUE;
   } else {
-    if (sScriptEngine->scripts.size() > 0) {
+    if (sScriptEngine->scripts().size() > 0) {
       //	EnterCriticalSection(&ScriptEngine::lock);
       sScriptEngine->LockScriptList("getScript");
-      iterp = sScriptEngine->scripts.begin()->second;
+      iterp = sScriptEngine->scripts().begin()->second;
       sScriptEngine->UnLockScriptList("getScript");
       //	LeaveCriticalSection(&ScriptEngine::lock);
     }
@@ -183,7 +186,8 @@ JSAPI_FUNC(my_getScripts) {
   JS_AddRoot(cx, &pReturnArray);
   sScriptEngine->LockScriptList("getScripts");
 
-  for (ScriptMap::iterator it = sScriptEngine->scripts.begin(); it != sScriptEngine->scripts.end(); it++) {
+  auto& scripts = sScriptEngine->scripts();
+  for (ScriptMap::iterator it = scripts.begin(); it != scripts.end(); it++) {
     JSObject* res = BuildObject(cx, &script_class, script_methods, script_props, it->second);
     jsval a = OBJECT_TO_JSVAL(res);
     JS_SetElement(cx, pReturnArray, dwArrayCount, &a);
