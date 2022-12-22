@@ -134,8 +134,9 @@ JSAPI_FUNC(script_join) {
 JSAPI_FUNC(my_getScript) {
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
   Script* iterp = NULL;
-  if (argc == 1 && JSVAL_IS_BOOLEAN(JS_ARGV(cx, vp)[0]) && JSVAL_TO_BOOLEAN(JS_ARGV(cx, vp)[0]) == JS_TRUE)
+  if (argc == 1 && JSVAL_IS_BOOLEAN(JS_ARGV(cx, vp)[0]) && JSVAL_TO_BOOLEAN(JS_ARGV(cx, vp)[0]) == JS_TRUE) {
     iterp = (Script*)JS_GetContextPrivate(cx);
+  }
   else if (argc == 1 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0])) {
     // loop over the Scripts in ScriptEngine and find the one with the right threadid
     DWORD tid = (DWORD)JSVAL_TO_INT(JS_ARGV(cx, vp)[0]);
@@ -151,17 +152,20 @@ JSAPI_FUNC(my_getScript) {
     FindHelper args = {0, name, NULL};
     sScriptEngine->ForEachScript(FindScriptByName, &args, 1);
     free(name);
-    if (args.script != NULL)
+    if (args.script != NULL) {
       iterp = args.script;
-    else
+    } else {
       return JS_TRUE;
+    }
   } else {
-    if (sScriptEngine->scripts().size() > 0) {
-      auto lock = sScriptEngine->lock_script_list("getScript");
+    auto lock = sScriptEngine->lock_script_list("getScript");
+    if (!sScriptEngine->scripts().empty()) {
       iterp = sScriptEngine->scripts().begin()->second;
     }
 
-    if (iterp == NULL) return JS_TRUE;
+    if (iterp == NULL) {
+      return JS_TRUE;
+    }
   }
 
   JSObject* res = BuildObject(cx, &script_class, script_methods, script_props, iterp);
@@ -180,8 +184,8 @@ JSAPI_FUNC(my_getScripts) {
   auto lock = sScriptEngine->lock_script_list("getScripts");
 
   auto& scripts = sScriptEngine->scripts();
-  for (ScriptMap::iterator it = scripts.begin(); it != scripts.end(); it++) {
-    JSObject* res = BuildObject(cx, &script_class, script_methods, script_props, it->second);
+  for (const auto& [_, script] : scripts) {
+    JSObject* res = BuildObject(cx, &script_class, script_methods, script_props, script);
     jsval a = OBJECT_TO_JSVAL(res);
     JS_SetElement(cx, pReturnArray, dwArrayCount, &a);
     dwArrayCount++;
