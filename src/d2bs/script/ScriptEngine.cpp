@@ -32,8 +32,7 @@ bool __fastcall StopScript(Script* script, void* argv, uint) {
 BOOL ScriptEngine::Startup(void) {
   if (GetState() == Stopped) {
     state_ = Starting;
-    InitializeCriticalSection(&scriptListLock_);
-    LockScriptList("startup - enter");
+    auto lock = lock_script_list("startup - enter");
 
     Script* console = nullptr;
     if (wcslen(Vars.szConsole) > 0) {
@@ -46,8 +45,6 @@ BOOL ScriptEngine::Startup(void) {
     console->BeginThread(ScriptThread);
     scripts_[L"console"] = console;
     state_ = Running;
-
-    UnLockScriptList("startup - leave");
   }
   return TRUE;
 }
@@ -55,8 +52,7 @@ BOOL ScriptEngine::Startup(void) {
 void ScriptEngine::Shutdown(void) {
   if (GetState() == Running) {
     // bring the engine down properly
-    // EnterCriticalSection(&lock);
-    LockScriptList("Shutdown");
+    auto lock = lock_script_list("Shutdown");
     state_ = Stopping;
     StopAll(true);
 
@@ -77,7 +73,6 @@ void ScriptEngine::Shutdown(void) {
       JS_ShutDown();
       runtime_ = NULL;
     }
-    UnLockScriptList("shutdown");
     state_ = Stopped;
   }
 }
@@ -140,11 +135,10 @@ void ScriptEngine::RunCommand(const wchar_t* command) {
   }
 
   try {
-    LockScriptList("RunCommand");
+    auto lock = lock_script_list("RunCommand");
     if (scripts_.contains(L"console")) {
       scripts_[L"console"]->RunCommand(command);
     }
-    UnLockScriptList("RunCommand");
   } catch (std::exception e) {
     wchar_t* what = AnsiToUnicode(e.what());
     Print(what);
@@ -153,15 +147,13 @@ void ScriptEngine::RunCommand(const wchar_t* command) {
 }
 
 void ScriptEngine::DisposeScript(Script* script) {
-  LockScriptList("DisposeScript");
+  auto lock = lock_script_list("DisposeScript");
 
   const wchar_t* nFilename = script->GetFilename();
 
   if (scripts_.count(nFilename)) {
     scripts_.erase(nFilename);
   }
-
-  UnLockScriptList("DisposeScript");
 
   if (GetCurrentThreadId() == script->threadId_) {
     delete script;
@@ -174,14 +166,10 @@ void ScriptEngine::DisposeScript(Script* script) {
   }
 }
 
-void ScriptEngine::LockScriptList(const char*) {
-  EnterCriticalSection(&scriptListLock_);
+std::unique_lock<std::mutex> ScriptEngine::lock_script_list(const char*) {
+  std::unique_lock<std::mutex> lock(script_list_mutex_);
+  return std::move(lock);
   // Log(loc);
-}
-
-void ScriptEngine::UnLockScriptList(const char*) {
-  // Log(loc);
-  LeaveCriticalSection(&scriptListLock_);
 }
 
 bool ScriptEngine::ForEachScript(ScriptCallback callback, void* argv, uint argc) {
@@ -189,7 +177,7 @@ bool ScriptEngine::ForEachScript(ScriptCallback callback, void* argv, uint argc)
     return false;
   }
 
-  LockScriptList("forEachScript");
+  auto lock = lock_script_list("forEachScript");
 
   bool block = false;
   for (const auto& [_, script] : scripts_) {
@@ -197,8 +185,6 @@ bool ScriptEngine::ForEachScript(ScriptCallback callback, void* argv, uint argc)
       block = true;
     }
   }
-
-  UnLockScriptList("forEachScript");
 
   return block;
 }
@@ -208,7 +194,7 @@ unsigned int ScriptEngine::GetCount(bool active, bool unexecuted) {
     return 0;
   }
 
-  LockScriptList("getCount");
+  auto lock = lock_script_list("getCount");
 
   int count = scripts_.size();
   for (const auto& [_, script] : scripts_) {
@@ -217,8 +203,6 @@ unsigned int ScriptEngine::GetCount(bool active, bool unexecuted) {
       --count;
     }
   }
-
-  UnLockScriptList("getCount");
 
   assert(count >= 0);
   return count;
@@ -244,11 +228,11 @@ void ScriptEngine::StopAll(bool forceStop) {
 }
 
 void ScriptEngine::UpdateConsole() {
-  LockScriptList("UpdateConsole");
+  auto lock = lock_script_list("UpdateConsole");
+
   if (scripts_.contains(L"console")) {
     scripts_[L"console"]->UpdatePlayerGid();
   }
-  UnLockScriptList("UpdateConsole");
 }
 
 int ScriptEngine::AddDelayedEvent(Event* evt, int freq) {

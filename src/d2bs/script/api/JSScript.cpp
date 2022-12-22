@@ -49,7 +49,7 @@ JSAPI_PROP(script_getProperty) {
 
 JSAPI_FUNC(script_getNext) {
   Script* iterp = (Script*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &script_class, NULL);
-  sScriptEngine->LockScriptList("scrip.getNext");
+  auto lock = sScriptEngine->lock_script_list("scrip.getNext");
 
   auto& scripts = sScriptEngine->scripts();
   for (ScriptMap::iterator it = scripts.begin(); it != scripts.end(); it++) {
@@ -61,12 +61,9 @@ JSAPI_FUNC(script_getNext) {
       iterp = it->second;
       JS_SetPrivate(cx, JS_THIS_OBJECT(cx, vp), iterp);
       JS_SET_RVAL(cx, vp, JSVAL_TRUE);
-      sScriptEngine->UnLockScriptList("scrip.getNext");
       return JS_TRUE;
     }
   }
-
-  sScriptEngine->UnLockScriptList("scrip.getNext");
 
   JS_SET_RVAL(cx, vp, JSVAL_VOID);
   return JS_TRUE;
@@ -102,8 +99,11 @@ JSAPI_FUNC(script_send) {
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
   Script* script = (Script*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &script_class, NULL);
   Event* evt = new Event;
-  if (!script || !script->IsRunning()) return JS_TRUE;
-  sScriptEngine->LockScriptList("script.send");
+  if (!script || !script->IsRunning()) {
+    return JS_TRUE;
+  }
+
+  auto lock = sScriptEngine->lock_script_list("script.send");
   evt->owner = script;
   evt->argc = argc;
   evt->name = _strdup("scriptmsg");
@@ -118,7 +118,6 @@ JSAPI_FUNC(script_send) {
   evt->owner->events().push_front(evt);
   LeaveCriticalSection(&Vars.cEventSection);
   evt->owner->TriggerOperationCallback();
-  sScriptEngine->UnLockScriptList("script.send");
 
   return JS_TRUE;
 }
@@ -158,9 +157,8 @@ JSAPI_FUNC(my_getScript) {
       return JS_TRUE;
   } else {
     if (sScriptEngine->scripts().size() > 0) {
-      sScriptEngine->LockScriptList("getScript");
+      auto lock = sScriptEngine->lock_script_list("getScript");
       iterp = sScriptEngine->scripts().begin()->second;
-      sScriptEngine->UnLockScriptList("getScript");
     }
 
     if (iterp == NULL) return JS_TRUE;
@@ -179,7 +177,7 @@ JSAPI_FUNC(my_getScripts) {
   JSObject* pReturnArray = JS_NewArrayObject(cx, 0, NULL);
   JS_BeginRequest(cx);
   JS_AddRoot(cx, &pReturnArray);
-  sScriptEngine->LockScriptList("getScripts");
+  auto lock = sScriptEngine->lock_script_list("getScripts");
 
   auto& scripts = sScriptEngine->scripts();
   for (ScriptMap::iterator it = scripts.begin(); it != scripts.end(); it++) {
@@ -189,7 +187,6 @@ JSAPI_FUNC(my_getScripts) {
     dwArrayCount++;
   }
 
-  sScriptEngine->UnLockScriptList("getScripts");
   JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(pReturnArray));
   JS_RemoveRoot(cx, &pReturnArray);
   JS_EndRequest(cx);

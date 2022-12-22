@@ -6,6 +6,7 @@
 
 #include <list>
 #include <map>
+#include <mutex>
 #include <string>
 
 typedef std::map<std::wstring, Script*> ScriptMap;
@@ -40,8 +41,7 @@ class ScriptEngine {
   void RunCommand(const wchar_t* command);
   void DisposeScript(Script* script);
 
-  void LockScriptList(const char* loc);
-  void UnLockScriptList(const char* loc);
+  std::unique_lock<std::mutex> lock_script_list(const char* loc);
 
   bool ForEachScript(ScriptCallback callback, void* argv, uint argc);
   unsigned int GetCount(bool active = true, bool unexecuted = false);
@@ -81,7 +81,7 @@ class ScriptEngine {
   std::list<Event*> DelayedExecList_;
   int delayedExecKey_;
 
-  CRITICAL_SECTION scriptListLock_{};
+  std::mutex script_list_mutex_{};
 };
 
 #define sScriptEngine ScriptEngine::instance()
