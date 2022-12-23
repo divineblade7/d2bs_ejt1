@@ -30,6 +30,5 @@ HANDLE __stdcall CacheFix(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShar
                           DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
 BOOL __fastcall RealmPacketRecv(BYTE* pPacket, DWORD dwSize);
 BOOL __fastcall ChatPacketRecv(BYTE* pPacket, int len);
-LONG WINAPI MyUnhandledExceptionFilter(_In_ struct _EXCEPTION_POINTERS* ExceptionInfo);
-void FogException();
+
 char __fastcall ErrorReportLaunch(const char* crash_file, int a2);

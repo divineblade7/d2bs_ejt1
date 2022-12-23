@@ -39,7 +39,6 @@ PatchHook Patches[] = {
 
     {PatchCall,   GetDllOffset("Fog.dll",       0x8CC4),    (DWORD)LogMessageBoxA_Intercept, 6},  // Updated 1.14d //00408CC4-BASE
     {PatchJmp,    GetDllOffset("Fog.dll",       0x82E0),    (DWORD)D2GAME_exit0, 6},  // NEW 1.14d //004082E0-BASE
-    //{PatchJmp,  GetDllOffset("Fog.dll",       0x8900),    (DWORD)FogException/*D2GAME_exit0*/, 6}, //NEW 1.14d 00408900-BASE
     {PatchJmp,    GetDllOffset("Fog.dll",       0x1790),    (DWORD)ErrorReportLaunch, 6},  // NEW 1.14d //00401790-BASE
 };
 

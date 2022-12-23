@@ -362,38 +362,6 @@ int WINAPI LogMessageBoxA_Intercept(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, 
   return MessageBoxA(hWnd, lpText, lpCaption, uType);
 }
 
-#include <DbgHelp.h>
-LONG WINAPI MyUnhandledExceptionFilter(_In_ struct _EXCEPTION_POINTERS* ExceptionInfo) {
-  // NOT WORKING ONE, WORKING ONE IS IN Helpers.cpp
-  MessageBox(NULL, "QWE", "QWE", MB_OK);
-  HANDLE hFile = INVALID_HANDLE_VALUE;
-  for (int i = 0; hFile == INVALID_HANDLE_VALUE; ++i) {
-    char fname[100];
-    sprintf_s(fname, "Crash%03d.dump", i);
-    hFile = CreateFile(fname, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-  }
-  DWORD ProcessId = GetCurrentProcessId();
-  HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS /*READ_CONTROL | PROCESS_VM_READ*/, TRUE, ProcessId);
-  MINIDUMP_EXCEPTION_INFORMATION ExceptionParam;
-  ExceptionParam.ThreadId = GetCurrentThreadId();
-  ExceptionParam.ExceptionPointers = ExceptionInfo;
-  ExceptionParam.ClientPointers = TRUE;
-  MiniDumpWriteDump(hProcess, ProcessId, hFile, MiniDumpNormal, &ExceptionParam, NULL, NULL);
-  CloseHandle(hFile);
-  exit(0);
-}
-
-//  FogException(6, (int)&Default, a3, "Unrecoverable internal error %08x", a2);
-void FogException() {
-  __try {
-    RaiseException(1,  // exception code
-                   0,  // continuable exception
-                   0, NULL);
-  } __except (UnhandledExceptionFilter(GetExceptionInformation())) {
-    exit(0);
-  }
-}
-
 char __fastcall ErrorReportLaunch(const char* crash_file, int) {
   GetStackWalk();
   Log(L"Crash File: %hs\n", crash_file);
