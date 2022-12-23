@@ -8,7 +8,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpParameter) {
     case DLL_PROCESS_ATTACH:
       DisableThreadLibraryCalls(hModule);
 
-      sEngine->startup(hModule, lpParameter);
+      sEngine->startup(hModule);
       break;
     case DLL_PROCESS_DETACH:
       sEngine->shutdown();

@@ -106,66 +106,6 @@ bool SwitchToProfile(const wchar_t* profile) {
   return true;
 }
 
-void InitSettings(void) {
-  wchar_t scriptPath[_MAX_PATH], defaultStarter[_MAX_FNAME], defaultGame[_MAX_FNAME], defaultConsole[_MAX_FNAME],
-      hosts[256], debug[6], quitOnHostile[6], quitOnError[6], maxGameTime[6], gameTimeout[6], startAtMenu[6],
-      disableCache[6], memUsage[6], gamePrint[6], useProfilePath[6], logConsole[6], enableUnsupported[6],
-      forwardMessageBox[6], consoleFont[6];
-
-  auto path = (Vars.working_dir / "d2bs.ini").wstring();
-  auto fname = path.c_str();
-
-  GetPrivateProfileStringW(L"settings", L"ScriptPath", L"scripts", scriptPath, _MAX_PATH, fname);
-  GetPrivateProfileStringW(L"settings", L"DefaultConsoleScript", L"", defaultConsole, _MAX_FNAME, fname);
-  GetPrivateProfileStringW(L"settings", L"DefaultGameScript", L"default.dbj", defaultGame, _MAX_FNAME, fname);
-  GetPrivateProfileStringW(L"settings", L"DefaultStarterScript", L"starter.dbj", defaultStarter, _MAX_FNAME, fname);
-  GetPrivateProfileStringW(L"settings", L"Hosts", L"", hosts, 256, fname);
-  GetPrivateProfileStringW(L"settings", L"MaxGameTime", L"0", maxGameTime, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"Debug", L"false", debug, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"QuitOnHostile", L"false", quitOnHostile, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"QuitOnError", L"false", quitOnError, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"StartAtMenu", L"true", startAtMenu, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"DisableCache", L"true", disableCache, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"MemoryLimit", L"100", memUsage, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"UseGamePrint", L"false", gamePrint, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"GameReadyTimeout", L"5", gameTimeout, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"UseProfileScript", L"false", useProfilePath, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"LogConsoleOutput", L"false", logConsole, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"EnableUnsupported", L"false", enableUnsupported, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"ForwardMessageBox", L"false", forwardMessageBox, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"ConsoleFont", L"0", consoleFont, 6, fname);
-  Vars.script_dir = Vars.working_dir / scriptPath;
-  wcscpy_s(Vars.szStarter, _MAX_FNAME, defaultStarter);
-  wcscpy_s(Vars.szConsole, _MAX_FNAME, defaultConsole);
-  wcscpy_s(Vars.szDefault, _MAX_FNAME, defaultGame);
-
-  char* szHosts = UnicodeToAnsi(hosts);
-  strcpy_s(Vars.szHosts, 256, szHosts);
-  delete[] szHosts;
-
-  Vars.dwGameTime = GetTickCount();
-  Vars.dwMaxGameTime = abs(_wtoi(maxGameTime) * 1000);
-  Vars.dwGameTimeout = abs(_wtoi(gameTimeout) * 1000);
-
-  Vars.bQuitOnHostile = StringToBool(quitOnHostile);
-  Vars.bQuitOnError = StringToBool(quitOnError);
-  Vars.bStartAtMenu = StringToBool(startAtMenu);
-  Vars.bDisableCache = StringToBool(disableCache);
-  Vars.bUseGamePrint = StringToBool(gamePrint);
-  Vars.bUseProfileScript = StringToBool(useProfilePath);
-  Vars.bLogConsole = StringToBool(logConsole);
-  Vars.bEnableUnsupported = StringToBool(enableUnsupported);
-  Vars.bForwardMessageBox = StringToBool(forwardMessageBox);
-  Vars.eventSignal = CreateEventA(nullptr, true, false, nullptr);
-  Vars.dwMemUsage = abs(_wtoi(memUsage));
-  Vars.dwConsoleFont = abs(_wtoi(consoleFont));
-  if (Vars.dwMemUsage < 1) {
-    Vars.dwMemUsage = 50;
-  }
-  Vars.dwMemUsage *= 1024 * 1024;
-  Vars.oldWNDPROC = NULL;
-}
-
 bool InitHooks(void) {
   int i = 0;
   while (!Vars.bActive) {

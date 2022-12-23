@@ -10,9 +10,12 @@
 #include "d2bs/variables.h"
 #include "d2bs/version.h"
 
+#include <Windows.h>
+#include <filesystem>
 #include <queue>
 #include <vector>
-#include <windows.h>
+
+namespace fs = std::filesystem;
 
 class D2BS {
   D2BS() noexcept = default;
@@ -27,16 +30,23 @@ class D2BS {
     return &_instance;
   }
 
-  bool startup(HMODULE mod, void* param);
+  bool startup(HMODULE mod);
   void shutdown(bool await_thread = false);
 
  private:
   friend DWORD WINAPI thread_entry(void* param);
   void parse_commandline_args();
 
+  void init_paths(HMODULE mod);
+  void init_settings();
+
  private:
   HANDLE thread_handle_ = INVALID_HANDLE_VALUE;
   bool initialized_ = false;
+
+  fs::path root_dir_;
+  fs::path logs_dir_;
+  fs::path settings_file_;
 };
 
 #define sEngine D2BS::instance()

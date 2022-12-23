@@ -45,7 +45,6 @@ struct Variables {
   BOOL bBlockMouse;
   BOOL bDisableCache;
   BOOL bUseProfileScript;
-  bool bLoadedWithCGuard;
   BOOL bLogConsole;
   BOOL bEnableUnsupported;
   BOOL bForwardMessageBox;
