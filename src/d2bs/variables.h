@@ -3,13 +3,13 @@
 #include "d2bs/cguard.h"            // Module
 #include "d2bs/diablo/D2Structs.h"  // CellFile
 
-#include <Windows.h>  // CRITICAL_SECTION, DWORD, HANDLE, HHOOK, HMODULE, POINT, UINT_PTR, WNDPROC
-#include <map>        // std::map
-#include <queue>      // std::queue
-#include <string>     // std::wstring
-#include <filesystem> // std::filesystem::path
-#include <vector>     // std::vector
-#include <utility>    // std::pair
+#include <Windows.h>   // CRITICAL_SECTION, DWORD, HANDLE, HHOOK, HMODULE, POINT, UINT_PTR, WNDPROC
+#include <filesystem>  // std::filesystem::path
+#include <map>         // std::map
+#include <queue>       // std::queue
+#include <string>      // std::wstring
+#include <utility>     // std::pair
+#include <vector>      // std::vector
 
 // Temporarily adding these here until I can untangle the great web och inclusions.
 // ArraySize, PRIVATE_ITEM, PRIVATE_UNIT and Private should be moved. ~ ejt
@@ -29,7 +29,7 @@ struct Variables {
   DWORD dwGameTime;
   BOOL bDontCatchNextMsg;
   BOOL bClickAction;
-  BOOL bNeedShutdown;
+  bool bNeedShutdown;
   BOOL bUseGamePrint;
   BOOL bChangedAct;
   BOOL bGameLoopEntered;
@@ -75,7 +75,6 @@ struct Variables {
   char szClassic[30];
   char szLod[30];
   wchar_t szTitle[256];
-  wchar_t szCommandLine[256];
 
   WNDPROC oldWNDPROC;
   HHOOK hMouseHook;
@@ -86,7 +85,6 @@ struct Variables {
 
   std::queue<std::wstring> qPrintBuffer;
   std::map<unsigned __int32, CellFile*> mCachedCellFiles;
-  std::vector<std::pair<DWORD, DWORD>> vUnitList;
   // std::list<Event*> EventList;
   CRITICAL_SECTION cEventSection;
   CRITICAL_SECTION cPrintSection;

@@ -35,12 +35,12 @@ DWORD WINAPI MainThread(LPVOID) {
   bool bInGame = false;
 
   if (!InitHooks()) {
-    Log(L"D2BS Engine startup failed. %s", Vars.szCommandLine);
+    Log(L"D2BS Engine startup failed. %s", GetCommandLineW());
     Print(L"\u00FFc2D2BS\u00FFc0 :: Engine startup failed!");
     return FALSE;
   }
 
-  Vars.bUseRawCDKey = FALSE;  // this can be set inside Variables instead to default to 'false'
+  Vars.bUseRawCDKey = FALSE;  // can this can be set inside Variables instead to default to 'false'?
 
   // This can be moved into a separate function
   CommandLine cmdline(GetCommandLineA());
@@ -149,24 +149,23 @@ void Setup(HINSTANCE hDll, LPVOID lpReserved) {
     std::filesystem::create_directory(Vars.log_dir);
   }
 
-  InitCommandLine();
   InitSettings();
 
 #if 0
-		char errlog[516] = "";
-		sprintf_s(errlog, 516, "%sd2bs.log", Vars.szPath);
-		AllocConsole();
-		int handle = _open_osfhandle((long)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT);
-		FILE* f = _fdopen(handle, "wt");
-		*stderr = *f;
-		setvbuf(stderr, NULL, _IONBF, 0);
-		freopen_s(&f, errlog, "a+t", f);
+  char errlog[516] = "";
+  sprintf_s(errlog, 516, "%sd2bs.log", Vars.szPath);
+  AllocConsole();
+  int handle = _open_osfhandle((long)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT);
+  FILE* f = _fdopen(handle, "wt");
+  *stderr = *f;
+  setvbuf(stderr, NULL, _IONBF, 0);
+  freopen_s(&f, errlog, "a+t", f);
 #endif
 
   SetUnhandledExceptionFilter(ExceptionHandler);
 }
 
-BOOL Startup(void) {
+BOOL Startup() {
   InitializeCriticalSection(&Vars.cEventSection);
   InitializeCriticalSection(&Vars.cPrintSection);
   InitializeCriticalSection(&Vars.cBoxHookSection);
@@ -179,12 +178,11 @@ BOOL Startup(void) {
   InitializeCriticalSection(&Vars.cGameLoopSection);
   InitializeCriticalSection(&Vars.cFileSection);
 
-  Vars.bNeedShutdown = TRUE;
+  Vars.bNeedShutdown = true;
   Vars.bChangedAct = FALSE;
   Vars.bGameLoopEntered = FALSE;
   Vars.SectionCount = 0;
 
-  // MessageBox(NULL, "qwe", "qwe", MB_OK);
   Genhook::Initialize();
   DefineOffsets();
   InstallPatches();
@@ -241,9 +239,7 @@ BOOL WINAPI DllMain(HINSTANCE hDll, DWORD dwReason, LPVOID lpReserved) {
       Setup(hDll, lpReserved);
       return Startup();
     case DLL_PROCESS_DETACH:
-      if (Vars.bNeedShutdown) {
-        Shutdown();
-      }
+      Shutdown();
       break;
   }
 

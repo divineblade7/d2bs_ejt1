@@ -91,9 +91,15 @@ bool SwitchToProfile(const wchar_t* profile) {
   wcscpy_s(Vars.szProfile, 256, profile);
   Vars.script_dir = Vars.working_dir / scriptPath;
 
-  if (wcslen(defaultConsole) > 0) wcscpy_s(Vars.szConsole, _MAX_FNAME, defaultConsole);
-  if (wcslen(defaultGame) > 0) wcscpy_s(Vars.szDefault, _MAX_FNAME, defaultGame);
-  if (wcslen(defaultStarter) > 0) wcscpy_s(Vars.szStarter, _MAX_FNAME, defaultStarter);
+  if (wcslen(defaultConsole) > 0) {
+    wcscpy_s(Vars.szConsole, _MAX_FNAME, defaultConsole);
+  }
+  if (wcslen(defaultGame) > 0) {
+    wcscpy_s(Vars.szDefault, _MAX_FNAME, defaultGame);
+  }
+  if (wcslen(defaultStarter) > 0) {
+    wcscpy_s(Vars.szStarter, _MAX_FNAME, defaultStarter);
+  }
 
   Vars.bUseProfileScript = FALSE;
   // Reload();
@@ -153,7 +159,9 @@ void InitSettings(void) {
   Vars.eventSignal = CreateEventA(nullptr, true, false, nullptr);
   Vars.dwMemUsage = abs(_wtoi(memUsage));
   Vars.dwConsoleFont = abs(_wtoi(consoleFont));
-  if (Vars.dwMemUsage < 1) Vars.dwMemUsage = 50;
+  if (Vars.dwMemUsage < 1) {
+    Vars.dwMemUsage = 50;
+  }
   Vars.dwMemUsage *= 1024 * 1024;
   Vars.oldWNDPROC = NULL;
 }
@@ -169,26 +177,38 @@ bool InitHooks(void) {
     }
 
     if (D2GFX_GetHwnd() && (ClientState() == ClientStateMenu || ClientState() == ClientStateInGame)) {
-      if (!Vars.oldWNDPROC)
+      if (!Vars.oldWNDPROC) {
         Vars.oldWNDPROC = (WNDPROC)SetWindowLong(D2GFX_GetHwnd(), GWL_WNDPROC, (LONG)GameEventHandler);
-      if (!Vars.oldWNDPROC) continue;
+      }
+      if (!Vars.oldWNDPROC) {
+        continue;
+      }
 
       Vars.uTimer = SetTimer(D2GFX_GetHwnd(), 1, 0, TimerProc);
 
       DWORD mainThread = GetWindowThreadProcessId(D2GFX_GetHwnd(), 0);
       if (mainThread) {
-        if (!Vars.hKeybHook) Vars.hKeybHook = SetWindowsHookEx(WH_KEYBOARD, KeyPress, NULL, mainThread);
-        if (!Vars.hMouseHook) Vars.hMouseHook = SetWindowsHookEx(WH_MOUSE, MouseMove, NULL, mainThread);
+        if (!Vars.hKeybHook) {
+          Vars.hKeybHook = SetWindowsHookEx(WH_KEYBOARD, KeyPress, NULL, mainThread);
+        }
+        if (!Vars.hMouseHook) {
+          Vars.hMouseHook = SetWindowsHookEx(WH_MOUSE, MouseMove, NULL, mainThread);
+        }
       }
-    } else
+    } else {
       continue;
+    }
 
     if (Vars.hKeybHook && Vars.hMouseHook) {
-      if (!sScriptEngine->Startup()) return false;
+      if (!sScriptEngine->Startup()) {
+        return false;
+      }
 
       Vars.bActive = TRUE;
 
-      if (ClientState() == ClientStateMenu && Vars.bStartAtMenu) clickControl(*p_D2WIN_FirstControl);
+      if (ClientState() == ClientStateMenu && Vars.bStartAtMenu) {
+        clickControl(*p_D2WIN_FirstControl);
+      }
     }
 
     i++;
@@ -476,13 +496,6 @@ void ResumeProcess() {
     ResumeThread(hThread);
     CloseHandle(hThread);
   }
-}
-
-void InitCommandLine() {
-  wchar_t* line = GetCommandLineW();
-  memcpy(Vars.szCommandLine, line, min(sizeof(Vars.szCommandLine), sizeof(wchar_t) * wcslen(line)));
-  LPCWSTR cline = L"C:\\Program Files (x86)\\Diablo II\\Game.exe -w";
-  memcpy(line, cline, sizeof(LPCWSTR) * wcslen(cline));
 }
 
 bool GetStackWalk() {

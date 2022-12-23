@@ -498,7 +498,9 @@ UnitAny* D2CLIENT_FindUnit(DWORD dwId, DWORD dwType) {
 CellFile* LoadCellFile(const char* lpszPath, DWORD bMPQ) {
   if (bMPQ == TRUE) {
     unsigned __int32 hash = sfh((char*)lpszPath, (int)strlen((char*)lpszPath));
-    if (Vars.mCachedCellFiles.count(hash) > 0) return Vars.mCachedCellFiles[hash];
+    if (Vars.mCachedCellFiles.count(hash) > 0) {
+      return Vars.mCachedCellFiles[hash];
+    }
     CellFile* result = (CellFile*)D2WIN_LoadCellFile((char*)lpszPath, 0);
     Vars.mCachedCellFiles[hash] = result;
     return result;
@@ -528,7 +530,9 @@ CellFile* LoadCellFile(const wchar_t* lpszPath, DWORD bMPQ) {
   }
 
   unsigned __int32 hash = sfh((char*)lpszPath, (int)strlen((char*)lpszPath));
-  if (Vars.mCachedCellFiles.count(hash) > 0) return Vars.mCachedCellFiles[hash];
+  if (Vars.mCachedCellFiles.count(hash) > 0) {
+    return Vars.mCachedCellFiles[hash];
+  }
 
   // see if the file exists first
   if (!(_waccess(lpszPath, 0) != 0 && errno == ENOENT)) {

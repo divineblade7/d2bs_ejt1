@@ -349,13 +349,16 @@ void __fastcall GamePlayerAssignment(UnitAny* pPlayer) {
 }
 
 void CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD) {
-  if (Vars.bGameLoopEntered)
+  if (Vars.bGameLoopEntered) {
     LeaveCriticalSection(&Vars.cGameLoopSection);
+  }
   else {
     Vars.bGameLoopEntered = true;
     Vars.dwGameThreadId = GetCurrentThreadId();
   }
-  if (Vars.SectionCount) Sleep(5);
+  if (Vars.SectionCount) {
+    Sleep(5);
+  }
 
   EnterCriticalSection(&Vars.cGameLoopSection);
 }

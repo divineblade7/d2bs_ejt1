@@ -10,6 +10,7 @@ void StringToLower(wchar_t* p);
 bool StringToBool(const char* str);
 void StringReplace(char* str, const char find, const char replace, size_t buflen);
 void StringReplace(wchar_t* str, const wchar_t find, const wchar_t replace, size_t buflen);
+
 bool SwitchToProfile(const wchar_t* profile);
 void InitSettings(void);
 bool InitHooks(void);
@@ -18,7 +19,6 @@ bool StartScript(const wchar_t* script, ScriptType type);
 void Reload(void);
 bool ProcessCommand(const wchar_t* command, bool unprocessedIsCommand);
 void ResumeProcess();
-void InitCommandLine();
 
 void GameJoined(void);
 void MenuEntered(bool beginStarter);
