@@ -92,7 +92,6 @@ struct Variables {
   CRITICAL_SECTION cFrameHookSection;
   CRITICAL_SECTION cLineHookSection;
   CRITICAL_SECTION cFlushCacheSection;
-  CRITICAL_SECTION cConsoleSection;
   CRITICAL_SECTION cGameLoopSection;
   CRITICAL_SECTION cFileSection;
 

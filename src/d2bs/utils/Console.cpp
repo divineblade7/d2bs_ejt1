@@ -9,78 +9,75 @@
 #include <string>
 
 void Console::Toggle(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
   ToggleBuffer();
   TogglePrompt();
-  LeaveCriticalSection(&Vars.cConsoleSection);
 }
 
 void Console::TogglePrompt(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
   if (!IsEnabled())
     ShowPrompt();
   else
     HidePrompt();
-  LeaveCriticalSection(&Vars.cConsoleSection);
 }
 
 void Console::ToggleBuffer(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
   if (!IsVisible())
     ShowBuffer();
   else
     HideBuffer();
-  LeaveCriticalSection(&Vars.cConsoleSection);
 }
 
 void Console::Hide(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
   HidePrompt();
   HideBuffer();
-  LeaveCriticalSection(&Vars.cConsoleSection);
 }
 
 void Console::HidePrompt(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
+  std::lock_guard<std::mutex> lock(mutex_);
   enabled = false;
-  LeaveCriticalSection(&Vars.cConsoleSection);
 }
 
 void Console::HideBuffer(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
-  visible = false;
-  if (IsEnabled()) HidePrompt();
-  LeaveCriticalSection(&Vars.cConsoleSection);
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    visible = false;
+  }
+
+  if (IsEnabled()) {
+    HidePrompt();
+  }
 }
 
 void Console::Show(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
   ShowBuffer();
   ShowPrompt();
-  LeaveCriticalSection(&Vars.cConsoleSection);
 }
 
 void Console::ShowPrompt(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
-  enabled = true;
-  if (!IsVisible()) ShowBuffer();
-  LeaveCriticalSection(&Vars.cConsoleSection);
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    enabled = true;
+  }
+
+  if (!IsVisible()) {
+    ShowBuffer();
+  }
 }
 
 void Console::ShowBuffer(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
+  std::lock_guard<std::mutex> lock(mutex_);
   visible = true;
-  LeaveCriticalSection(&Vars.cConsoleSection);
 }
 
 void Console::AddKey(unsigned int key) {
-  EnterCriticalSection(&Vars.cConsoleSection);
+  std::lock_guard<std::mutex> lock(mutex_);
   cmd << (char)key;
-  LeaveCriticalSection(&Vars.cConsoleSection);
 }
 
 void Console::ExecuteCommand(void) {
-  if (cmd.str().length() < 1) return;
+  if (cmd.str().length() < 1) {
+    return;
+  }
 
   commands.push_back(cmd.str());
   commandPos = commands.size();
@@ -89,7 +86,8 @@ void Console::ExecuteCommand(void) {
 }
 
 void Console::RemoveLastKey(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
+  std::lock_guard<std::mutex> lock(mutex_);
+
   int len = cmd.str().length() - 1;
   if (len >= 0) {
     cmd.str(cmd.str().substr(0, len));
@@ -98,11 +96,10 @@ void Console::RemoveLastKey(void) {
       cmd.seekp(len);
     }
   }
-  LeaveCriticalSection(&Vars.cConsoleSection);
 }
 
 void Console::PrevCommand(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
+  std::lock_guard<std::mutex> lock(mutex_);
 
   if (commandPos < 1 || commandPos > commands.size()) {
     cmd.str(L"");
@@ -111,43 +108,48 @@ void Console::PrevCommand(void) {
     cmd.str(L"");
     cmd << commands[commandPos];
   }
-
-  LeaveCriticalSection(&Vars.cConsoleSection);
 }
 
 void Console::NextCommand(void) {
-  if (commandPos >= commands.size()) return;
+  std::lock_guard<std::mutex> lock(mutex_);
 
-  EnterCriticalSection(&Vars.cConsoleSection);
+  if (commandPos >= commands.size()) {
+    return;
+  }
 
   cmd.str(L"");
   cmd << commands[commandPos];
 
-  if (commandPos < commands.size() - 1) commandPos++;
-
-  LeaveCriticalSection(&Vars.cConsoleSection);
+  if (commandPos < commands.size() - 1) {
+    commandPos++;
+  }
 }
 
 void Console::ScrollUp(void) {
-  if (scrollIndex == 0 || history.size() - scrollIndex == 0) return;
-  EnterCriticalSection(&Vars.cConsoleSection);
+  std::lock_guard<std::mutex> lock(mutex_);
+
+  if (scrollIndex == 0 || history.size() - scrollIndex == 0) {
+    return;
+  }
+
   scrollIndex--;
   Console::UpdateLines();
-
-  LeaveCriticalSection(&Vars.cConsoleSection);
 }
 
 void Console::ScrollDown(void) {
-  if (history.size() < lineCount || (history.size() - lineCount == scrollIndex)) return;
+  std::lock_guard<std::mutex> lock(mutex_);
 
-  EnterCriticalSection(&Vars.cConsoleSection);
+  if (history.size() < lineCount || (history.size() - lineCount == scrollIndex)) {
+    return;
+  }
+
   scrollIndex++;
   Console::UpdateLines();
-  LeaveCriticalSection(&Vars.cConsoleSection);
 }
 
 void Console::AddLine(std::wstring line) {
-  EnterCriticalSection(&Vars.cConsoleSection);
+  std::lock_guard<std::mutex> lock(mutex_);
+
   std::list<std::wstring> buf;
   SplitLines(line, Console::MaxWidth(), L' ', buf);
   for (std::list<std::wstring>::iterator it2 = buf.begin(); it2 != buf.end(); it2++) {
@@ -157,12 +159,12 @@ void Console::AddLine(std::wstring line) {
   while (history.size() > 300)  // set history cap at 300
     history.pop_front();
 
-  if (Vars.bLogConsole) LogNoFormat(line.c_str());
+  if (Vars.bLogConsole) {
+    LogNoFormat(line.c_str());
+  }
 
   scrollIndex = history.size() < lineCount ? 0 : history.size() - lineCount;
   Console::UpdateLines();
-
-  LeaveCriticalSection(&Vars.cConsoleSection);
 }
 
 void Console::UpdateLines(void) {
@@ -172,14 +174,14 @@ void Console::UpdateLines(void) {
 }
 
 void Console::Clear(void) {
-  EnterCriticalSection(&Vars.cConsoleSection);
+  std::lock_guard<std::mutex> lock(mutex_);
   lines.clear();
-  LeaveCriticalSection(&Vars.cConsoleSection);
 }
 
 void Console::Draw(void) {
+  std::lock_guard<std::mutex> lock(mutex_);
+
   static DWORD count = GetTickCount();
-  EnterCriticalSection(&Vars.cConsoleSection);
   if (IsVisible()) {
     POINT size = GetScreenSize();
     int xsize = size.x;
@@ -218,8 +220,9 @@ void Console::Draw(void) {
     if (IsEnabled()) {
       if (cmdsplit.size() > 0) {
         int dy = _height + 3;
-        for (std::list<std::wstring>::iterator it2 = cmdsplit.begin(); it2 != cmdsplit.end(); it2++, dy += charheight)
+        for (std::list<std::wstring>::iterator it2 = cmdsplit.begin(); it2 != cmdsplit.end(); it2++, dy += charheight) {
           myDrawText(it2->c_str(), charwidth, dy, 0, Vars.dwConsoleFont);
+        }
       }
 
       myDrawText(L">", 1, Console::height - 3, 0, Vars.dwConsoleFont);
@@ -227,9 +230,9 @@ void Console::Draw(void) {
       if ((tick - count) < 600) {
         int lx = cmdsize + charwidth, ly = Console::height - (charheight / 3);
         D2GFX_DrawRectangle(lx, ly, lx + ((charwidth * 2) / 3), ly + 2, 0xFF, 0x07);
-      } else if ((tick - count) > 1100)
+      } else if ((tick - count) > 1100) {
         count = tick;
+      }
     }
   }
-  LeaveCriticalSection(&Vars.cConsoleSection);
 }

@@ -72,7 +72,6 @@ bool D2BS::startup(HMODULE mod, void* param) {
   InitializeCriticalSection(&Vars.cImageHookSection);
   InitializeCriticalSection(&Vars.cTextHookSection);
   InitializeCriticalSection(&Vars.cFlushCacheSection);
-  InitializeCriticalSection(&Vars.cConsoleSection);
   InitializeCriticalSection(&Vars.cGameLoopSection);
   InitializeCriticalSection(&Vars.cFileSection);
 
@@ -123,7 +122,6 @@ void D2BS::shutdown(bool await_thread) {
   DeleteCriticalSection(&Vars.cImageHookSection);
   DeleteCriticalSection(&Vars.cTextHookSection);
   DeleteCriticalSection(&Vars.cFlushCacheSection);
-  DeleteCriticalSection(&Vars.cConsoleSection);
   DeleteCriticalSection(&Vars.cGameLoopSection);
   DeleteCriticalSection(&Vars.cFileSection);
 

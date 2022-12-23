@@ -3,6 +3,7 @@
 #include "d2bs/D2BS.h"
 
 #include <deque>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <windows.h>
@@ -68,6 +69,8 @@ class Console {
   unsigned int height = 0;
   unsigned int scrollIndex = 0;
   std::wstringstream cmd;
+
+  std::mutex mutex_;
 };
 
 #define sConsole Console::instance()
