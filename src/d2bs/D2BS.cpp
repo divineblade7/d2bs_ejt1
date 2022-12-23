@@ -222,32 +222,35 @@ void D2BS::init_paths(HMODULE mod) {
   GetModuleFileNameW(mod, path, MAX_PATH);
   root_dir_ = path;
   // remove filename from path and make preferred, '\\' instead of '/'
-  root_dir_.remove_filename().make_preferred();
-  Vars.working_dir = root_dir_; // DEPRECATED
+  root_dir_.remove_filename();
 
-  logs_dir_ = (root_dir_ / "logs").make_preferred();
+  Vars.working_dir = root_dir_; // DEPRECATED
+  logs_dir_ = root_dir_ / "logs";
+  Vars.log_dir = logs_dir_;  // DEPRECATED
+  settings_file_ = root_dir_ / "d2bs.ini";
+
+  // create log directory if it does not exist
   if (!std::filesystem::exists(logs_dir_)) {
     std::filesystem::create_directory(logs_dir_);
   }
-
-  Vars.log_dir = logs_dir_; // DEPRECATED
 }
 
 void D2BS::init_settings() {
   wchar_t scriptPath[_MAX_PATH], defaultStarter[_MAX_FNAME], defaultGame[_MAX_FNAME], defaultConsole[_MAX_FNAME],
-      hosts[256], debug[6], quitOnHostile[6], quitOnError[6], maxGameTime[6], gameTimeout[6], startAtMenu[6],
+      hosts[256], debug[6], quitOnHostile[6], quitOnError[6], startAtMenu[6],
       disableCache[6], memUsage[6], gamePrint[6], useProfilePath[6], logConsole[6], enableUnsupported[6],
       forwardMessageBox[6], consoleFont[6];
+  int maxGameTime = 0;
+  int gameTimeout = 0;
 
-  auto path = (Vars.working_dir / "d2bs.ini").wstring();
-  auto fname = path.c_str();
+  auto fname = settings_file_.c_str();
 
   GetPrivateProfileStringW(L"settings", L"ScriptPath", L"scripts", scriptPath, _MAX_PATH, fname);
-  GetPrivateProfileStringW(L"settings", L"DefaultConsoleScript", L"", defaultConsole, _MAX_FNAME, fname);
-  GetPrivateProfileStringW(L"settings", L"DefaultGameScript", L"default.dbj", defaultGame, _MAX_FNAME, fname);
-  GetPrivateProfileStringW(L"settings", L"DefaultStarterScript", L"starter.dbj", defaultStarter, _MAX_FNAME, fname);
+  GetPrivateProfileStringW(L"settings", L"DefaultConsoleScript", L"", Vars.szConsole, _MAX_FNAME, fname);
+  GetPrivateProfileStringW(L"settings", L"DefaultGameScript", L"default.dbj", Vars.szDefault, _MAX_FNAME, fname);
+  GetPrivateProfileStringW(L"settings", L"DefaultStarterScript", L"starter.dbj", Vars.szStarter, _MAX_FNAME, fname);
   GetPrivateProfileStringW(L"settings", L"Hosts", L"", hosts, 256, fname);
-  GetPrivateProfileStringW(L"settings", L"MaxGameTime", L"0", maxGameTime, 6, fname);
+  maxGameTime = GetPrivateProfileIntW(L"settings", L"MaxGameTime", 0, fname);
   GetPrivateProfileStringW(L"settings", L"Debug", L"false", debug, 6, fname);
   GetPrivateProfileStringW(L"settings", L"QuitOnHostile", L"false", quitOnHostile, 6, fname);
   GetPrivateProfileStringW(L"settings", L"QuitOnError", L"false", quitOnError, 6, fname);
@@ -255,24 +258,22 @@ void D2BS::init_settings() {
   GetPrivateProfileStringW(L"settings", L"DisableCache", L"true", disableCache, 6, fname);
   GetPrivateProfileStringW(L"settings", L"MemoryLimit", L"100", memUsage, 6, fname);
   GetPrivateProfileStringW(L"settings", L"UseGamePrint", L"false", gamePrint, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"GameReadyTimeout", L"5", gameTimeout, 6, fname);
+  gameTimeout = GetPrivateProfileIntW(L"settings", L"GameReadyTimeout", 5, fname);
   GetPrivateProfileStringW(L"settings", L"UseProfileScript", L"false", useProfilePath, 6, fname);
   GetPrivateProfileStringW(L"settings", L"LogConsoleOutput", L"false", logConsole, 6, fname);
   GetPrivateProfileStringW(L"settings", L"EnableUnsupported", L"false", enableUnsupported, 6, fname);
   GetPrivateProfileStringW(L"settings", L"ForwardMessageBox", L"false", forwardMessageBox, 6, fname);
   GetPrivateProfileStringW(L"settings", L"ConsoleFont", L"0", consoleFont, 6, fname);
+
   Vars.script_dir = Vars.working_dir / scriptPath;
-  wcscpy_s(Vars.szStarter, _MAX_FNAME, defaultStarter);
-  wcscpy_s(Vars.szConsole, _MAX_FNAME, defaultConsole);
-  wcscpy_s(Vars.szDefault, _MAX_FNAME, defaultGame);
 
   char* szHosts = UnicodeToAnsi(hosts);
   strcpy_s(Vars.szHosts, 256, szHosts);
   delete[] szHosts;
 
   Vars.dwGameTime = GetTickCount();
-  Vars.dwMaxGameTime = abs(_wtoi(maxGameTime) * 1000);
-  Vars.dwGameTimeout = abs(_wtoi(gameTimeout) * 1000);
+  Vars.dwMaxGameTime = abs(maxGameTime * 1000);
+  Vars.dwGameTimeout = abs(gameTimeout * 1000);
 
   Vars.bQuitOnHostile = StringToBool(quitOnHostile);
   Vars.bQuitOnError = StringToBool(quitOnError);
