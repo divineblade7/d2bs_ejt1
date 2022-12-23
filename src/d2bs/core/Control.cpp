@@ -123,6 +123,14 @@ bool clickControl(Control* pControl, int x, int y) {
   return false;
 }
 
+void SetControlText(Control* pControl, const wchar_t* Text) {
+  if (ClientState() != ClientStateMenu) return;
+
+  if (pControl && Text) {
+    D2WIN_SetControlText(pControl, Text);
+  }
+}
+
 BOOL OOG_CreateCharacter(const wchar_t* szCharacter, int type, [[maybe_unused]] bool hardcore,
                          [[maybe_unused]] bool ladder) {
   if (OOG_GetLocation() != OOG_CHAR_SELECT || wcslen(szCharacter) > 15 || type > 6 || type < 0) return FALSE;
@@ -210,14 +218,6 @@ BOOL OOG_SelectCharacter(const wchar_t* szCharacter) {
     pControl = pControl->pNext;
   }
   return FALSE;
-}
-
-void SetControlText(Control* pControl, const wchar_t* Text) {
-  if (ClientState() != ClientStateMenu) return;
-
-  if (pControl && Text) {
-    D2WIN_SetControlText(pControl, Text);
-  }
 }
 
 BOOL OOG_SelectGateway(const wchar_t* szGateway, [[maybe_unused]] size_t strSize) {

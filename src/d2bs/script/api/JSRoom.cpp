@@ -1,5 +1,6 @@
 #include "d2bs/script/api/JSRoom.h"
 
+#include "d2bs/core/Unit.h"
 #include "d2bs/diablo/D2Ptrs.h"
 #include "d2bs/diablo/D2Structs.h"
 #include "d2bs/script/api/JSPresetUnit.h"

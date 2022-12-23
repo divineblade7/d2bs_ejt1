@@ -2,6 +2,7 @@
 
 #include "d2bs/core/Core.h"
 #include "d2bs/core/MPQStats.h"
+#include "d2bs/core/Unit.h"
 #include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/diablo/D2Structs.h"
 #include "d2bs/utils/CriticalSections.h"

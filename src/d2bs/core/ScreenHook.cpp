@@ -3,7 +3,6 @@
 #include "d2bs/D2BS.h"
 #include "d2bs/diablo/D2Ptrs.h"
 #include "d2bs/script/api/JSScreenHook.h"
-#include "d2bs/utils/Console.h"
 #include "d2bs/utils/Helpers.h"
 
 #include <format>

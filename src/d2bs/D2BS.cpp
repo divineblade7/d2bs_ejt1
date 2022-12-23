@@ -8,7 +8,6 @@
 #include "d2bs/diablo/handlers/D2Handlers.h"
 #include "d2bs/script/ScriptEngine.h"
 #include "d2bs/utils/CommandLine.h"
-#include "d2bs/utils/Console.h"
 #include "d2bs/utils/Helpers.h"
 #include "d2bs/utils/Offset.h"
 #include "d2bs/utils/dde.h"
@@ -21,9 +20,115 @@
 #include "utils/D2Loader.h"
 #endif
 
+// deprecate this function, some hack workaround implemented by someone long ago...
 bool __fastcall UpdatePlayerGid(Script* script, void*, uint) {
   script->UpdatePlayerGid();
   return true;
+}
+
+// forward-declare `thread_entry` so that is can be defined in the proper
+// order accoring to how it is declared inside `D2BS`
+DWORD __stdcall thread_entry([[maybe_unused]] void* param);
+
+bool D2BS::startup(HMODULE mod, void* param) {
+  if (param) {
+    Vars.pModule = (Module*)param;
+    Vars.working_dir = Vars.pModule->szPath;
+    Vars.bLoadedWithCGuard = true;
+  } else {
+    Vars.hModule = mod;
+    wchar_t path[MAX_PATH]{};
+    GetModuleFileNameW(mod, path, MAX_PATH);
+    Vars.working_dir = path;
+    Vars.working_dir.remove_filename().make_preferred();
+    Vars.bLoadedWithCGuard = false;
+  }
+
+  Vars.log_dir = Vars.working_dir / "logs";
+  if (!std::filesystem::exists(Vars.log_dir)) {
+    std::filesystem::create_directory(Vars.log_dir);
+  }
+
+  InitSettings();
+
+#if 0
+  char errlog[516] = "";
+  sprintf_s(errlog, 516, "%sd2bs.log", Vars.szPath);
+  AllocConsole();
+  int handle = _open_osfhandle((long)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT);
+  FILE* f = _fdopen(handle, "wt");
+  *stderr = *f;
+  setvbuf(stderr, NULL, _IONBF, 0);
+  freopen_s(&f, errlog, "a+t", f);
+#endif
+
+  SetUnhandledExceptionFilter(ExceptionHandler);
+
+  InitializeCriticalSection(&Vars.cEventSection);
+  InitializeCriticalSection(&Vars.cPrintSection);
+  InitializeCriticalSection(&Vars.cBoxHookSection);
+  InitializeCriticalSection(&Vars.cFrameHookSection);
+  InitializeCriticalSection(&Vars.cLineHookSection);
+  InitializeCriticalSection(&Vars.cImageHookSection);
+  InitializeCriticalSection(&Vars.cTextHookSection);
+  InitializeCriticalSection(&Vars.cFlushCacheSection);
+  InitializeCriticalSection(&Vars.cConsoleSection);
+  InitializeCriticalSection(&Vars.cGameLoopSection);
+  InitializeCriticalSection(&Vars.cFileSection);
+
+  initialized_ = true;
+  Vars.bChangedAct = FALSE;
+  Vars.bGameLoopEntered = FALSE;
+  Vars.SectionCount = 0;
+
+  Genhook::Initialize();
+  DefineOffsets();
+  InstallPatches();
+  InstallConditional();
+  CreateDdeServer();
+
+  thread_handle_ = CreateThread(NULL, NULL, thread_entry, NULL, NULL, NULL);
+  if (!thread_handle_) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+void D2BS::shutdown(bool await_thread) {
+  if (!initialized_) {
+    return;
+  }
+
+  Vars.bActive = FALSE;
+  if (await_thread) {
+    WaitForSingleObject(thread_handle_, INFINITE);
+  }
+
+  SetWindowLong(D2GFX_GetHwnd(), GWL_WNDPROC, (LONG)Vars.oldWNDPROC);
+
+  RemovePatches();
+  Genhook::Destroy();
+  ShutdownDdeServer();
+
+  KillTimer(D2GFX_GetHwnd(), Vars.uTimer);
+
+  UnhookWindowsHookEx(Vars.hMouseHook);
+  UnhookWindowsHookEx(Vars.hKeybHook);
+
+  DeleteCriticalSection(&Vars.cPrintSection);
+  DeleteCriticalSection(&Vars.cBoxHookSection);
+  DeleteCriticalSection(&Vars.cFrameHookSection);
+  DeleteCriticalSection(&Vars.cLineHookSection);
+  DeleteCriticalSection(&Vars.cImageHookSection);
+  DeleteCriticalSection(&Vars.cTextHookSection);
+  DeleteCriticalSection(&Vars.cFlushCacheSection);
+  DeleteCriticalSection(&Vars.cConsoleSection);
+  DeleteCriticalSection(&Vars.cGameLoopSection);
+  DeleteCriticalSection(&Vars.cFileSection);
+
+  Log(L"D2BS Shutdown complete.");
+  initialized_ = false;
 }
 
 DWORD __stdcall thread_entry([[maybe_unused]] void* param) {
@@ -39,40 +144,7 @@ DWORD __stdcall thread_entry([[maybe_unused]] void* param) {
 
   Vars.bUseRawCDKey = FALSE;  // can this can be set inside Variables instead to default to 'false'?
 
-  // This can be moved into a separate function
-  CommandLine cmdline(GetCommandLineA());
-  for (const auto& [arg, val] : cmdline.args()) {
-    if (arg == "-title") {
-      const wchar_t* text = AnsiToUnicode(val.c_str());
-      int len = wcslen((wchar_t*)text);
-      wcsncat_s(Vars.szTitle, (wchar_t*)text, len);
-      delete[] text;  // ugh...
-    } else if (arg == "-sleepy") {
-      Vars.bSleepy = TRUE;
-    } else if (arg == "-cachefix") {
-      Vars.bCacheFix = TRUE;
-    } else if (arg == "-multi") {
-      Vars.bMulti = TRUE;
-    } else if (arg == "-ftj") {
-      Vars.bReduceFTJ = TRUE;
-    } else if (arg == "-d2c") {
-      Vars.bUseRawCDKey = TRUE;
-      strncat_s(Vars.szClassic, val.c_str(), val.length());
-    } else if (arg == "-d2x") {
-      strncat_s(Vars.szLod, val.c_str(), val.length());
-    } else if (arg == "-handle") {
-      Vars.hHandle = (HWND)atoi(val.c_str());
-    } else if (arg == "-mpq") {
-      LoadMPQ(val.c_str());
-    } else if (arg == "-profile") {
-      const wchar_t* profile = AnsiToUnicode(val.c_str());
-      if (SwitchToProfile(profile))
-        Print(L"\u00FFc2D2BS\u00FFc0 :: Switched to profile %s", profile);
-      else
-        Print(L"\u00FFc2D2BS\u00FFc0 :: Profile %s not found", profile);
-      delete[] profile;  // ugh...
-    }
-  }
+  sEngine->parse_commandline_args();
 
   Log(L"D2BS Engine startup complete. %s", L"" D2BS_VERSION);
   Print(L"\u00FFc2D2BS\u00FFc0 :: Engine startup complete!");
@@ -125,109 +197,38 @@ DWORD __stdcall thread_entry([[maybe_unused]] void* param) {
   return NULL;
 }
 
-void Setup(HINSTANCE hDll, LPVOID lpReserved) {
-  DisableThreadLibraryCalls(hDll);
-
-  if (lpReserved) {
-    Vars.pModule = (Module*)lpReserved;
-    Vars.working_dir = Vars.pModule->szPath;
-    Vars.bLoadedWithCGuard = true;
-  } else {
-    Vars.hModule = hDll;
-    wchar_t path[MAX_PATH]{};
-    GetModuleFileNameW(hDll, path, MAX_PATH);
-    Vars.working_dir = path;
-    Vars.working_dir.remove_filename().make_preferred();
-    Vars.bLoadedWithCGuard = false;
+void D2BS::parse_commandline_args() {
+  CommandLine cmdline(GetCommandLineA());
+  for (const auto& [arg, val] : cmdline.args()) {
+    if (arg == "-title") {
+      const wchar_t* text = AnsiToUnicode(val.c_str());
+      int len = wcslen((wchar_t*)text);
+      wcsncat_s(Vars.szTitle, (wchar_t*)text, len);
+      delete[] text;  // ugh...
+    } else if (arg == "-sleepy") {
+      Vars.bSleepy = TRUE;
+    } else if (arg == "-cachefix") {
+      Vars.bCacheFix = TRUE;
+    } else if (arg == "-multi") {
+      Vars.bMulti = TRUE;
+    } else if (arg == "-ftj") {
+      Vars.bReduceFTJ = TRUE;
+    } else if (arg == "-d2c") {
+      Vars.bUseRawCDKey = TRUE;
+      strncat_s(Vars.szClassic, val.c_str(), val.length());
+    } else if (arg == "-d2x") {
+      strncat_s(Vars.szLod, val.c_str(), val.length());
+    } else if (arg == "-handle") {
+      Vars.hHandle = (HWND)atoi(val.c_str());
+    } else if (arg == "-mpq") {
+      LoadMPQ(val.c_str());
+    } else if (arg == "-profile") {
+      const wchar_t* profile = AnsiToUnicode(val.c_str());
+      if (SwitchToProfile(profile))
+        Print(L"\u00FFc2D2BS\u00FFc0 :: Switched to profile %s", profile);
+      else
+        Print(L"\u00FFc2D2BS\u00FFc0 :: Profile %s not found", profile);
+      delete[] profile;  // ugh...
+    }
   }
-
-  Vars.log_dir = Vars.working_dir / "logs";
-  if (!std::filesystem::exists(Vars.log_dir)) {
-    std::filesystem::create_directory(Vars.log_dir);
-  }
-
-  InitSettings();
-
-#if 0
-  char errlog[516] = "";
-  sprintf_s(errlog, 516, "%sd2bs.log", Vars.szPath);
-  AllocConsole();
-  int handle = _open_osfhandle((long)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT);
-  FILE* f = _fdopen(handle, "wt");
-  *stderr = *f;
-  setvbuf(stderr, NULL, _IONBF, 0);
-  freopen_s(&f, errlog, "a+t", f);
-#endif
-
-  SetUnhandledExceptionFilter(ExceptionHandler);
-}
-
-bool D2BS::Startup(HMODULE mod, void* param) {
-  Setup(mod, param);
-
-  InitializeCriticalSection(&Vars.cEventSection);
-  InitializeCriticalSection(&Vars.cPrintSection);
-  InitializeCriticalSection(&Vars.cBoxHookSection);
-  InitializeCriticalSection(&Vars.cFrameHookSection);
-  InitializeCriticalSection(&Vars.cLineHookSection);
-  InitializeCriticalSection(&Vars.cImageHookSection);
-  InitializeCriticalSection(&Vars.cTextHookSection);
-  InitializeCriticalSection(&Vars.cFlushCacheSection);
-  InitializeCriticalSection(&Vars.cConsoleSection);
-  InitializeCriticalSection(&Vars.cGameLoopSection);
-  InitializeCriticalSection(&Vars.cFileSection);
-
-  Vars.bNeedShutdown = true;
-  Vars.bChangedAct = FALSE;
-  Vars.bGameLoopEntered = FALSE;
-  Vars.SectionCount = 0;
-
-  Genhook::Initialize();
-  DefineOffsets();
-  InstallPatches();
-  InstallConditional();
-  CreateDdeServer();
-
-  thread_handle_ = CreateThread(NULL, NULL, thread_entry, NULL, NULL, NULL);
-  if (!thread_handle_) {
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-void D2BS::Shutdown(bool await_thread) {
-  if (!Vars.bNeedShutdown) {
-    return;
-  }
-
-  Vars.bActive = FALSE;
-  if (await_thread) {
-    WaitForSingleObject(thread_handle_, INFINITE);
-  }
-
-  SetWindowLong(D2GFX_GetHwnd(), GWL_WNDPROC, (LONG)Vars.oldWNDPROC);
-
-  RemovePatches();
-  Genhook::Destroy();
-  ShutdownDdeServer();
-
-  KillTimer(D2GFX_GetHwnd(), Vars.uTimer);
-
-  UnhookWindowsHookEx(Vars.hMouseHook);
-  UnhookWindowsHookEx(Vars.hKeybHook);
-
-  DeleteCriticalSection(&Vars.cPrintSection);
-  DeleteCriticalSection(&Vars.cBoxHookSection);
-  DeleteCriticalSection(&Vars.cFrameHookSection);
-  DeleteCriticalSection(&Vars.cLineHookSection);
-  DeleteCriticalSection(&Vars.cImageHookSection);
-  DeleteCriticalSection(&Vars.cTextHookSection);
-  DeleteCriticalSection(&Vars.cFlushCacheSection);
-  DeleteCriticalSection(&Vars.cConsoleSection);
-  DeleteCriticalSection(&Vars.cGameLoopSection);
-  DeleteCriticalSection(&Vars.cFileSection);
-
-  Log(L"D2BS Shutdown complete.");
-  Vars.bNeedShutdown = false;
 }

@@ -25,11 +25,9 @@ struct Private {
 struct Variables {
   int nChickenHP;
   int nChickenMP;
-  DWORD dwInjectTime;
   DWORD dwGameTime;
   BOOL bDontCatchNextMsg;
   BOOL bClickAction;
-  bool bNeedShutdown;
   BOOL bUseGamePrint;
   BOOL bChangedAct;
   BOOL bGameLoopEntered;

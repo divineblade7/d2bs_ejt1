@@ -55,53 +55,6 @@ void LogNoFormat(const wchar_t* szString) {
 #endif
 }
 
-// NOTE TO CALLERS: szTmp must be a PRE-INITIALIZED string.
-const char* GetUnitName(UnitAny* pUnit, char* szTmp, size_t bufSize) {
-  if (!pUnit) {
-    strcpy_s(szTmp, bufSize, "Unknown");
-    return szTmp;
-  }
-  if (pUnit->dwType == UNIT_MONSTER) {
-    wchar_t* wName = D2CLIENT_GetUnitName(pUnit);
-    WideCharToMultiByte(CP_UTF8, 0, wName, -1, szTmp, bufSize, 0, 0);
-    return szTmp;
-  }
-  if (pUnit->dwType == UNIT_PLAYER && pUnit->pPlayerData) {
-    //	return pUnit->pPlayerData->szName;
-    strcpy_s(szTmp, bufSize, pUnit->pPlayerData->szName);
-    return szTmp;
-  }
-  if (pUnit->dwType == UNIT_ITEM) {
-    wchar_t wBuffer[256] = L"";
-    D2CLIENT_GetItemName(pUnit, wBuffer, _countof(wBuffer));
-    char* szBuffer = UnicodeToAnsi(wBuffer);
-    if (strchr(szBuffer, '\n')) *strchr(szBuffer, '\n') = 0x00;
-
-    strcpy_s(szTmp, bufSize, szBuffer);
-    delete[] szBuffer;
-    return szTmp;
-  }
-  if (pUnit->dwType == UNIT_OBJECT || pUnit->dwType == UNIT_TILE) {
-    if (pUnit->pObjectData && pUnit->pObjectData->pTxt) {
-      strcpy_s(szTmp, bufSize, pUnit->pObjectData->pTxt->szName);
-      return szTmp;
-    }
-  }
-  strcpy_s(szTmp, bufSize, "Unknown");
-  return szTmp;
-}
-
-// szBuf must be a 4-character string
-void GetItemCode(UnitAny* pUnit, char* szBuf) {
-  if (pUnit->dwType == UNIT_ITEM) {
-    ItemTxt* pTxt = D2COMMON_GetItemText(pUnit->dwTxtFileNo);
-    if (pTxt) {
-      memcpy(szBuf, pTxt->szCode, 3);
-      szBuf[3] = 0x00;
-    }
-  }
-}
-
 bool InArea(int x, int y, int x2, int y2, int sizex, int sizey) {
   return !!(x >= x2 && x < x2 + sizex && y >= y2 && y < y2 + sizey);
 }
@@ -386,22 +339,6 @@ void myDrawCenterText(const wchar_t* szText, int x, int y, int color, int font, 
   myDrawText(szText, x - (dwWidth >> div), y, color, font);
 }
 
-void D2CLIENT_Interact(UnitAny* pUnit, DWORD dwMoveType) {
-  if (!pUnit) return;
-
-  if (!D2CLIENT_FindUnit(pUnit->dwUnitId, pUnit->dwType)) return;
-
-  UnitInteraction pInteract = {dwMoveType,
-                               D2CLIENT_GetPlayerUnit(),
-                               pUnit,
-                               static_cast<DWORD>(D2CLIENT_GetUnitX(pUnit)),
-                               static_cast<DWORD>(D2CLIENT_GetUnitY(pUnit)),
-                               0,
-                               0};
-
-  D2CLIENT_Interact_STUB(&pInteract);
-}
-
 typedef void (*fnClickEntry)(void);
 
 BOOL ClickNPCMenu(DWORD NPCClassId, DWORD MenuId) {
@@ -446,12 +383,6 @@ BOOL ClickNPCMenu(DWORD NPCClassId, DWORD MenuId) {
   return FALSE;
 }
 
-int GetItemLocation(UnitAny* pItem) {
-  if (!pItem || !pItem->pItemData) return -1;
-
-  return (pItem->pItemData->GameLocation);
-}
-
 BYTE CalcPercent(DWORD dwVal, DWORD dwMaxVal, BYTE iMin) {
   if (dwVal == 0 || dwMaxVal == 0) return 0;
 
@@ -467,31 +398,6 @@ DWORD GetTileLevelNo(Room2* lpRoom2, DWORD dwTileNo) {
   }
 
   return NULL;
-}
-
-UnitAny* GetMercUnit(UnitAny* pUnit) {
-  for (Room1* pRoom = pUnit->pAct->pRoom1; pRoom; pRoom = pRoom->pRoomNext)
-    for (UnitAny* pMerc = pRoom->pUnitFirst; pMerc; pMerc = pMerc->pRoomNext)
-      if (pMerc->dwType == UNIT_MONSTER &&
-          (pMerc->dwTxtFileNo == MERC_A1 || pMerc->dwTxtFileNo == MERC_A2 || pMerc->dwTxtFileNo == MERC_A3 ||
-           pMerc->dwTxtFileNo == MERC_A5) &&
-          D2CLIENT_GetMonsterOwner(pMerc->dwUnitId) == pUnit->dwUnitId)
-        return pMerc;
-  return NULL;
-
-#if 0
-	// Wanted way of doing things, but D2CLIENT_GetMercUnit does some wierd internal things (drawing, causing screen flicker)
-	for(UnitAny* pMerc = D2CLIENT_GetMercUnit(); pMerc; pMerc = pMerc->pRoomNext)
-		if (D2CLIENT_GetMonsterOwner(pMerc->dwUnitId) == pUnit->dwUnitId)
-			return pMerc;
-	return NULL;
-#endif
-}
-
-UnitAny* D2CLIENT_FindUnit(DWORD dwId, DWORD dwType) {
-  if (dwId == -1) return NULL;
-  UnitAny* pUnit = D2CLIENT_FindServerSideUnit(dwId, dwType);
-  return pUnit ? pUnit : D2CLIENT_FindClientSideUnit(dwId, dwType);
 }
 
 // TODO: Rewrite this and split it into two functions

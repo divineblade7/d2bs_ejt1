@@ -1,5 +1,6 @@
 #include "d2bs/core/LevelMap.h"
 
+#include "d2bs/core/Unit.h"
 #include "d2bs/diablo/D2Structs.h"
 
 #include <algorithm>

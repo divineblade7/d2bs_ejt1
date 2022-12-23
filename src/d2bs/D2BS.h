@@ -27,14 +27,16 @@ class D2BS {
     return &_instance;
   }
 
-  bool Startup(HMODULE mod, void* param);
-  void Shutdown(bool await_thread = false);
+  bool startup(HMODULE mod, void* param);
+  void shutdown(bool await_thread = false);
 
  private:
   friend DWORD WINAPI thread_entry(void* param);
+  void parse_commandline_args();
 
  private:
   HANDLE thread_handle_ = INVALID_HANDLE_VALUE;
+  bool initialized_ = false;
 };
 
 #define sEngine D2BS::instance()

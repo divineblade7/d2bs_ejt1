@@ -3,6 +3,7 @@
 #include "d2bs/core/Core.h"
 #include "d2bs/core/Game.h"
 #include "d2bs/core/MPQStats.h"
+#include "d2bs/core/Unit.h"
 #include "d2bs/diablo/Constants.h"
 #include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/diablo/D2Skills.h"
@@ -988,7 +989,7 @@ JSAPI_FUNC(my_quitGame) {
   if (ClientState() != ClientStateMenu) D2CLIENT_ExitGame();
 
   // give the core a chance to shut down
-  sEngine->Shutdown(true);
+  sEngine->shutdown(true);
   TerminateProcess(GetCurrentProcess(), 0);
 
   return JS_TRUE;

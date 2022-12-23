@@ -8,7 +8,6 @@
 #include "d2bs/diablo/Constants.h"
 #include "d2bs/script/Script.h"
 #include "d2bs/script/ScriptEngine.h"
-#include "d2bs/utils/Console.h"
 #include "d2bs/utils/Events.h"
 #include "d2bs/utils/Helpers.h"
 

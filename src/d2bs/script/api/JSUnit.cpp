@@ -823,7 +823,6 @@ JSAPI_FUNC(unit_interact) {
   else {
     JS_SET_RVAL(cx, vp, JSVAL_TRUE);
     ClickMap(0, D2CLIENT_GetUnitX(pUnit), D2CLIENT_GetUnitY(pUnit), FALSE, pUnit);
-    // D2CLIENT_Interact(pUnit, 0x45);
   }
 
   return JS_TRUE;

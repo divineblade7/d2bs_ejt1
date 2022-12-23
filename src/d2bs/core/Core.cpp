@@ -2,7 +2,6 @@
 
 #include "d2bs/core/Control.h"
 #include "d2bs/diablo/D2Ptrs.h"
-#include "d2bs/utils/Console.h"
 #include "d2bs/utils/CriticalSections.h"
 #include "d2bs/utils/Helpers.h"
 
