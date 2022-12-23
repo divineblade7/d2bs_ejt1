@@ -4,7 +4,6 @@
 
 #include <windows.h>
 
-DWORD WINAPI D2Thread(LPVOID lpParam);
 DWORD __fastcall GameInput(wchar_t* wMsg);
 LONG WINAPI GameEventHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK MouseMove(int code, WPARAM wParam, LPARAM lParam);

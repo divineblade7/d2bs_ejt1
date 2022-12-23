@@ -101,10 +101,10 @@ bool SwitchToProfile(const wchar_t* profile) {
 }
 
 void InitSettings(void) {
-  wchar_t scriptPath[_MAX_PATH], defaultStarter[_MAX_FNAME], defaultGame[_MAX_FNAME],
-      defaultConsole[_MAX_FNAME], hosts[256], debug[6], quitOnHostile[6], quitOnError[6], maxGameTime[6],
-      gameTimeout[6], startAtMenu[6], disableCache[6], memUsage[6], gamePrint[6], useProfilePath[6], logConsole[6],
-      enableUnsupported[6], forwardMessageBox[6], consoleFont[6];
+  wchar_t scriptPath[_MAX_PATH], defaultStarter[_MAX_FNAME], defaultGame[_MAX_FNAME], defaultConsole[_MAX_FNAME],
+      hosts[256], debug[6], quitOnHostile[6], quitOnError[6], maxGameTime[6], gameTimeout[6], startAtMenu[6],
+      disableCache[6], memUsage[6], gamePrint[6], useProfilePath[6], logConsole[6], enableUnsupported[6],
+      forwardMessageBox[6], consoleFont[6];
 
   auto path = (Vars.working_dir / "d2bs.ini").wstring();
   auto fname = path.c_str();
@@ -259,11 +259,15 @@ bool ProcessCommand(const wchar_t* command, bool unprocessedIsCommand) {
       Print(L"\u00FFc2D2BS\u00FFc0 :: Failed to start %s", script);
     result = true;
   } else if (_wcsicmp(argv, L"stop") == 0) {
-    if (sScriptEngine->GetCount() > 0) Print(L"\u00FFc2D2BS\u00FFc0 :: Stopping all scripts");
+    if (sScriptEngine->GetCount() > 0) {
+      Print(L"\u00FFc2D2BS\u00FFc0 :: Stopping all scripts");
+    }
     sScriptEngine->StopAll();
     result = true;
   } else if (_wcsicmp(argv, L"flush") == 0) {
-    if (Vars.bDisableCache != TRUE) Print(L"\u00FFc2D2BS\u00FFc0 :: Flushing the script cache");
+    if (Vars.bDisableCache != TRUE) {
+      Print(L"\u00FFc2D2BS\u00FFc0 :: Flushing the script cache");
+    }
     sScriptEngine->FlushCache();
     result = true;
   } else if (_wcsicmp(argv, L"load") == 0) {

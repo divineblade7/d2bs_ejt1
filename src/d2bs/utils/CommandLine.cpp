@@ -16,81 +16,81 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "d2bs/utils/CommandLine.h"
 
-#include "d2bs/core/File.h"
-#include "d2bs/utils/Offset.h"
+CommandLine::CommandLine(std::string cmdline) {
+  // example input C:\Program Files (x86)\Diablo II\Game.exe -profile "test" -handle "4325261" -cachefix -multi
+  // -title "some title" -w -ns -sleepy -ftj
+  trim_binary_path(cmdline);
+  auto args = parse_args(cmdline);
 
-#include <shlwapi.h>
-#include <stdio.h>
-#include <time.h>
-#include <windows.h>
-
-#define ArraySize(x) (sizeof((x)) / sizeof((x)[0]))
-
-std::vector<sLine*> aCommand;
-
-// Commands.
-sLine CLine[] = {{L"-d2c", 0},    {L"-d2x", 0},   {L"-title", 0},  {L"-mpq", 0},     {L"-profile", 0},
-                 {L"-handle", 0}, {L"-multi", 0}, {L"-sleepy", 0}, {L"-cachefix", 0}};
-
-DWORD ParseStringForText(LPWSTR Source, LPWSTR text) {
-  WCHAR BUF[4059];
-  memset(BUF, 0x00, 4059);
-
-  for (unsigned int x = 0; x < wcslen(Source); x++) {
-    if (wcslen(text) + x > wcslen(Source)) break;
-
-    for (unsigned int y = 0; y < wcslen(text); y++) {
-      INT cC = Source[x + y];
-      memcpy(BUF + wcslen(BUF), (LPWSTR)&cC, sizeof(cC));
+  auto it = args.begin();
+  while (it != args.end()) {
+    std::string arg = (*it);
+    std::string val;
+    if (++it != args.end() && (*it)[0] != '-') {
+      val = (*it);
+      ++it;
     }
-    if (!_wcsicmp(BUF, text)) return x;
-
-    memset(BUF, 0x00, 4059);
-  }
-  return static_cast<DWORD>(-1);
-}
-
-VOID ParseCommandLine(LPWSTR Command) {
-  for (int x = 0; x < ArraySize(CLine); x++) {
-    DWORD id = ParseStringForText(Command, CLine[x].Param);
-    if (id == -1) continue;
-
-    WCHAR szText[200];
-    BOOL bStart = false;
-
-    memset(szText, 0x00, 100);
-
-    if (!CLine[x].isBool) {
-      for (unsigned int y = (id + (wcslen(CLine[x].Param))); y < wcslen(Command); y++) {
-        if (Command[y] == L'"')
-          if (bStart) {
-            bStart = false;
-            break;
-          } else {
-            bStart = true;
-            y++;
-          }
-
-        int byt = Command[y];
-
-        if (bStart) memcpy(szText + wcslen(szText), (LPWSTR)&byt, sizeof(byt));
-      }
-    }
-    sLine* sl = new sLine;
-    sl->isBool = CLine[x].isBool;
-    wcscpy_s(sl->Param, _countof(sl->Param), CLine[x].Param);
-    if (!sl->isBool) wcscpy_s(sl->szText, _countof(sl->szText), szText);
-
-    aCommand.push_back(sl);
+    args_[arg] = trim_quote(val);
   }
 }
 
-sLine* GetCommand(LPCWSTR Param) {
-  for (const auto& cmd : aCommand) {
-    if (!_wcsicmp(cmd->Param, Param)) {
-      return cmd;
+bool CommandLine::contains(const std::string& arg) {
+  return args_.contains(arg);
+}
+
+std::string CommandLine::value(const std::string& arg) {
+  if (!contains(arg)) {
+    return "";
+  }
+
+  return args_[arg];
+}
+
+std::map<std::string, std::string> CommandLine::args() {
+  return args_;
+}
+
+void CommandLine::trim_binary_path(std::string& cmdline) {
+  size_t pos = 0;
+
+  // remove the binary path from command line
+  if ((pos = cmdline.find(".exe")) != std::string::npos) {
+    cmdline.erase(0, pos + 4);
+
+    // remove trailing space, if present
+    if (!cmdline.empty() && cmdline[0] == ' ') {
+      cmdline.erase(0, 1);
+    }
+  }
+}
+
+std::string& CommandLine::trim_quote(std::string& val) {
+  if (val.starts_with('\"')) {
+    val.erase(0, 1);
+  }
+  if (val.ends_with('\"')) {
+    val.erase(val.size() - 1, val.size());
+  }
+  return val;
+}
+
+std::vector<std::string> CommandLine::parse_args(std::string& cmdline) {
+  size_t pos = 0;
+  std::vector<std::string> args;
+
+  // tokenize the remainder of command line into arguments
+  while ((pos = cmdline.find(' ')) != std::string::npos || !cmdline.empty()) {
+    args.push_back(cmdline.substr(0, pos));
+
+    // contains trailing space
+    if (pos != std::string::npos) {
+      cmdline.erase(0, pos + 1);
+    } else {
+      // last argument, clear the string to stop loop
+      // ugly but best I can think of right now :)
+      cmdline.clear();
     }
   }
 
-  return 0;
+  return args;
 }

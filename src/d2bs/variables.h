@@ -31,7 +31,6 @@ struct Variables {
   BOOL bClickAction;
   BOOL bNeedShutdown;
   BOOL bUseGamePrint;
-  BOOL bShutdownFromDllMain;
   BOOL bChangedAct;
   BOOL bGameLoopEntered;
   DWORD dwGameThreadId;

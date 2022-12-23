@@ -36,10 +36,12 @@ void unit_finalize(JSFreeOp*, JSObject* obj) {
 //	if(ClientState() == ClientStateInGame) {
 //		*bp = JS_InstanceOf(cx, obj, &unit_class_ex.base, NULL);
 //		myUnit* one = (myUnit*)JS_GetInstancePrivate(cx, obj, &unit_class_ex.base, NULL);
-//				myUnit* two = (myUnit*)JS_GetInstancePrivate(cx, JSVAL_TO_OBJECT(v), &unit_class_ex.base,
-//NULL); 		UnitAny* pUnit1 = D2CLIENT_FindUnit(one->dwUnitId, one->dwType); 		UnitAny* pUnit2 =
-//D2CLIENT_FindUnit(two->dwUnitId, two->dwType); 		if(!pUnit1 || !pUnit2 || pUnit1->dwUnitId != pUnit2->dwUnitId) 			*bp =
-//JS_FALSE;
+//				myUnit* two = (myUnit*)JS_GetInstancePrivate(cx, JSVAL_TO_OBJECT(v),
+//&unit_class_ex.base,
+// NULL); 		UnitAny* pUnit1 = D2CLIENT_FindUnit(one->dwUnitId, one->dwType); 		UnitAny* pUnit2
+// =
+// D2CLIENT_FindUnit(two->dwUnitId, two->dwType); 		if(!pUnit1 || !pUnit2 || pUnit1->dwUnitId !=
+// pUnit2->dwUnitId) 			*bp = JS_FALSE;
 //	}
 //	return JS_TRUE;
 //}
@@ -1139,7 +1141,7 @@ JSAPI_FUNC(item_getFlag) {
 //		diff = JSVAL_TO_INT(JS_ARGV(cx, vp)[2]);
 //
 //	*rval = INT_TO_JSVAL(D2COMMON_GetItemPrice(D2CLIENT_GetPlayerUnit(), pUnit, diff, *p_D2CLIENT_ItemPriceList,
-//NPCID, buysell));
+// NPCID, buysell));
 //
 //	return JS_TRUE;
 //}

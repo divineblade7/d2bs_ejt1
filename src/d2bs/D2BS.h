@@ -12,5 +12,5 @@
 #include <vector>
 #include <windows.h>
 
-BOOL Startup(void);
-void Shutdown(void);
+// Expose Shutdown, called inside script/api/JSGame.cpp
+void Shutdown(bool await_thread = false);

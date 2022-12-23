@@ -16,16 +16,24 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <map>
+#include <string>
 #include <vector>
-#include <Windows.h>
 
-struct sLine {
-  WCHAR Param[400];
-  BOOL isBool;
-  WCHAR szText[600];
+class CommandLine {
+ public:
+  CommandLine(std::string cmdline);
+  ~CommandLine() noexcept = default;
+
+  bool contains(const std::string& arg);
+  std::string value(const std::string& arg);
+  std::map<std::string, std::string> args();
+
+ private:
+  void trim_binary_path(std::string& cmdline);
+  std::string& trim_quote(std::string& val);
+  std::vector<std::string> parse_args(std::string& cmdline);
+
+ private:
+  std::map<std::string, std::string> args_;
 };
-
-void ParseCommandLine(LPWSTR Command);
-sLine* GetCommand(LPCWSTR Param);
-
-extern std::vector<sLine*> aCommand;

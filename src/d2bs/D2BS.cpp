@@ -2,6 +2,8 @@
 
 #include "D2BS.h"
 
+#include "d2bs/core/Core.h"
+#include "d2bs/core/Unit.h"
 #include "d2bs/diablo/D2Ptrs.h"
 #include "d2bs/diablo/handlers/D2Handlers.h"
 #include "d2bs/script/ScriptEngine.h"
@@ -19,63 +21,136 @@
 #include "utils/D2Loader.h"
 #endif
 
-static HANDLE hD2Thread = INVALID_HANDLE_VALUE;
+bool __fastcall UpdatePlayerGid(Script* script, void*, uint) {
+  script->UpdatePlayerGid();
+  return true;
+}
+
+static HANDLE main_thread_handle = INVALID_HANDLE_VALUE;
 static HANDLE hEventThread = INVALID_HANDLE_VALUE;
 
-BOOL WINAPI DllMain(HINSTANCE hDll, DWORD dwReason, LPVOID lpReserved) {
-  switch (dwReason) {
-    case DLL_PROCESS_ATTACH: {
-      DisableThreadLibraryCalls(hDll);
+DWORD WINAPI MainThread(LPVOID) {
+  std::string arg_val;
+  bool beginStarter = true;
+  bool bInGame = false;
 
-      if (lpReserved) {
-        Vars.pModule = (Module*)lpReserved;
-        Vars.working_dir = Vars.pModule->szPath;
-        Vars.bLoadedWithCGuard = true;
-      } else {
-        Vars.hModule = hDll;
-        wchar_t path[MAX_PATH]{};
-        GetModuleFileNameW(hDll, path, MAX_PATH);
-        Vars.working_dir = path;
-        Vars.working_dir.remove_filename().make_preferred();
-        Vars.bLoadedWithCGuard = false;
+  if (!InitHooks()) {
+    Log(L"D2BS Engine startup failed. %s", Vars.szCommandLine);
+    Print(L"\u00FFc2D2BS\u00FFc0 :: Engine startup failed!");
+    return FALSE;
+  }
+
+  Vars.bUseRawCDKey = FALSE;  // this can be set inside Variables instead to default to 'false'
+
+  // This can be moved into a separate function
+  CommandLine cmdline(GetCommandLineA());
+  for (const auto& [arg, val] : cmdline.args()) {
+    if (arg == "-title") {
+      const wchar_t* text = AnsiToUnicode(val.c_str());
+      int len = wcslen((wchar_t*)text);
+      wcsncat_s(Vars.szTitle, (wchar_t*)text, len);
+      delete[] text;  // ugh...
+    } else if (arg == "-sleepy") {
+      Vars.bSleepy = TRUE;
+    } else if (arg == "-cachefix") {
+      Vars.bCacheFix = TRUE;
+    } else if (arg == "-multi") {
+      Vars.bMulti = TRUE;
+    } else if (arg == "-ftj") {
+      Vars.bReduceFTJ = TRUE;
+    } else if (arg == "-d2c") {
+      Vars.bUseRawCDKey = TRUE;
+      strncat_s(Vars.szClassic, val.c_str(), val.length());
+    } else if (arg == "-d2x") {
+      strncat_s(Vars.szLod, val.c_str(), val.length());
+    } else if (arg == "-handle") {
+      Vars.hHandle = (HWND)atoi(val.c_str());
+    } else if (arg == "-mpq") {
+      LoadMPQ(val.c_str());
+    } else if (arg == "-profile") {
+      const wchar_t* profile = AnsiToUnicode(val.c_str());
+      if (SwitchToProfile(profile))
+        Print(L"\u00FFc2D2BS\u00FFc0 :: Switched to profile %s", profile);
+      else
+        Print(L"\u00FFc2D2BS\u00FFc0 :: Profile %s not found", profile);
+      delete[] profile;  // ugh...
+    }
+  }
+
+  Log(L"D2BS Engine startup complete. %s", L"" D2BS_VERSION);
+  Print(L"\u00FFc2D2BS\u00FFc0 :: Engine startup complete!");
+
+  while (Vars.bActive) {
+    switch (ClientState()) {
+      case ClientStateInGame: {
+        if (bInGame) {
+          if ((Vars.dwMaxGameTime && Vars.dwGameTime && (GetTickCount() - Vars.dwGameTime) > Vars.dwMaxGameTime) ||
+              (!D2COMMON_IsTownByLevelNo(GetPlayerArea()) &&
+                   (Vars.nChickenHP && Vars.nChickenHP >= GetUnitHP(D2CLIENT_GetPlayerUnit())) ||
+               (Vars.nChickenMP && Vars.nChickenMP >= GetUnitMP(D2CLIENT_GetPlayerUnit()))))
+            D2CLIENT_ExitGame();
+        } else {
+          Vars.dwGameTime = GetTickCount();
+
+          Sleep(500);
+
+          D2CLIENT_InitInventory();
+          sScriptEngine->ForEachScript(UpdatePlayerGid, NULL, 0);
+          sScriptEngine->UpdateConsole();
+          Vars.bQuitting = false;
+          GameJoined();
+
+          bInGame = true;
+        }
+        break;
       }
-
-      Vars.log_dir = Vars.working_dir / "logs";
-      if (!std::filesystem::exists(Vars.log_dir)) {
-        std::filesystem::create_directory(Vars.log_dir);
+      case ClientStateMenu: {
+        while (Vars.bUseProfileScript) {
+          Sleep(100);
+        }
+        MenuEntered(beginStarter);
+        beginStarter = false;
+        if (bInGame) {
+          Vars.dwGameTime = NULL;
+          bInGame = false;
+        }
+        break;
       }
+      case ClientStateBusy:
+      case ClientStateNull:
+        break;
+    }
+    Sleep(50);
+  }
 
-      InitCommandLine();
-      ParseCommandLine(Vars.szCommandLine);
-      InitSettings();
-      sLine* command = NULL;
-      Vars.bUseRawCDKey = FALSE;
+  sScriptEngine->Shutdown();
 
-      if ((command = GetCommand(L"-title")) != nullptr) {
-        int len = wcslen((wchar_t*)command->szText);
-        wcsncat_s(Vars.szTitle, (wchar_t*)command->szText, len);
-      }
+  return NULL;
+}
 
-      if (GetCommand(L"-sleepy")) Vars.bSleepy = TRUE;
+void Setup(HINSTANCE hDll, LPVOID lpReserved) {
+  DisableThreadLibraryCalls(hDll);
 
-      if (GetCommand(L"-cachefix")) Vars.bCacheFix = TRUE;
+  if (lpReserved) {
+    Vars.pModule = (Module*)lpReserved;
+    Vars.working_dir = Vars.pModule->szPath;
+    Vars.bLoadedWithCGuard = true;
+  } else {
+    Vars.hModule = hDll;
+    wchar_t path[MAX_PATH]{};
+    GetModuleFileNameW(hDll, path, MAX_PATH);
+    Vars.working_dir = path;
+    Vars.working_dir.remove_filename().make_preferred();
+    Vars.bLoadedWithCGuard = false;
+  }
 
-      if (GetCommand(L"-multi")) Vars.bMulti = TRUE;
+  Vars.log_dir = Vars.working_dir / "logs";
+  if (!std::filesystem::exists(Vars.log_dir)) {
+    std::filesystem::create_directory(Vars.log_dir);
+  }
 
-      if (GetCommand(L"-ftj")) Vars.bReduceFTJ = TRUE;
-
-      if ((command = GetCommand(L"-d2c")) != nullptr) {
-        Vars.bUseRawCDKey = TRUE;
-        const char* keys = UnicodeToAnsi(command->szText);
-        strncat_s(Vars.szClassic, keys, strlen(keys));
-        delete[] keys;
-      }
-
-      if ((command = GetCommand(L"-d2x")) != nullptr) {
-        const char* keys = UnicodeToAnsi(command->szText);
-        strncat_s(Vars.szLod, keys, strlen(keys));
-        delete[] keys;
-      }
+  InitCommandLine();
+  InitSettings();
 
 #if 0
 		char errlog[516] = "";
@@ -88,19 +163,7 @@ BOOL WINAPI DllMain(HINSTANCE hDll, DWORD dwReason, LPVOID lpReserved) {
 		freopen_s(&f, errlog, "a+t", f);
 #endif
 
-      Vars.bShutdownFromDllMain = FALSE;
-      SetUnhandledExceptionFilter(ExceptionHandler);
-      if (!Startup()) return FALSE;
-    } break;
-    case DLL_PROCESS_DETACH:
-      if (Vars.bNeedShutdown) {
-        Vars.bShutdownFromDllMain = TRUE;
-        Shutdown();
-      }
-      break;
-  }
-
-  return TRUE;
+  SetUnhandledExceptionFilter(ExceptionHandler);
 }
 
 BOOL Startup(void) {
@@ -128,16 +191,23 @@ BOOL Startup(void) {
   InstallConditional();
   CreateDdeServer();
 
-  if ((hD2Thread = CreateThread(NULL, NULL, D2Thread, NULL, NULL, NULL)) == NULL) return FALSE;
-  //	hEventThread = CreateThread(0, 0, EventThread, NULL, 0, 0);
+  main_thread_handle = CreateThread(NULL, NULL, MainThread, NULL, NULL, NULL);
+  if (!main_thread_handle) {
+    return FALSE;
+  }
+
   return TRUE;
 }
 
-void Shutdown(void) {
-  if (!Vars.bNeedShutdown) return;
+void Shutdown(bool await_thread) {
+  if (!Vars.bNeedShutdown) {
+    return;
+  }
 
   Vars.bActive = FALSE;
-  if (!Vars.bShutdownFromDllMain) WaitForSingleObject(hD2Thread, INFINITE);
+  if (await_thread) {
+    WaitForSingleObject(main_thread_handle, INFINITE);
+  }
 
   SetWindowLong(D2GFX_GetHwnd(), GWL_WNDPROC, (LONG)Vars.oldWNDPROC);
 
@@ -163,4 +233,19 @@ void Shutdown(void) {
 
   Log(L"D2BS Shutdown complete.");
   Vars.bNeedShutdown = false;
+}
+
+BOOL WINAPI DllMain(HINSTANCE hDll, DWORD dwReason, LPVOID lpReserved) {
+  switch (dwReason) {
+    case DLL_PROCESS_ATTACH:
+      Setup(hDll, lpReserved);
+      return Startup();
+    case DLL_PROCESS_DETACH:
+      if (Vars.bNeedShutdown) {
+        Shutdown();
+      }
+      break;
+  }
+
+  return TRUE;
 }
