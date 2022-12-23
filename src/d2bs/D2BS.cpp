@@ -26,9 +26,7 @@ bool __fastcall UpdatePlayerGid(Script* script, void*, uint) {
   return true;
 }
 
-static HANDLE main_thread_handle = INVALID_HANDLE_VALUE;
-
-DWORD WINAPI MainThread(LPVOID) {
+DWORD __stdcall thread_entry([[maybe_unused]] void* param) {
   std::string arg_val;
   bool beginStarter = true;
   bool bInGame = false;
@@ -164,7 +162,9 @@ void Setup(HINSTANCE hDll, LPVOID lpReserved) {
   SetUnhandledExceptionFilter(ExceptionHandler);
 }
 
-BOOL Startup() {
+bool D2BS::Startup(HMODULE mod, void* param) {
+  Setup(mod, param);
+
   InitializeCriticalSection(&Vars.cEventSection);
   InitializeCriticalSection(&Vars.cPrintSection);
   InitializeCriticalSection(&Vars.cBoxHookSection);
@@ -188,22 +188,22 @@ BOOL Startup() {
   InstallConditional();
   CreateDdeServer();
 
-  main_thread_handle = CreateThread(NULL, NULL, MainThread, NULL, NULL, NULL);
-  if (!main_thread_handle) {
+  thread_handle_ = CreateThread(NULL, NULL, thread_entry, NULL, NULL, NULL);
+  if (!thread_handle_) {
     return FALSE;
   }
 
   return TRUE;
 }
 
-void Shutdown(bool await_thread) {
+void D2BS::Shutdown(bool await_thread) {
   if (!Vars.bNeedShutdown) {
     return;
   }
 
   Vars.bActive = FALSE;
   if (await_thread) {
-    WaitForSingleObject(main_thread_handle, INFINITE);
+    WaitForSingleObject(thread_handle_, INFINITE);
   }
 
   SetWindowLong(D2GFX_GetHwnd(), GWL_WNDPROC, (LONG)Vars.oldWNDPROC);
@@ -230,17 +230,4 @@ void Shutdown(bool await_thread) {
 
   Log(L"D2BS Shutdown complete.");
   Vars.bNeedShutdown = false;
-}
-
-BOOL WINAPI DllMain(HINSTANCE hDll, DWORD dwReason, LPVOID lpReserved) {
-  switch (dwReason) {
-    case DLL_PROCESS_ATTACH:
-      Setup(hDll, lpReserved);
-      return Startup();
-    case DLL_PROCESS_DETACH:
-      Shutdown();
-      break;
-  }
-
-  return TRUE;
 }

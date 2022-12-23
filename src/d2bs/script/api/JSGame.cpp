@@ -988,7 +988,7 @@ JSAPI_FUNC(my_quitGame) {
   if (ClientState() != ClientStateMenu) D2CLIENT_ExitGame();
 
   // give the core a chance to shut down
-  Shutdown(true);
+  sEngine->Shutdown(true);
   TerminateProcess(GetCurrentProcess(), 0);
 
   return JS_TRUE;
