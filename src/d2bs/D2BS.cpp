@@ -27,7 +27,6 @@ bool __fastcall UpdatePlayerGid(Script* script, void*, uint) {
 }
 
 static HANDLE main_thread_handle = INVALID_HANDLE_VALUE;
-static HANDLE hEventThread = INVALID_HANDLE_VALUE;
 
 DWORD WINAPI MainThread(LPVOID) {
   std::string arg_val;

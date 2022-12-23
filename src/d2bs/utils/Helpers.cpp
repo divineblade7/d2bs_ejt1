@@ -244,10 +244,14 @@ bool StartScript(const wchar_t* scriptname, ScriptType type) {
 }
 
 void Reload(void) {
-  if (sScriptEngine->GetCount() > 0) Print(L"\u00FFc2D2BS\u00FFc0 :: Stopping all scripts");
+  if (sScriptEngine->GetCount() > 0) {
+    Print(L"\u00FFc2D2BS\u00FFc0 :: Stopping all scripts");
+  }
   sScriptEngine->StopAll();
 
-  if (Vars.bDisableCache != TRUE) Print(L"\u00FFc2D2BS\u00FFc0 :: Flushing the script cache");
+  if (Vars.bDisableCache != TRUE) {
+    Print(L"\u00FFc2D2BS\u00FFc0 :: Flushing the script cache");
+  }
   sScriptEngine->FlushCache();
 
   // wait for things to catch up
@@ -255,10 +259,11 @@ void Reload(void) {
 
   if (!Vars.bUseProfileScript) {
     const wchar_t* script = GetStarterScriptName();
-    if (StartScript(script, GetStarterScriptState()))
+    if (StartScript(script, GetStarterScriptState())) {
       Print(L"\u00FFc2D2BS\u00FFc0 :: Started %s", script);
-    else
+    } else {
       Print(L"\u00FFc2D2BS\u00FFc0 :: Failed to start %s", script);
+    }
   }
 }
 
