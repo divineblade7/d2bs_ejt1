@@ -22,6 +22,7 @@ void ResumeProcess();
 const wchar_t* GetStarterScriptName(void);
 ScriptType GetStarterScriptState(void);
 
-char* DllLoadAddrStrs();
+#ifdef DEBUG
 LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* ptrs);
 int __cdecl _purecall(void);
+#endif

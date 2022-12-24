@@ -7,6 +7,7 @@
 #include "d2bs/diablo/Constants.h"
 #include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/diablo/D2Skills.h"
+#include "d2bs/engine.h"
 #include "d2bs/script/api/JSArea.h"
 #include "d2bs/script/api/JSGlobalClasses.h"
 #include "d2bs/script/api/JSRoom.h"
@@ -118,7 +119,7 @@ JSAPI_FUNC(my_acceptTrade) {
     return JS_TRUE;
   }
 
-  AutoCriticalRoom* cRoom = new AutoCriticalRoom;
+  CriticalRoom cRoom;
 
   if ((*p_D2CLIENT_RecentTradeId) == 3 || (*p_D2CLIENT_RecentTradeId) == 5 || (*p_D2CLIENT_RecentTradeId) == 7) {
     if ((*p_D2CLIENT_bTradeBlock)) {
@@ -133,17 +134,15 @@ JSAPI_FUNC(my_acceptTrade) {
       D2CLIENT_AcceptTrade();
       JS_SET_RVAL(cx, vp, JSVAL_TRUE);
     }
-    delete cRoom;
     return JS_TRUE;
   }
-  delete cRoom;
   THROW_ERROR(cx, "Invalid parameter passed to acceptTrade!");
 }
 
 JSAPI_FUNC(my_tradeOk) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  AutoCriticalRoom* cRoom = new AutoCriticalRoom;
+  CriticalRoom cRoom;
   TransactionDialogsInfo_t* pTdi = *p_D2CLIENT_pTransactionDialogsInfo;
   unsigned int i;
 
@@ -153,12 +152,10 @@ JSAPI_FUNC(my_tradeOk) {
       // the dialog list, but if it's not 1, a crash is guaranteed. (CrazyCasta)
       if (pTdi->dialogLines[i].handler == D2CLIENT_TradeOK && *p_D2CLIENT_TransactionDialogs == 1) {
         D2CLIENT_TradeOK();
-        delete cRoom;
         return JS_TRUE;
       }
     }
   }
-  delete cRoom;
   THROW_ERROR(cx, "Not in proper state to click ok to trade.");
 }
 
@@ -173,7 +170,7 @@ JSAPI_FUNC(my_getDialogLines) {
   JSFunction* jsf_handler;
   JSObject* jso_addr;
 
-  AutoCriticalRoom* cRoom = new AutoCriticalRoom;
+  CriticalRoom cRoom;
 
   if (pTdi != NULL) {
     pReturnArray = JS_NewArrayObject(cx, 0, NULL);
@@ -201,7 +198,6 @@ JSAPI_FUNC(my_getDialogLines) {
     JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(pReturnArray));
     JS_RemoveObjectRoot(cx, &pReturnArray);
   }
-  delete cRoom;
   return JS_TRUE;
 }
 JSAPI_FUNC(my_clickDialog) {
@@ -352,11 +348,10 @@ JSAPI_FUNC(my_clickItem) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
 
-  AutoCriticalRoom* cRoom = new AutoCriticalRoom;
+  CriticalRoom cRoom;
 
   if (*p_D2CLIENT_TransactionDialog != 0 || *p_D2CLIENT_TransactionDialogs != 0 ||
       *p_D2CLIENT_TransactionDialogs_2 != 0) {
-    delete cRoom;
     JS_SET_RVAL(cx, vp, JSVAL_FALSE);
     return JS_TRUE;
   }
@@ -395,26 +390,22 @@ JSAPI_FUNC(my_clickItem) {
     pmyUnit = (myUnit*)JS_GetPrivate(cx, JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[0]));
 
     if (!pmyUnit || (pmyUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) {
-      delete cRoom;
       return JS_TRUE;
     }
 
     pUnit = D2CLIENT_FindUnit(pmyUnit->dwUnitId, pmyUnit->dwType);
 
     if (!pUnit) {
-      delete cRoom;
       return JS_TRUE;
     }
 
     clickequip* click = (clickequip*)*(DWORD*)(D2CLIENT_BodyClickTable + (4 * pUnit->pItemData->BodyLocation));
 
     if (!click) {
-      delete cRoom;
       return JS_TRUE;
     }
 
     click(D2CLIENT_GetPlayerUnit(), D2CLIENT_GetPlayerUnit()->pInventory, pUnit->pItemData->BodyLocation);
-    delete cRoom;
     return JS_TRUE;
   } else if (argc == 2 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0]) && JSVAL_IS_INT(JS_ARGV(cx, vp)[1])) {
     jsint nClickType = JSVAL_TO_INT(JS_ARGV(cx, vp)[0]);
@@ -424,7 +415,6 @@ JSAPI_FUNC(my_clickItem) {
       clickequip* click = (clickequip*)*(DWORD*)(D2CLIENT_BodyClickTable + (4 * nBodyLoc));
 
       if (!click) {
-        delete cRoom;
         return JS_TRUE;
       }
 
@@ -442,13 +432,11 @@ JSAPI_FUNC(my_clickItem) {
         }
       }
     }
-    delete cRoom;
     return JS_TRUE;
   } else if (argc == 2 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0]) && JSVAL_IS_OBJECT(JS_ARGV(cx, vp)[1])) {
     pmyUnit = (myUnit*)JS_GetPrivate(cx, JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[1]));
 
     if (!pmyUnit || (pmyUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) {
-      delete cRoom;
       return JS_TRUE;
     }
 
@@ -457,7 +445,6 @@ JSAPI_FUNC(my_clickItem) {
     jsint nClickType = JSVAL_TO_INT(JS_ARGV(cx, vp)[0]);
 
     if (!pUnit || !(pUnit->dwType == UNIT_ITEM) || !pUnit->pItemData) {
-      delete cRoom;
       THROW_ERROR(cx, "Object is not an item!");
     }
 
@@ -481,7 +468,6 @@ JSAPI_FUNC(my_clickItem) {
             JS_SET_RVAL(cx, vp, JSVAL_TRUE);
             D2CLIENT_MercItemAction(0x61, pUnit->pItemData->BodyLocation);
           }
-      delete cRoom;
       return JS_TRUE;
     } else if (InventoryLocation == LOCATION_INVENTORY || InventoryLocation == LOCATION_STASH ||
                InventoryLocation == LOCATION_CUBE) {
@@ -517,7 +503,6 @@ JSAPI_FUNC(my_clickItem) {
       int i = x;
 
       if (i < 0 || i > 0x0F) {
-        delete cRoom;
         return JS_TRUE;
       }
 
@@ -535,14 +520,12 @@ JSAPI_FUNC(my_clickItem) {
                                 nClickType == 1 ? FALSE : TRUE, i);
     } else if (D2CLIENT_GetCursorItem() == pUnit) {
       if (nClickType < 1 || nClickType > 12) {
-        delete cRoom;
         return JS_TRUE;
       }
 
       clickequip* click = (clickequip*)*(DWORD*)(D2CLIENT_BodyClickTable + (4 * nClickType));
 
       if (!click) {
-        delete cRoom;
         return JS_TRUE;
       }
 
@@ -608,7 +591,6 @@ JSAPI_FUNC(my_clickItem) {
           D2CLIENT_LeftClickItem(clickTarget, D2CLIENT_GetPlayerUnit(), D2CLIENT_GetPlayerUnit()->pInventory, x, y, 5,
                                  pLayout);
 
-        delete cRoom;
         JS_SET_RVAL(cx, vp, JSVAL_TRUE);
         return JS_TRUE;
       } else if (nLoc == LOCATION_BELT)  // Belt
@@ -623,7 +605,6 @@ JSAPI_FUNC(my_clickItem) {
         }
 
         if (z == -1) {
-          delete cRoom;
           return JS_TRUE;
         }
 
@@ -645,14 +626,12 @@ JSAPI_FUNC(my_clickItem) {
         else if (nButton == 2)
           D2CLIENT_ClickBeltRight(D2CLIENT_GetPlayerUnit(), D2CLIENT_GetPlayerUnit()->pInventory, TRUE, z);
 
-        delete cRoom;
         JS_SET_RVAL(cx, vp, JSVAL_TRUE);
         return JS_TRUE;
       }
     }
   }
   JS_SET_RVAL(cx, vp, JSVAL_TRUE);
-  delete cRoom;
   return JS_TRUE;
 }
 
@@ -1418,15 +1397,13 @@ JSAPI_FUNC(my_revealLevel) {
   if (argc == 1 && JSVAL_IS_BOOLEAN(JS_ARGV(cx, vp)[0])) {
     bDrawPresets = !!JSVAL_TO_BOOLEAN(JS_ARGV(cx, vp)[0]);
   }
-  AutoCriticalRoom* cRoom = new AutoCriticalRoom;
+  CriticalRoom cRoom;
   if (!GameReady()) {
-    delete cRoom;
     return JS_TRUE;
   }
 
   for (Room2* room = level->pRoom2First; room; room = room->pRoom2Next) {
     RevealRoom(room, bDrawPresets);
   }
-  delete cRoom;
   return JS_TRUE;
 }

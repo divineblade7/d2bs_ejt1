@@ -104,9 +104,9 @@ class ActMap : public Map {
   ~ActMap(void);
 
  public:
-  void CleanUp(void) const;
-  void AllowCritSpace(void) const;
-  CriticalRoom* actCrit;
+  void CleanUp();
+  void AllowCritSpace();
+  CriticalRoom actCrit;
   static ActMap* GetMap(Level* level);
   static void ClearCache(void);
   void Dump(const char* file, const PointList& points) const;

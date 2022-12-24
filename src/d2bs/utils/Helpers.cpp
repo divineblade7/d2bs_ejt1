@@ -220,31 +220,7 @@ bool ProcessCommand(const wchar_t* command, bool unprocessedIsCommand) {
   return result;
 }
 
-char* DllLoadAddrStrs() {
-  const char* dlls[] = {"D2Client.DLL", "D2Common.DLL", "D2Gfx.DLL",    "D2Lang.DLL", "D2Win.DLL",
-                        "D2Net.DLL",    "D2Game.DLL",   "D2Launch.DLL", "Fog.DLL",    "BNClient.DLL",
-                        "Storm.DLL",    "D2Cmp.DLL",    "D2Multi.DLL"};
-  size_t strMaxLen;
-  char* result;
-  char lineBuf[80];
-  unsigned int i;
-
-  strMaxLen = sizeof(lineBuf) * sizeof(dlls) / sizeof(dlls[0]);
-  result = (char*)malloc(strMaxLen);
-
-  result[0] = '\0';
-
-  for (i = 0; i < sizeof(dlls) / sizeof(dlls[0]); ++i) {
-    sprintf_s(lineBuf, sizeof(lineBuf), "%s loaded at: 0x%p.", dlls[i], GetModuleHandle(dlls[i]));
-    strcat_s(result, strMaxLen, lineBuf);
-    if (i != (sizeof(dlls) / sizeof(dlls[0]) - 1)) {
-      strcat_s(result, strMaxLen, "\n");
-    }
-  }
-
-  return result;
-}
-
+#ifdef DEBUG
 LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* ptrs) {
   GetStackWalk();
 
@@ -279,9 +255,6 @@ LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* ptrs) {
       rec->ExceptionCode, rec->ExceptionAddress, base, ctx->Eip, ctx->Esp, ctx->SegCs, ctx->SegDs, ctx->SegEs,
       ctx->SegSs, ctx->SegFs, ctx->SegGs, ctx->Eax, ctx->Ebx, ctx->Ecx, ctx->Edx, ctx->Esi, ctx->Edi, ctx->Ebp,
       ctx->EFlags);
-
-  dllAddrs = DllLoadAddrStrs();
-  Log(L"%hs\n%hs", szString, dllAddrs);
 
   free(dllAddrs);
   delete[] szString;
@@ -355,3 +328,4 @@ bool GetStackWalk() {
 
   return true;
 }
+#endif

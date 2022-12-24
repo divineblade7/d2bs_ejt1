@@ -44,8 +44,6 @@ void ActMap::ClearCache(void) {
 ActMap::ActMap(const Level* level) {
   lock = new CRITICAL_SECTION;
   InitializeCriticalSection(lock);
-  actCrit = new CriticalRoom;
-  actCrit->EnterSection();
   assert(act != NULL);
   assert(level != NULL);
 
@@ -70,7 +68,6 @@ ActMap::ActMap(const Level* level) {
 ActMap::~ActMap(void) {
   DeleteCriticalSection(lock);
   delete lock;
-  delete actCrit;
   lock = NULL;
   PathingPointList.clear();
 }
@@ -186,19 +183,19 @@ WORD ActMap::getCollFromRoom(Room2* room, const Point& pt) const {
   return val;
 }
 
-void ActMap::CleanUp(void) const {
+void ActMap::CleanUp() {
   for (RoomList::iterator it = RoomsAdded.begin(); it != RoomsAdded.end(); it++) RemoveRoomData(*it);
   RoomsAdded.clear();
   levelCache.clear();
   roomCache.clear();
   avoidRoomPointSet.clear();
-  actCrit->LeaveSection();
+
+  // wtf? ~ ejt
+  actCrit.release();
 }
-void ActMap::AllowCritSpace(void) const {
+void ActMap::AllowCritSpace() {
   CleanUp();
-  actCrit->LeaveSection();
-  Sleep(5);
-  actCrit->EnterSection();
+  actCrit.release_for(5);
 }
 void ActMap::GetExits(ExitArray& exits) const {
   static const Point empty(0, 0);

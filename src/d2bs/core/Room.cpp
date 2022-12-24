@@ -1,5 +1,6 @@
 #include "d2bs/core/Room.h"
 
+#include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/diablo/D2Ptrs.h"
 #include "d2bs/utils/CriticalSections.h"
 
@@ -11,7 +12,7 @@ BOOL RevealRoom(Room2* pRoom2, BOOL revealPresets) {
   // Make sure we have the room.
   if (!pRoom2) return false;
 
-  AutoCriticalRoom* cRoom = new AutoCriticalRoom;
+  CriticalRoom cRoom;
 
   UnitAny* player = D2CLIENT_GetPlayerUnit();
   // Check if we have Room1(Needed in order to reveal)
@@ -20,7 +21,6 @@ BOOL RevealRoom(Room2* pRoom2, BOOL revealPresets) {
     bAdded = true;
   }
   if (!(pRoom2 && pRoom2->pRoom1)) {  // second check added to see if we DID indeed init the room!
-    delete cRoom;
     return false;
   }
 
@@ -44,7 +44,6 @@ BOOL RevealRoom(Room2* pRoom2, BOOL revealPresets) {
 
   if (bInit) InitAutomapLayer(dwLevelNo);
 
-  delete cRoom;
   return true;
 }
 

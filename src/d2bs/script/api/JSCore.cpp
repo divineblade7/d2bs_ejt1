@@ -242,7 +242,11 @@ JSAPI_FUNC(my_stop) {
 
 JSAPI_FUNC(my_stacktrace) {
   JS_SET_RVAL(cx, vp, JSVAL_TRUE);
+#if DEBUG
   GetStackWalk();
+#else
+  Log(L"Stackwalk is only enabled in debug builds");
+#endif
   return JS_TRUE;
 }
 

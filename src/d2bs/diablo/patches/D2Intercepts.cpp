@@ -71,7 +71,7 @@ void __declspec(naked) GamePacketSent_Interception() {
 }
 
 void GameDraw_Intercept(void) {
-  GameDraw();
+  sEngine->on_game_draw();
 }
 
 void __declspec(naked) GameInput_Intercept() {
@@ -186,7 +186,7 @@ Skip:
 }
 
 void GameDrawOOG_Intercept(void) {
-  GameDrawOOG();
+  sEngine->on_menu_draw();
 }
 
 void __declspec(naked) CongratsScreen_Intercept(void) {
@@ -337,21 +337,4 @@ HANDLE __stdcall CacheFix(LPCSTR, DWORD dwDesiredAccess, DWORD dwShareMode, LPSE
 
   return CreateFileA(path, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition,
                      dwFlagsAndAttributes, hTemplateFile);
-}
-
-WINUSERAPI
-int WINAPI MessageBoxA(__in_opt HWND hWnd, __in_opt LPCSTR lpText, __in_opt LPCSTR lpCaption, __in UINT uType);
-
-int WINAPI LogMessageBoxA_Intercept(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType) {
-  GetStackWalk();
-  char* dllAddrs;
-  Log(L"Error message box, caption: \"%hs\", message:\n%hs\n%hs", lpCaption, lpText, dllAddrs = DllLoadAddrStrs());
-  free(dllAddrs);
-  return MessageBoxA(hWnd, lpText, lpCaption, uType);
-}
-
-char __fastcall ErrorReportLaunch(const char* crash_file, int) {
-  GetStackWalk();
-  Log(L"Crash File: %hs\n", crash_file);
-  exit(0);
 }

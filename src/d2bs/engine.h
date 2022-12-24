@@ -41,6 +41,9 @@ class Engine {
   void on_game_enter();
   void on_menu_enter();
 
+  void on_game_draw();
+  void on_menu_draw();
+
   ScriptEngine* script_engine() {
     return &script_engine_;
   }

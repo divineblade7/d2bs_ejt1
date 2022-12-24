@@ -75,69 +75,6 @@ DWORD __fastcall GamePacketSent(BYTE* pPacket, DWORD dwSize) {
   return !GamePacketSentEvent(pPacket, dwSize);
 }
 
-LRESULT CALLBACK MouseMove(int code, WPARAM wParam, LPARAM lParam) {
-  MOUSEHOOKSTRUCT* mouse = (MOUSEHOOKSTRUCT*)lParam;
-  POINT pt = mouse->pt;
-  ScreenToClient(mouse->hwnd, &pt);
-
-  // filter out clicks on the window border
-  if (code == HC_ACTION && (pt.x < 0 || pt.y < 0)) {
-    return CallNextHookEx(NULL, code, wParam, lParam);
-  }
-
-  Vars.pMouseCoords = pt;
-  if (Vars.bBlockMouse) {
-    return 1;
-  }
-
-  if (code == HC_ACTION) {
-    bool clicked = false;
-
-    HookClickHelper helper = {-1, {pt.x, pt.y}};
-    switch (wParam) {
-      case WM_LBUTTONDOWN:
-        MouseClickEvent(0, pt, false);
-        helper.button = 0;
-        if (Genhook::ForEachVisibleHook(ClickHook, &helper, 1)) {
-          clicked = true;
-        }
-        break;
-      case WM_LBUTTONUP:
-        MouseClickEvent(0, pt, true);
-        break;
-      case WM_RBUTTONDOWN:
-        MouseClickEvent(1, pt, false);
-        helper.button = 1;
-        if (Genhook::ForEachVisibleHook(ClickHook, &helper, 1)) {
-          clicked = true;
-        }
-        break;
-      case WM_RBUTTONUP:
-        MouseClickEvent(1, pt, true);
-        break;
-      case WM_MBUTTONDOWN:
-        MouseClickEvent(2, pt, false);
-        helper.button = 2;
-        if (Genhook::ForEachVisibleHook(ClickHook, &helper, 1)) {
-          clicked = true;
-        }
-        break;
-      case WM_MBUTTONUP:
-        MouseClickEvent(2, pt, true);
-        break;
-      case WM_MOUSEMOVE:
-        // would be nice to enable these events but they bog down too much
-        MouseMoveEvent(pt);
-        // Genhook::ForEachVisibleHook(HoverHook, &helper, 1);
-        break;
-    }
-
-    return clicked ? 1 : CallNextHookEx(NULL, code, wParam, lParam);
-  }
-
-  return CallNextHookEx(NULL, code, wParam, lParam);
-}
-
 void FlushPrint() {
   if (!TryEnterCriticalSection(&Vars.cPrintSection)) return;
 
@@ -168,54 +105,12 @@ void FlushPrint() {
       for (std::list<std::wstring>::iterator it = lines.begin(); it != lines.end(); ++it) {
         D2CLIENT_PrintGameString((wchar_t*)it->c_str(), 0);
       }
-      /*} else if (Vars.bUseGamePrint && ClientState() == ClientStateMenu && findControl(4, (const wchar_t*)NULL, -1,
-         28, 410, 354, 298)) { while (getline(ss, temp)) SplitLines(temp, sConsole->MaxWidth() - 100, ' ', lines);
-              // TODO: Double check this function, make sure it is working as intended.
-              for (list<string>::iterator it = lines.begin(); it != lines.end(); ++it)
-                  D2MULTI_PrintChannelText((char*)it->c_str(), 0);*/
     } else {
       while (getline(ss, temp)) sConsole->AddLine(temp);
     }
 
     clean.pop();
   }
-}
-
-void GameDraw(void) {
-  if (Vars.bActive && ClientState() == ClientStateInGame) {
-    FlushPrint();
-    Genhook::DrawAll(IG);
-    DrawLogo();
-    sConsole->Draw();
-  }
-  if (Vars.bTakeScreenshot) {
-    Vars.bTakeScreenshot = false;
-    D2WIN_TakeScreenshot();
-  }
-  if (Vars.SectionCount) {
-    if (Vars.bGameLoopEntered)
-      LeaveCriticalSection(&Vars.cGameLoopSection);
-    else
-      Vars.bGameLoopEntered = true;
-    Sleep(0);
-    EnterCriticalSection(&Vars.cGameLoopSection);
-  } else
-    Sleep(10);
-}
-
-void GameDrawOOG(void) {
-  D2WIN_DrawSprites();
-  if (Vars.bActive && ClientState() == ClientStateMenu) {
-    FlushPrint();
-    Genhook::DrawAll(OOG);
-    DrawLogo();
-    sConsole->Draw();
-  }
-  if (Vars.bTakeScreenshot) {
-    Vars.bTakeScreenshot = false;
-    D2WIN_TakeScreenshot();
-  }
-  Sleep(10);
 }
 
 void SetMaxDiff(void) {

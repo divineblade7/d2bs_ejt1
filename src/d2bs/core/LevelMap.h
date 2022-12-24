@@ -107,7 +107,7 @@ class LevelMap : public Map {
   static LevelMap* GetMap(Level* level);
   static void ClearCache(void);
   void Dump(const char* file, const PointList& points) const;
-  void CleanUp(void) const;
+  void CleanUp();
   Point AbsToRelative(const Point& point) const;
   Point RelativeToAbs(const Point& point) const;
 

@@ -124,7 +124,7 @@ DWORD GetPlayerArea(void) {
 }
 
 Level* GetLevel(DWORD dwLevelNo) {
-  AutoCriticalRoom* cRoom = new AutoCriticalRoom;
+  CriticalRoom cRoom;
 
   if (!GameReady()) return nullptr;
 
@@ -135,7 +135,6 @@ Level* GetLevel(DWORD dwLevelNo) {
       if (!pLevel->pRoom2First) D2COMMON_InitLevel(pLevel);
 
       if (!pLevel->pRoom2First) break;
-      delete cRoom;
       return pLevel;
     }
     pLevel = pLevel->pNextLevel;
@@ -143,7 +142,6 @@ Level* GetLevel(DWORD dwLevelNo) {
 
   // this crashes pretty much every time it's called
   // pLevel = D2COMMON_GetLevel(D2CLIENT_GetPlayerUnit()->pAct->pMisc, dwLevelNo);
-  delete cRoom;
   return pLevel;
 }
 

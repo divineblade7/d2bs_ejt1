@@ -5,11 +5,10 @@
 #include <windows.h>
 
 DWORD __fastcall GameInput(wchar_t* wMsg);
-void GameDraw(void);
 DWORD __fastcall GamePacketReceived(BYTE* pPacket, DWORD dwSize);
 DWORD __fastcall GamePacketSent(BYTE* pPacket, DWORD dwSize);
-void GameDrawOOG(void);
-void SetMaxDiff(void);
+void FlushPrint();
+  void SetMaxDiff(void);
 void __fastcall WhisperHandler(char* szAcc, char* szText);
 DWORD __fastcall ChannelInput(wchar_t* wMsg);
 DWORD __fastcall GameAttack(UnitInteraction* pAttack);

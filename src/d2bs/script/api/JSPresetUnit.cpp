@@ -2,6 +2,7 @@
 
 #include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/diablo/D2Ptrs.h"
+#include "d2bs/script/api/JSGlobalClasses.h"
 #include "d2bs/utils/CriticalSections.h"
 
 EMPTY_CTOR(presetunit)
@@ -71,7 +72,7 @@ JSAPI_FUNC(my_getPresetUnits) {
   if (argc >= 2) nType = JSVAL_TO_INT(JS_ARGV(cx, vp)[1]);
   if (argc >= 3) nClassId = JSVAL_TO_INT(JS_ARGV(cx, vp)[2]);
 
-  AutoCriticalRoom* cRoom = new AutoCriticalRoom;
+  CriticalRoom cRoom;
 
   bool bAddedRoom = FALSE;
   DWORD dwArrayCount = NULL;
@@ -105,7 +106,6 @@ JSAPI_FUNC(my_getPresetUnits) {
         if (!unit) {
           delete mypUnit;
           JS_EndRequest(cx);
-          delete cRoom;
           THROW_ERROR(cx, "Failed to build object?");
         }
 
@@ -126,7 +126,6 @@ JSAPI_FUNC(my_getPresetUnits) {
 
   JS_RemoveRoot(cx, &pReturnArray);
   JS_EndRequest(cx);
-  delete cRoom;
   return JS_TRUE;
 }
 
@@ -152,7 +151,7 @@ JSAPI_FUNC(my_getPresetUnit) {
   if (argc >= 2) nType = JSVAL_TO_INT(JS_ARGV(cx, vp)[1]);
   if (argc >= 3) nClassId = JSVAL_TO_INT(JS_ARGV(cx, vp)[2]);
 
-  AutoCriticalRoom* cRoom = new AutoCriticalRoom;
+  CriticalRoom cRoom;
 
   bool bAddedRoom = FALSE;
 
@@ -181,12 +180,10 @@ JSAPI_FUNC(my_getPresetUnit) {
 
         JSObject* obj = BuildObject(cx, &presetunit_class, NULL, presetunit_props, mypUnit);
         if (!obj) {
-          delete cRoom;
           delete mypUnit;
           THROW_ERROR(cx, "Failed to create presetunit object");
         }
         JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj));
-        delete cRoom;
         return JS_TRUE;
       }
     }
@@ -198,6 +195,5 @@ JSAPI_FUNC(my_getPresetUnit) {
     }
   }
   JS_SET_RVAL(cx, vp, JSVAL_FALSE);
-  delete cRoom;
   return JS_TRUE;
 }

@@ -17,10 +17,6 @@
 #include <fcntl.h>
 #include <io.h>
 
-#ifdef _MSVC_DEBUG
-#include "utils/D2Loader.h"
-#endif
-
 // deprecate this function, some hack workaround implemented by someone long ago...
 bool __fastcall UpdatePlayerGid(Script* script, void*, uint) {
   script->UpdatePlayerGid();
@@ -51,7 +47,9 @@ bool Engine::startup(HMODULE mod) {
   freopen_s(&f, errlog, "a+t", f);
 #endif
 
+#if DEBUG
   SetUnhandledExceptionFilter(ExceptionHandler);
+#endif
 
   InitializeCriticalSection(&Vars.cEventSection);
   InitializeCriticalSection(&Vars.cPrintSection);
@@ -188,6 +186,45 @@ void Engine::on_menu_enter() {
   }
 }
 
+void Engine::on_game_draw() {
+  if (Vars.bActive && ClientState() == ClientStateInGame) {
+    FlushPrint();
+    Genhook::DrawAll(IG);
+    DrawLogo();
+    sConsole->Draw();
+  }
+
+  if (Vars.bTakeScreenshot) {
+    Vars.bTakeScreenshot = false;
+    D2WIN_TakeScreenshot();
+  }
+
+  if (Vars.SectionCount) {
+    if (Vars.bGameLoopEntered)
+      LeaveCriticalSection(&Vars.cGameLoopSection);
+    else
+      Vars.bGameLoopEntered = true;
+    Sleep(0);
+    EnterCriticalSection(&Vars.cGameLoopSection);
+  } else
+    Sleep(10);
+}
+
+void Engine::on_menu_draw() {
+  D2WIN_DrawSprites();
+  if (Vars.bActive && ClientState() == ClientStateMenu) {
+    FlushPrint();
+    Genhook::DrawAll(OOG);
+    DrawLogo();
+    sConsole->Draw();
+  }
+  if (Vars.bTakeScreenshot) {
+    Vars.bTakeScreenshot = false;
+    D2WIN_TakeScreenshot();
+  }
+  Sleep(10);
+}
+
 void Engine::run_chicken() {
   if ((Vars.dwMaxGameTime && Vars.dwGameTime && (GetTickCount() - Vars.dwGameTime) > Vars.dwMaxGameTime) ||
       (!D2COMMON_IsTownByLevelNo(GetPlayerArea()) &&
@@ -270,6 +307,7 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     case WM_SYSKEYDOWN:
     case WM_SYSKEYUP:
     case WM_CHAR: {
+      // This is straight copy-pasted from previous KeyPress function, needs a cleanup
       WORD repeatCount = LOWORD(lparam);
       bool altState = !!(HIWORD(lparam) & KF_ALTDOWN);
       bool previousState = !!(HIWORD(lparam) & KF_REPEAT);

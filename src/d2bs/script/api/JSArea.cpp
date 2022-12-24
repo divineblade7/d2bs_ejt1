@@ -2,6 +2,7 @@
 
 #include "d2bs/diablo/D2Ptrs.h"
 #include "d2bs/script/api/JSExits.h"
+#include "d2bs/script/api/JSGlobalClasses.h"
 #include "d2bs/utils/CriticalSections.h"
 #include "d2bs/utils/MapHeader.h"
 

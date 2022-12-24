@@ -12,7 +12,7 @@ typedef std::vector<Point> PointList;
 class Map {
  public:
   virtual void Dump(const char* file, const PointList& points) const = 0;
-  virtual void CleanUp(void) const = 0;
+  virtual void CleanUp() = 0;
   virtual int GetWidth(void) const = 0;
   virtual int GetHeight(void) const = 0;
 
@@ -21,7 +21,7 @@ class Map {
 
   virtual bool SpaceHasFlag(int flag, const Point& point, bool abs) const = 0;
   virtual bool PathHasFlag(int flag, const PointList& points, bool abs) const = 0;
-  virtual void AllowCritSpace(void) const = 0;
+  virtual void AllowCritSpace() = 0;
 };
 
 template <typename T>
