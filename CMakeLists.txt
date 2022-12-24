@@ -96,6 +96,12 @@ set(D2BS_SRCS
   src/d2bs/engine.cpp
   src/d2bs/entry.cpp)
 
+# Set debug only sources
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
+  list(D2BS_SRCS APPEND
+    src/d2bs/utils/Stackwalker.cpp)
+endif()
+
 if(WIN32)
   configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.rc.in
@@ -132,12 +138,16 @@ foreach(D2BS_OPTION
 endforeach()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-  dbghelp
-  shlwapi
   wininet
   ws2_32
 
   js)
+
+# Set debug only libraries
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
+  target_link_libraries(${PROJECT_NAME} PRIVATE
+    dbghelp)
+endif()
 
 install(TARGETS d2bs
   RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)

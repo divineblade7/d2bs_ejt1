@@ -220,37 +220,6 @@ bool ProcessCommand(const wchar_t* command, bool unprocessedIsCommand) {
   return result;
 }
 
-SYMBOL_INFO* GetSymFromAddr(HANDLE hProcess, DWORD64 addr) {
-  char* symbols = new char[sizeof(SYMBOL_INFO) + 512];
-  memset(symbols, 0, sizeof(SYMBOL_INFO) + 512);
-
-  SYMBOL_INFO* sym = (SYMBOL_INFO*)(symbols);
-  sym->SizeOfStruct = sizeof(SYMBOL_INFO);
-  sym->MaxNameLen = 512;
-
-  DWORD64 dummy;
-  bool success = SymFromAddr(hProcess, addr, &dummy, sym) == TRUE ? true : false;
-  if (!success) {
-    delete[] symbols;
-    sym = NULL;
-  }
-
-  return sym;
-}
-
-IMAGEHLP_LINE64* GetLineFromAddr(HANDLE hProcess, DWORD64 addr) {
-  IMAGEHLP_LINE64* line = new IMAGEHLP_LINE64;
-  line->SizeOfStruct = sizeof(IMAGEHLP_LINE64);
-
-  DWORD dummy;
-  bool success = SymGetLineFromAddr64(hProcess, addr, &dummy, line) == TRUE ? true : false;
-  if (!success) {
-    delete line;
-    line = NULL;
-  }
-  return line;
-}
-
 char* DllLoadAddrStrs() {
   const char* dlls[] = {"D2Client.DLL", "D2Common.DLL", "D2Gfx.DLL",    "D2Lang.DLL", "D2Win.DLL",
                         "D2Net.DLL",    "D2Game.DLL",   "D2Launch.DLL", "Fog.DLL",    "BNClient.DLL",
@@ -281,7 +250,7 @@ LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* ptrs) {
 
   EXCEPTION_RECORD* rec = ptrs->ExceptionRecord;
   CONTEXT* ctx = ptrs->ContextRecord;
-  DWORD base = Vars.pModule ? Vars.pModule->dwBaseAddress : (DWORD)Vars.hModule;
+  DWORD base = (DWORD)Vars.hModule;
 
   int len;
   char* szString;

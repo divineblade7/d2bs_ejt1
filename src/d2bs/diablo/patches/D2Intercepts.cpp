@@ -4,7 +4,7 @@
 #include "d2bs/diablo/handlers/D2Handlers.h"
 #include "d2bs/utils/Helpers.h"
 
-#include <shlwapi.h>
+#include <filesystem>
 
 void __declspec(naked) RealmPacketRecv_Interception() {
   __asm {
@@ -277,30 +277,18 @@ void __declspec(naked) FailToJoin() {
 }
 
 int EraseCacheFiles() {
-  CHAR path[MAX_PATH];
-  GetCurrentDirectoryA(MAX_PATH, path);
-
-  CHAR szSearch[MAX_PATH];
-  memset(szSearch, 0x00, MAX_PATH);
-
-  strcpy_s(szSearch, path);
-  PathAppendA(szSearch, "\\*.dat");
-
-  WIN32_FIND_DATAA FindFileData;
-  HANDLE hFind = FindFirstFileA(szSearch, &FindFileData);
-  if (hFind != INVALID_HANDLE_VALUE) {
-    do {
-      char FilePath[MAX_PATH];
-      memset(FilePath, 0x00, MAX_PATH);
-
-      strcpy_s(FilePath, path);
-      PathAppendA(FilePath, FindFileData.cFileName);
-      DeleteFileA(FilePath);
-
-    } while (FindNextFileA(hFind, &FindFileData));
-
-    FindClose(hFind);
+  CHAR cur_dir[MAX_PATH]{};
+  GetCurrentDirectoryA(MAX_PATH, cur_dir);
+  std::filesystem::path cur_path = cur_dir;
+  if (!std::filesystem::exists(cur_path) || !std::filesystem::is_directory(cur_path)) {
+    return 0;
   }
+
+  for (const auto& entry : std::filesystem::directory_iterator(cur_path))
+    if (std::filesystem::is_regular_file(entry) && entry.path().has_extension() &&
+        entry.path().extension().compare(".dat") == 0) {
+      std::filesystem::remove(entry);
+    }
 
   return 0;
 }

@@ -16,7 +16,6 @@
 
 #include <fcntl.h>
 #include <io.h>
-#include <shlwapi.h>
 
 #ifdef _MSVC_DEBUG
 #include "utils/D2Loader.h"

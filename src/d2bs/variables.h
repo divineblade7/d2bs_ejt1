@@ -1,6 +1,5 @@
 #pragma once
 
-#include "d2bs/cguard.h"            // Module
 #include "d2bs/diablo/D2Structs.h"  // CellFile
 
 #include <Windows.h>   // CRITICAL_SECTION, DWORD, HANDLE, HHOOK, HMODULE, POINT, UINT_PTR, WNDPROC
@@ -57,7 +56,6 @@ struct Variables {
   int dwMemUsage;
   int dwConsoleFont;
   HANDLE eventSignal;
-  Module* pModule;
   HMODULE hModule;
   HWND hHandle;
 
