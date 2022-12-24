@@ -48,7 +48,7 @@ struct Variables {
   BOOL bLogConsole;
   BOOL bEnableUnsupported;
   BOOL bForwardMessageBox;
-  BOOL bUseRawCDKey;
+  BOOL bUseRawCDKey = FALSE;
   BOOL bQuitting;
   BOOL bCacheFix;
   BOOL bMulti;

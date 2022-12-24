@@ -33,7 +33,7 @@ struct FileData {
   bool autoflush, locked;
   FILE* fptr;
 #if DEBUG
-  char* lockLocation;
+  const char* lockLocation;
   int line;
 #endif
 };

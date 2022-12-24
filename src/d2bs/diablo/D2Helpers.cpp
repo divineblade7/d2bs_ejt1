@@ -389,7 +389,7 @@ BYTE CalcPercent(DWORD dwVal, DWORD dwMaxVal, BYTE iMin) {
   BYTE iRes = (BYTE)((double)dwVal / (double)dwMaxVal * 100.0);
   if (iRes > 100) iRes = 100;
 
-  return max(iRes, iMin);
+  return std::max(iRes, iMin);
 }
 
 DWORD GetTileLevelNo(Room2* lpRoom2, DWORD dwTileNo) {
@@ -398,6 +398,22 @@ DWORD GetTileLevelNo(Room2* lpRoom2, DWORD dwTileNo) {
   }
 
   return NULL;
+}
+
+void AddRoomData(Room2* room) {
+  D2COMMON_AddRoomData(room->pLevel->pMisc->pAct, room->pLevel->dwLevelNo, room->dwPosX, room->dwPosY, room->pRoom1);
+}
+
+void RemoveRoomData(Room2* room) {
+  D2COMMON_RemoveRoomData(room->pLevel->pMisc->pAct, room->pLevel->dwLevelNo, room->dwPosX, room->dwPosY, room->pRoom1);
+}
+
+char* __stdcall GetLevelName(const Level* level) {
+  return D2COMMON_GetLevelText(level->dwLevelNo)->szName;
+}
+
+char* __stdcall GetLevelIdName(DWORD level) {
+  return D2COMMON_GetLevelText(level)->szName;
 }
 
 // TODO: Rewrite this and split it into two functions
@@ -536,7 +552,7 @@ CellFile* LoadBmpCellFile(BYTE* buf1, int width, int height) {
   for (int i = 0; i < height; i++) {
     BYTE *src = buf1 + (i * ((width + 3) & -4)), *limit = src + width;
     while (src < limit) {
-      BYTE *start = src, *limit2 = min(limit, src + 0x7f), trans = !*src;
+      BYTE *start = src, *limit2 = std::min(limit, src + 0x7f), trans = !*src;
       do src++;
       while ((trans == (BYTE) !*src) && (src < limit2));
       if (!trans || (src < limit)) *dest++ = (BYTE)((trans ? 0x80 : 0) + (src - start));
@@ -884,7 +900,7 @@ double GetDistance(long x1, long y1, long x2, long y2, DistanceType type) {
       long dy = (y2 - y1);
       dx = abs(dx);
       dy = abs(dy);
-      dist = max(dx, dy);
+      dist = std::max(dx, dy);
     } break;
     case Manhattan: {
       long dx = (x2 - x1);

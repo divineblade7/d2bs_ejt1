@@ -62,7 +62,7 @@ static UnitAny* GetNextUnitFromTables(UnitAny* curUnit, UnitHashTable* unitTable
   }
 
   // Go through all the remaining types
-  for (i = max(dwTypeLow, curUnit->dwType + 1); i <= dwTypeHigh; ++i) {
+  for (i = std::max(dwTypeLow, curUnit->dwType + 1); i <= dwTypeHigh; ++i) {
     // Go through all the hash values
     for (j = 0; j < 127; ++j) {
       // Go through all the units in a given hash value

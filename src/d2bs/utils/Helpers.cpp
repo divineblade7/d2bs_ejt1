@@ -76,7 +76,9 @@ void StringReplace(wchar_t* str, const wchar_t find, const wchar_t replace, size
 }
 
 bool SwitchToProfile(const wchar_t* profile) {
-  if (Vars.bUseProfileScript != TRUE || !Profile::ProfileExists(profile)) return false;
+  if (Vars.bUseProfileScript != TRUE || !Profile::ProfileExists(profile)) {
+    return false;
+  }
 
   wchar_t defaultStarter[_MAX_FNAME] = L"", defaultConsole[_MAX_FNAME] = L"", defaultGame[_MAX_FNAME] = L"",
           scriptPath[_MAX_PATH] = L"";
@@ -103,59 +105,6 @@ bool SwitchToProfile(const wchar_t* profile) {
 
   Vars.bUseProfileScript = FALSE;
   // Reload();
-  return true;
-}
-
-bool InitHooks(void) {
-  int i = 0;
-  while (!Vars.bActive) {
-    Sleep(50);
-
-    if (i >= 300) {
-      MessageBox(0, "Failed to set hooks, exiting!", "D2BS", 0);
-      return false;
-    }
-
-    if (D2GFX_GetHwnd() && (ClientState() == ClientStateMenu || ClientState() == ClientStateInGame)) {
-      if (!Vars.oldWNDPROC) {
-        Vars.oldWNDPROC = (WNDPROC)SetWindowLong(D2GFX_GetHwnd(), GWL_WNDPROC, (LONG)GameEventHandler);
-      }
-      if (!Vars.oldWNDPROC) {
-        continue;
-      }
-
-      Vars.uTimer = SetTimer(D2GFX_GetHwnd(), 1, 0, TimerProc);
-
-      DWORD mainThread = GetWindowThreadProcessId(D2GFX_GetHwnd(), 0);
-      if (mainThread) {
-        if (!Vars.hKeybHook) {
-          Vars.hKeybHook = SetWindowsHookEx(WH_KEYBOARD, KeyPress, NULL, mainThread);
-        }
-        if (!Vars.hMouseHook) {
-          Vars.hMouseHook = SetWindowsHookEx(WH_MOUSE, MouseMove, NULL, mainThread);
-        }
-      }
-    } else {
-      continue;
-    }
-
-    if (Vars.hKeybHook && Vars.hMouseHook) {
-      if (!sScriptEngine->Startup()) {
-        return false;
-      }
-
-      Vars.bActive = TRUE;
-
-      if (ClientState() == ClientStateMenu && Vars.bStartAtMenu) {
-        clickControl(*p_D2WIN_FirstControl);
-      }
-    }
-
-    i++;
-  }
-
-  *p_D2CLIENT_Lang = D2CLIENT_GetGameLanguageCode();
-  Vars.dwLocale = *p_D2CLIENT_Lang;
   return true;
 }
 
@@ -269,33 +218,6 @@ bool ProcessCommand(const wchar_t* command, bool unprocessedIsCommand) {
   }
   free(buf);
   return result;
-}
-
-void GameJoined(void) {
-  if (!Vars.bUseProfileScript) {
-    const wchar_t* starter = GetStarterScriptName();
-    if (starter != NULL) {
-      Print(L"\u00FFc2D2BS\u00FFc0 :: Starting %s", starter);
-      if (StartScript(starter, GetStarterScriptState()))
-        Print(L"\u00FFc2D2BS\u00FFc0 :: %s running.", starter);
-      else
-        Print(L"\u00FFc2D2BS\u00FFc0 :: Failed to start %s!", starter);
-    }
-  }
-}
-
-void MenuEntered(bool beginStarter) {
-  if (beginStarter && !Vars.bUseProfileScript) {
-    const wchar_t* starter = GetStarterScriptName();
-    if (starter != NULL) {
-      Print(L"\u00FFc2D2BS\u00FFc0 :: Starting %s", starter);
-      if (StartScript(starter, GetStarterScriptState())) {
-        Print(L"\u00FFc2D2BS\u00FFc0 :: %s running.", starter);
-      } else {
-        Print(L"\u00FFc2D2BS\u00FFc0 :: Failed to start %s!", starter);
-      }
-    }
-  }
 }
 
 SYMBOL_INFO* GetSymFromAddr(HANDLE hProcess, DWORD64 addr) {

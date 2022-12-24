@@ -16,12 +16,12 @@ typedef bool(__fastcall* ScriptCallback)(Script*, void*, uint);
 enum EngineState { Starting, Running, Paused, Stopping, Stopped };
 
 class ScriptEngine {
-  ScriptEngine() noexcept = default;
-  ~ScriptEngine() noexcept = default;
-
  public:
   // should this use friendship? ~ ejt
   friend class Script;
+
+  ScriptEngine() noexcept = default;
+  ~ScriptEngine() noexcept = default;
 
   ScriptEngine(const ScriptEngine&) = delete;
   ScriptEngine& operator=(const ScriptEngine&) = delete;
@@ -84,7 +84,8 @@ class ScriptEngine {
   std::mutex script_list_mutex_{};
 };
 
-#define sScriptEngine ScriptEngine::instance()
+//#define sScriptEngine ScriptEngine::instance()
+inline ScriptEngine* sScriptEngine = nullptr;
 
 // these ForEachScript helpers are exposed in case they can be of use somewhere
 bool __fastcall StopIngameScript(Script* script, void*, uint);

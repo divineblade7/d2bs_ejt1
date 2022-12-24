@@ -203,7 +203,7 @@ unsigned int ScriptEngine::GetCount(bool active, bool unexecuted) {
     }
   }
 
-  assert(count >= 0);
+  //assert(count >= 0);
   return count;
 }
 

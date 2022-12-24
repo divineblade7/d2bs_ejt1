@@ -33,16 +33,31 @@ class D2BS {
   bool startup(HMODULE mod);
   void shutdown(bool await_thread = false);
 
+  void update();
+
+  void on_game_enter();
+  void on_menu_enter();
+
+  ScriptEngine* script_engine() {
+    return &script_engine_;
+  }
+
  private:
+  void run_chicken();
+
   friend DWORD WINAPI thread_entry(void* param);
   void parse_commandline_args();
 
   void init_paths(HMODULE mod);
   void init_settings();
+  bool init_hooks();
 
  private:
+  ScriptEngine script_engine_;
+
   HANDLE thread_handle_ = INVALID_HANDLE_VALUE;
   bool initialized_ = false;
+  bool first_menu_call_ = true;
 
   fs::path root_dir_;
   fs::path logs_dir_;

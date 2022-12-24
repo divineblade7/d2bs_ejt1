@@ -4479,7 +4479,7 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
         return;
 #endif
 
-    JS_ASSERT_IF(!incremental || budget != SliceBudget::Unlimited, JSGC_INCREMENTAL);
+    JS_ASSERT(!incremental || budget != SliceBudget::Unlimited);
 
 #ifdef JS_GC_ZEAL
     bool isShutdown = reason == JS::gcreason::SHUTDOWN_CC || !rt->hasContexts();

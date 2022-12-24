@@ -23,18 +23,10 @@ bool WaitForGameReady(void);
 DWORD GetPlayerArea(void);
 Level* GetLevel(DWORD dwLevelNo);
 DWORD GetTileLevelNo(Room2* lpRoom2, DWORD dwTileNo);
-static inline void AddRoomData(Room2* room) {
-  D2COMMON_AddRoomData(room->pLevel->pMisc->pAct, room->pLevel->dwLevelNo, room->dwPosX, room->dwPosY, room->pRoom1);
-}
-static inline void RemoveRoomData(Room2* room) {
-  D2COMMON_RemoveRoomData(room->pLevel->pMisc->pAct, room->pLevel->dwLevelNo, room->dwPosX, room->dwPosY, room->pRoom1);
-}
-static inline char* __stdcall GetLevelName(const Level* level) {
-  return D2COMMON_GetLevelText(level->dwLevelNo)->szName;
-}
-static inline char* __stdcall GetLevelIdName(DWORD level) {
-  return D2COMMON_GetLevelText(level)->szName;
-}
+void AddRoomData(Room2* room);
+void RemoveRoomData(Room2* room);
+char* __stdcall GetLevelName(const Level* level);
+char* __stdcall GetLevelIdName(DWORD level);
 
 // Input/output
 void SendMouseClick(int x, int y, int clicktype);

@@ -23,6 +23,19 @@ option(D2BS_ENABLE_PROFILING "Enable profiling" OFF)
 
 option(D2BS_NO_EXCEPTIONS "Enable profiling" OFF)
 
+# Set Windows definitions
+add_definitions(-DWIN32)
+add_definitions(-D_WINDOWS)
+add_definitions(-DWIN32_LEAN_AND_MEAN)
+add_definitions(-DNOMINMAX) # do not define min/max macros, we want to use std::min/max
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
+  add_definitions(-DDEBUG)
+  add_definitions(-D_DEBUG)
+else()
+  add_definitions(-DNDEBUG)
+  add_definitions(-D_NDEBUG)
+endif()
+
 # Set D2BS sources
 set(D2BS_SRCS
   src/d2bs/core/ActMap.cpp
@@ -106,6 +119,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 
   XP_WIN
   STATIC_JS_API
+
   D2BS_VERSION="${D2BS_VERSION}")
 
 # Set option definitions

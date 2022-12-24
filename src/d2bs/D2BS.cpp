@@ -2,6 +2,7 @@
 
 #include "D2BS.h"
 
+#include "d2bs/core/Control.h"
 #include "d2bs/core/Core.h"
 #include "d2bs/core/Unit.h"
 #include "d2bs/diablo/D2Ptrs.h"
@@ -114,68 +115,121 @@ void D2BS::shutdown(bool await_thread) {
   initialized_ = false;
 }
 
-DWORD __stdcall thread_entry(void*) {
-  std::string arg_val;
-  bool beginStarter = true;
-  bool bInGame = false;
+void D2BS::update() {
+  static bool bInGame = false;
 
-  if (!InitHooks()) {
+  switch (ClientState()) {
+    case ClientStateInGame: {
+      if (!bInGame) {
+        Vars.dwGameTime = GetTickCount();
+
+        // Is this Zzzz necessary? ~ ejt
+        Sleep(500);
+
+        D2CLIENT_InitInventory();
+        script_engine_.ForEachScript(UpdatePlayerGid, NULL, 0);
+        script_engine_.UpdateConsole();
+        Vars.bQuitting = false;
+        on_game_enter();
+
+        bInGame = true;
+      }
+
+      run_chicken();
+      break;
+    }
+    case ClientStateMenu: {
+      // i think this variable is to wait for a profile to start using SwitchToProfile? ~ ejt
+      while (Vars.bUseProfileScript) {
+        Sleep(100);
+      }
+
+      on_menu_enter();
+      if (bInGame) {
+        Vars.dwGameTime = NULL;
+        bInGame = false;
+      }
+      break;
+    }
+    case ClientStateBusy:
+    case ClientStateNull:
+      break;
+  }
+}
+
+void D2BS::on_game_enter() {
+  if (!Vars.bUseProfileScript) {
+    const wchar_t* starter = GetStarterScriptName();
+    if (starter != NULL) {
+      Print(L"\u00FFc2D2BS\u00FFc0 :: Starting %s", starter);
+      if (StartScript(starter, GetStarterScriptState()))
+        Print(L"\u00FFc2D2BS\u00FFc0 :: %s running.", starter);
+      else
+        Print(L"\u00FFc2D2BS\u00FFc0 :: Failed to start %s!", starter);
+    }
+  }
+}
+
+void D2BS::on_menu_enter() {
+  if (first_menu_call_ && !Vars.bUseProfileScript) {
+    const wchar_t* starter = GetStarterScriptName();
+    if (starter != NULL) {
+      Print(L"\u00FFc2D2BS\u00FFc0 :: Starting %s", starter);
+      if (StartScript(starter, GetStarterScriptState())) {
+        Print(L"\u00FFc2D2BS\u00FFc0 :: %s running.", starter);
+      } else {
+        Print(L"\u00FFc2D2BS\u00FFc0 :: Failed to start %s!", starter);
+      }
+    }
+    first_menu_call_ = false;
+  }
+}
+
+void D2BS::run_chicken() {
+  if ((Vars.dwMaxGameTime && Vars.dwGameTime && (GetTickCount() - Vars.dwGameTime) > Vars.dwMaxGameTime) ||
+      (!D2COMMON_IsTownByLevelNo(GetPlayerArea()) &&
+           (Vars.nChickenHP && Vars.nChickenHP >= GetUnitHP(D2CLIENT_GetPlayerUnit())) ||
+       (Vars.nChickenMP && Vars.nChickenMP >= GetUnitMP(D2CLIENT_GetPlayerUnit())))) {
+    D2CLIENT_ExitGame();
+  }
+}
+
+DWORD __stdcall thread_entry(void*) {
+  auto engine = sEngine;
+
+  // TODO REMOVE: Temporary during refactoring of ScriptEngine
+  sScriptEngine = engine->script_engine();
+
+  if (!engine->init_hooks()) {
     Log(L"D2BS Engine startup failed. %s", GetCommandLineW());
     Print(L"\u00FFc2D2BS\u00FFc0 :: Engine startup failed!");
     return FALSE;
   }
 
-  Vars.bUseRawCDKey = FALSE;  // can this can be set inside Variables instead to default to 'false'?
+  if (!engine->script_engine()->Startup()) {
+    Log(L"Failed to startup script engine");
+    Print(L"\u00FFc2D2BS\u00FFc0 :: Script engine startup failed!");
+    return false;
+  }
 
-  sEngine->parse_commandline_args();
+  if (ClientState() == ClientStateMenu && Vars.bStartAtMenu) {
+    clickControl(*p_D2WIN_FirstControl);
+  }
+
+  *p_D2CLIENT_Lang = D2CLIENT_GetGameLanguageCode();
+  Vars.dwLocale = *p_D2CLIENT_Lang;
+
+  engine->parse_commandline_args();
 
   Log(L"D2BS Engine startup complete. %s", L"" D2BS_VERSION);
   Print(L"\u00FFc2D2BS\u00FFc0 :: Engine startup complete!");
 
   while (Vars.bActive) {
-    switch (ClientState()) {
-      case ClientStateInGame: {
-        if (bInGame) {
-          if ((Vars.dwMaxGameTime && Vars.dwGameTime && (GetTickCount() - Vars.dwGameTime) > Vars.dwMaxGameTime) ||
-              (!D2COMMON_IsTownByLevelNo(GetPlayerArea()) &&
-                   (Vars.nChickenHP && Vars.nChickenHP >= GetUnitHP(D2CLIENT_GetPlayerUnit())) ||
-               (Vars.nChickenMP && Vars.nChickenMP >= GetUnitMP(D2CLIENT_GetPlayerUnit()))))
-            D2CLIENT_ExitGame();
-        } else {
-          Vars.dwGameTime = GetTickCount();
-
-          Sleep(500);
-
-          D2CLIENT_InitInventory();
-          sScriptEngine->ForEachScript(UpdatePlayerGid, NULL, 0);
-          sScriptEngine->UpdateConsole();
-          Vars.bQuitting = false;
-          GameJoined();
-
-          bInGame = true;
-        }
-        break;
-      }
-      case ClientStateMenu: {
-        while (Vars.bUseProfileScript) {
-          Sleep(100);
-        }
-        MenuEntered(beginStarter);
-        beginStarter = false;
-        if (bInGame) {
-          Vars.dwGameTime = NULL;
-          bInGame = false;
-        }
-        break;
-      }
-      case ClientStateBusy:
-      case ClientStateNull:
-        break;
-    }
+    engine->update();
     Sleep(50);
   }
 
-  sScriptEngine->Shutdown();
+  engine->script_engine()->Shutdown();
 
   return NULL;
 }
@@ -224,7 +278,7 @@ void D2BS::init_paths(HMODULE mod) {
   // remove filename from path and make preferred, '\\' instead of '/'
   root_dir_.remove_filename();
 
-  Vars.working_dir = root_dir_; // DEPRECATED
+  Vars.working_dir = root_dir_;  // DEPRECATED
   logs_dir_ = root_dir_ / "logs";
   Vars.log_dir = logs_dir_;  // DEPRECATED
   settings_file_ = root_dir_ / "d2bs.ini";
@@ -236,8 +290,7 @@ void D2BS::init_paths(HMODULE mod) {
 }
 
 void D2BS::init_settings() {
-  wchar_t scriptPath[_MAX_PATH], defaultStarter[_MAX_FNAME], defaultGame[_MAX_FNAME], defaultConsole[_MAX_FNAME],
-      hosts[256], debug[6], quitOnHostile[6], quitOnError[6], startAtMenu[6],
+  wchar_t scriptPath[_MAX_PATH], hosts[256], debug[6], quitOnHostile[6], quitOnError[6], startAtMenu[6],
       disableCache[6], memUsage[6], gamePrint[6], useProfilePath[6], logConsole[6], enableUnsupported[6],
       forwardMessageBox[6], consoleFont[6];
   int maxGameTime = 0;
@@ -292,4 +345,34 @@ void D2BS::init_settings() {
   }
   Vars.dwMemUsage *= 1024 * 1024;
   Vars.oldWNDPROC = NULL;
+}
+
+bool D2BS::init_hooks() {
+  // Is this sleep necessary? ~ ejt
+  Sleep(50);
+
+  while (!Vars.oldWNDPROC) {
+    Vars.oldWNDPROC = (WNDPROC)SetWindowLong(D2GFX_GetHwnd(), GWL_WNDPROC, (LONG)GameEventHandler);
+  }
+
+  Vars.uTimer = SetTimer(D2GFX_GetHwnd(), 1, 0, TimerProc);
+
+  DWORD mainThread = GetWindowThreadProcessId(D2GFX_GetHwnd(), 0);
+  // refactor this hook into the WndProc instead
+  Vars.hKeybHook = SetWindowsHookEx(WH_KEYBOARD, KeyPress, NULL, mainThread);
+  if (!Vars.hKeybHook) {
+    MessageBox(0, "Failed to install keylogger!", "D2BS", 0);
+    return false;
+  }
+
+  // refactor this hook into the WndProc instead
+  Vars.hMouseHook = SetWindowsHookEx(WH_MOUSE, MouseMove, NULL, mainThread);
+  if (!Vars.hMouseHook) {
+    MessageBox(0, "Failed to install mouselogger!", "D2BS", 0);
+    return false;
+  }
+
+  // is this variable necessary? ~ ejt
+  Vars.bActive = TRUE;
+  return true;
 }

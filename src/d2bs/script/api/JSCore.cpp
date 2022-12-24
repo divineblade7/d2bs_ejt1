@@ -12,6 +12,7 @@
 #include <ddeml.h>
 #include <io.h>
 #include <iostream>
+#include <utility>
 #include <windows.h>
 #include <wininet.h>
 
@@ -138,7 +139,7 @@ JSAPI_FUNC(my_delay) {
 
       auto& events = script->events();
       while (events.size() > 0 && !!!(JSBool)(script->is_stopped() || ((script->type() == ScriptType::InGame) &&
-                                                                      ClientState() == ClientStateMenu))) {
+                                                                       ClientState() == ClientStateMenu))) {
         EnterCriticalSection(&Vars.cEventSection);
         Event* evt = events.back();
         events.pop_back();
@@ -646,7 +647,7 @@ JSAPI_FUNC(my_getIP) {
   hInternet = InternetOpen(NULL, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
   hFile = InternetOpenUrl(hInternet, "http://ipv4bot.whatismyipaddress.com", NULL, 0, INTERNET_FLAG_RELOAD, 0);
   InternetReadFile(hFile, &buffer, sizeof(buffer), &rSize);
-  buffer[min(rSize, 31)] = '\0';
+  buffer[std::min(rSize, DWORD(31))] = '\0';
   InternetCloseHandle(hFile);
   InternetCloseHandle(hInternet);
   JS_BeginRequest(cx);
