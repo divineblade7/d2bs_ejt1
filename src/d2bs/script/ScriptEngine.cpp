@@ -7,8 +7,8 @@
 #include "d2bs/script/api/JSGlobalClasses.h"
 #include "d2bs/script/api/JSGlobalFuncs.h"
 #include "d2bs/script/api/JSUnit.h"
+#include "d2bs/script/event.h"
 #include "d2bs/utils/Console.h"
-#include "d2bs/utils/Events.h"
 #include "d2bs/utils/Helpers.h"
 
 #include <algorithm>

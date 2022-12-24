@@ -1,12 +1,8 @@
 #include "d2bs/utils/Console.h"
 
 #include "d2bs/core/Core.h"
-#include "d2bs/diablo/D2Ptrs.h"
-#include "d2bs/script/ScriptEngine.h"
+#include "d2bs/engine.h"
 #include "d2bs/utils/Helpers.h"
-
-#include <sstream>
-#include <string>
 
 void Console::Toggle(void) {
   ToggleBuffer();

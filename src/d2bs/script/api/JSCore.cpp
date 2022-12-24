@@ -3,12 +3,12 @@
 #include "d2bs/core/Core.h"
 #include "d2bs/core/File.h"
 #include "d2bs/diablo/D2Ptrs.h"
+#include "d2bs/engine.h"
 #include "d2bs/script/api/JSScript.h"
+#include "d2bs/script/event.h"
 #include "d2bs/utils/Console.h"
-#include "d2bs/utils/Events.h"
 #include "d2bs/utils/Helpers.h"
 #include "d2bs/utils/dde.h"
-#include "d2bs/engine.h"
 
 #include <ddeml.h>
 #include <io.h>
@@ -427,8 +427,9 @@ JSAPI_FUNC(my_sendDDE) {
 
   JS_EndRequest(cx);
   char buffer[255] = "";
-  BOOL result = sEngine->dde()->send(mode, pszDDEServer ? pszDDEServer : "\"\"", pszTopic ? pszTopic : "\"\"",
-                        pszItem ? pszTopic : "\"\"", pszData ? pszTopic : "\"\"", (char**)&buffer, sizeof(buffer));
+  BOOL result =
+      sEngine->dde()->send(mode, pszDDEServer ? pszDDEServer : "\"\"", pszTopic ? pszTopic : "\"\"",
+                           pszItem ? pszTopic : "\"\"", pszData ? pszTopic : "\"\"", (char**)&buffer, sizeof(buffer));
 
   JS_free(cx, pszDDEServer);
   JS_free(cx, pszTopic);

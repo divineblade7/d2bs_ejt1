@@ -1,12 +1,9 @@
 #pragma once
 
-#include "d2bs/engine.h"
-
 #include <deque>
 #include <mutex>
 #include <sstream>
 #include <string>
-#include <windows.h>
 
 class Console {
   Console() noexcept = default;

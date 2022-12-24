@@ -1,8 +1,6 @@
 #include "d2bs/utils/dde.h"
 
-#include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/engine.h"
-#include "d2bs/script/ScriptEngine.h"
 #include "d2bs/utils/Helpers.h"
 
 HDDEDATA CALLBACK DdeCallback(UINT uType, UINT, HCONV, HSZ, HSZ, HDDEDATA hdata, DWORD, DWORD) {

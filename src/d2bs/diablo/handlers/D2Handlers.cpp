@@ -1,17 +1,17 @@
 #include "d2bs/diablo/handlers/D2Handlers.h"
 
-#include "d2bs/engine.h"
 #include "d2bs/core/Control.h"
 #include "d2bs/core/Core.h"
 #include "d2bs/core/ScreenHook.h"
 #include "d2bs/core/Unit.h"
 #include "d2bs/diablo/Constants.h"
 #include "d2bs/diablo/handlers/D2NetHandlers.h"
+#include "d2bs/engine.h"
 #include "d2bs/script/Script.h"
 #include "d2bs/script/ScriptEngine.h"
+#include "d2bs/script/event.h"
 #include "d2bs/utils/CommandLine.h"
 #include "d2bs/utils/Console.h"
-#include "d2bs/utils/Events.h"
 #include "d2bs/utils/Helpers.h"
 #include "d2bs/utils/MapHeader.h"
 #include "d2bs/utils/Offset.h"
@@ -253,8 +253,7 @@ void __fastcall GamePlayerAssignment(UnitAny* pPlayer) {
 void CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD) {
   if (Vars.bGameLoopEntered) {
     LeaveCriticalSection(&Vars.cGameLoopSection);
-  }
-  else {
+  } else {
     Vars.bGameLoopEntered = true;
     Vars.dwGameThreadId = GetCurrentThreadId();
   }

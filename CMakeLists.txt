@@ -79,6 +79,7 @@ set(D2BS_SRCS
   src/d2bs/script/api/JSUnit.cpp
   
   src/d2bs/script/AutoRoot.cpp
+  src/d2bs/script/event.cpp
   src/d2bs/script/js32.cpp
   src/d2bs/script/Script.cpp
   src/d2bs/script/ScriptEngine.cpp
@@ -86,7 +87,6 @@ set(D2BS_SRCS
   src/d2bs/utils/CommandLine.cpp
   src/d2bs/utils/Console.cpp
   src/d2bs/utils/dde.cpp
-  src/d2bs/utils/Events.cpp
   src/d2bs/utils/Helpers.cpp
   src/d2bs/utils/Offset.cpp
   src/d2bs/utils/StackWalker.cpp

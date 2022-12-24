@@ -5,7 +5,6 @@
 #include "d2bs/script/api/JSUnit.h"
 #include "d2bs/script/event.h"
 #include "d2bs/script/js32.h"
-#include "d2bs/utils/Events.h"
 
 #include <list>
 #include <map>

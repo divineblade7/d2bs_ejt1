@@ -1,3 +1,5 @@
+#include "d2bs/script/event.h"
+
 #include "d2bs/engine.h"
 #include "d2bs/script/ScriptEngine.h"
 
