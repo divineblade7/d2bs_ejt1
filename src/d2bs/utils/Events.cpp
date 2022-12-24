@@ -1,4 +1,4 @@
-#include "d2bs/D2BS.h"
+#include "d2bs/engine.h"
 #include "d2bs/script/ScriptEngine.h"
 
 bool __fastcall LifeEventCallback(Script* script, void* argv, uint argc) {

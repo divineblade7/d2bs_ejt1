@@ -8,7 +8,7 @@
 #include "d2bs/utils/Events.h"
 #include "d2bs/utils/Helpers.h"
 #include "d2bs/utils/dde.h"
-#include "d2bs/D2BS.h"
+#include "d2bs/engine.h"
 
 #include <ddeml.h>
 #include <io.h>

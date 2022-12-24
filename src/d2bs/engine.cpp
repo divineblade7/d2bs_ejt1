@@ -1,6 +1,6 @@
 // Diablo II Botting System Core
 
-#include "D2BS.h"
+#include "engine.h"
 
 #include "d2bs/core/Control.h"
 #include "d2bs/core/Core.h"
@@ -28,12 +28,14 @@ bool __fastcall UpdatePlayerGid(Script* script, void*, uint) {
   return true;
 }
 
+namespace d2bs {
+
 // forward-declare `thread_entry` and `wndproc` so that is can be defined in the proper
 // order accoring to how it is declared inside `D2BS`
 DWORD __stdcall thread_entry(void* param);
 LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
-bool D2BS::startup(HMODULE mod) {
+bool Engine::startup(HMODULE mod) {
   Vars.hModule = mod;
 
   init_paths(mod);
@@ -82,7 +84,7 @@ bool D2BS::startup(HMODULE mod) {
   return TRUE;
 }
 
-void D2BS::shutdown(bool await_thread) {
+void Engine::shutdown(bool await_thread) {
   if (!initialized_) {
     return;
   }
@@ -117,7 +119,7 @@ void D2BS::shutdown(bool await_thread) {
   initialized_ = false;
 }
 
-void D2BS::update() {
+void Engine::update() {
   static bool bInGame = false;
 
   switch (ClientState()) {
@@ -159,7 +161,7 @@ void D2BS::update() {
   }
 }
 
-void D2BS::on_game_enter() {
+void Engine::on_game_enter() {
   if (!Vars.bUseProfileScript) {
     const wchar_t* starter = GetStarterScriptName();
     if (starter != NULL) {
@@ -172,7 +174,7 @@ void D2BS::on_game_enter() {
   }
 }
 
-void D2BS::on_menu_enter() {
+void Engine::on_menu_enter() {
   if (first_menu_call_ && !Vars.bUseProfileScript) {
     const wchar_t* starter = GetStarterScriptName();
     if (starter != NULL) {
@@ -187,7 +189,7 @@ void D2BS::on_menu_enter() {
   }
 }
 
-void D2BS::run_chicken() {
+void Engine::run_chicken() {
   if ((Vars.dwMaxGameTime && Vars.dwGameTime && (GetTickCount() - Vars.dwGameTime) > Vars.dwMaxGameTime) ||
       (!D2COMMON_IsTownByLevelNo(GetPlayerArea()) &&
            (Vars.nChickenHP && Vars.nChickenHP >= GetUnitHP(D2CLIENT_GetPlayerUnit())) ||
@@ -237,7 +239,7 @@ DWORD __stdcall thread_entry(void*) {
 }
 
 LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-  D2BS* engine = sEngine;
+  Engine* engine = sEngine;
 
   COPYDATASTRUCT* pCopy;
   switch (msg) {
@@ -417,7 +419,7 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
   return (LONG)CallWindowProcA(engine->orig_wndproc_, hwnd, msg, wparam, lparam);
 }
 
-void D2BS::parse_commandline_args() {
+void Engine::parse_commandline_args() {
   CommandLine cmdline(GetCommandLineA());
   for (const auto& [arg, val] : cmdline.args()) {
     if (arg == "-title") {
@@ -453,7 +455,7 @@ void D2BS::parse_commandline_args() {
   }
 }
 
-void D2BS::init_paths(HMODULE mod) {
+void Engine::init_paths(HMODULE mod) {
   // grab root directory from input module pointer
   wchar_t path[MAX_PATH]{};
   GetModuleFileNameW(mod, path, MAX_PATH);
@@ -472,7 +474,7 @@ void D2BS::init_paths(HMODULE mod) {
   }
 }
 
-void D2BS::init_settings() {
+void Engine::init_settings() {
   wchar_t scriptPath[_MAX_PATH], hosts[256], debug[6], quitOnHostile[6], quitOnError[6], startAtMenu[6],
       disableCache[6], memUsage[6], gamePrint[6], useProfilePath[6], logConsole[6], enableUnsupported[6],
       forwardMessageBox[6], consoleFont[6];
@@ -530,7 +532,7 @@ void D2BS::init_settings() {
   orig_wndproc_ = nullptr;
 }
 
-bool D2BS::init_hooks() {
+bool Engine::init_hooks() {
   // Is this sleep necessary? ~ ejt
   Sleep(50);
 
@@ -544,3 +546,5 @@ bool D2BS::init_hooks() {
   Vars.bActive = TRUE;
   return true;
 }
+
+}  // namespace d2bs

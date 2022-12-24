@@ -18,16 +18,18 @@
 
 namespace fs = std::filesystem;
 
-class D2BS {
-  D2BS() noexcept = default;
-  ~D2BS() noexcept = default;
+namespace d2bs {
+
+class Engine {
+  Engine() noexcept = default;
+  ~Engine() noexcept = default;
 
  public:
-  D2BS(const D2BS&) = delete;
-  D2BS& operator=(const D2BS&) = delete;
+  Engine(const Engine&) = delete;
+  Engine& operator=(const Engine&) = delete;
 
-  static D2BS* instance() {
-    static D2BS _instance;
+  static Engine* instance() {
+    static Engine _instance;
     return &_instance;
   }
 
@@ -72,4 +74,6 @@ class D2BS {
   fs::path settings_file_;
 };
 
-#define sEngine D2BS::instance()
+}  // namespace d2bs
+
+#define sEngine d2bs::Engine::instance()

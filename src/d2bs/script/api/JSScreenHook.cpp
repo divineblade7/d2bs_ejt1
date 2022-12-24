@@ -1,8 +1,8 @@
 #include "d2bs/script/api/JSScreenHook.h"
 
-#include "d2bs/D2BS.h"
 #include "d2bs/core/File.h"
 #include "d2bs/core/ScreenHook.h"
+#include "d2bs/engine.h"
 #include "d2bs/script/Script.h"
 
 void hook_finalize(JSFreeOp*, JSObject* obj) {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "d2bs/D2BS.h"
+#include "d2bs/engine.h"
 #include "d2bs/diablo/handlers/D2Handlers.h"
 #include "d2bs/diablo/patches/D2Intercepts.h"
 #include "d2bs/utils/Offset.h"

@@ -1,9 +1,9 @@
 #include "d2bs/script/ScriptEngine.h"
 
-#include "d2bs/D2BS.h"
 #include "d2bs/core/Core.h"
 #include "d2bs/diablo/Constants.h"
 #include "d2bs/diablo/D2Ptrs.h"
+#include "d2bs/engine.h"
 #include "d2bs/script/api/JSGlobalClasses.h"
 #include "d2bs/script/api/JSGlobalFuncs.h"
 #include "d2bs/script/api/JSUnit.h"
@@ -203,7 +203,7 @@ unsigned int ScriptEngine::GetCount(bool active, bool unexecuted) {
     }
   }
 
-  //assert(count >= 0);
+  // assert(count >= 0);
   return count;
 }
 
@@ -335,7 +335,7 @@ JSBool operationCallback(JSContext* cx) {
                   ((script->type() == ScriptType::InGame) && ClientState() == ClientStateMenu))) {
     auto& events = script->events();
     while (events.size() > 0 && !!!(JSBool)(script->is_stopped() || ((script->type() == ScriptType::InGame) &&
-                                                                    ClientState() == ClientStateMenu))) {
+                                                                     ClientState() == ClientStateMenu))) {
       EnterCriticalSection(&Vars.cEventSection);
       Event* evt = events.back();
       events.pop_back();
@@ -379,7 +379,7 @@ JSBool contextCallback(JSContext* cx, uint contextOp) {
 
     for (JSClassSpec* entry = global_classes; entry->classp != NULL; entry++)
       sEngine->script_engine()->InitClass(cx, globalObject, entry->classp, entry->methods, entry->properties,
-                               entry->static_methods, entry->static_properties);
+                                          entry->static_methods, entry->static_properties);
 
     JSObject* meObject = BuildObject(cx, &unit_class, unit_methods, me_props, lpUnit);
     if (!meObject) return JS_FALSE;

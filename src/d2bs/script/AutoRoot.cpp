@@ -1,6 +1,6 @@
 #include "d2bs/script/AutoRoot.h"
 
-#include "d2bs/D2BS.h"
+#include "d2bs/engine.h"
 #include "d2bs/script/ScriptEngine.h"
 
 AutoRoot::AutoRoot(JSContext* ncx, jsval nvar) : cx(ncx), var(nvar), count(0) {

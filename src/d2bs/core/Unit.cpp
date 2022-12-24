@@ -1,6 +1,6 @@
 #include "d2bs/core/Unit.h"
 
-#include "d2bs/D2BS.h"
+#include "d2bs/engine.h"
 #include "d2bs/diablo/Constants.h"
 #include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/utils/Helpers.h"

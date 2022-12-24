@@ -20,7 +20,7 @@
 
 #include "d2bs/script/api/JSDirectory.h"
 
-#include "d2bs/D2BS.h"
+#include "d2bs/engine.h"
 #include "d2bs/core/File.h"
 #include "d2bs/utils/Helpers.h"
 

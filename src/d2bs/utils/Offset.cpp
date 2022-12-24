@@ -3,9 +3,9 @@
 #include "d2bs/diablo/D2Ptrs.h"
 #undef __D2PTRS_H__
 #define __D2PTRS_LIST_
-#include "d2bs/D2BS.h"
 #include "d2bs/diablo/D2Ptrs.h"
 #include "d2bs/diablo/Patch.h"
+#include "d2bs/engine.h"
 
 #ifndef ArraySize
 #define ArraySize(x) (sizeof((x)) / sizeof((x)[0]))

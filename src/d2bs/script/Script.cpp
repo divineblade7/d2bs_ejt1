@@ -1,9 +1,9 @@
 #include "d2bs/script/Script.h"
 
-#include "d2bs/D2BS.h"
 #include "d2bs/core/Core.h"
 #include "d2bs/diablo/Constants.h"
 #include "d2bs/diablo/D2Ptrs.h"
+#include "d2bs/engine.h"
 #include "d2bs/script/ScriptEngine.h"
 #include "d2bs/script/api/JSUnit.h"
 #include "d2bs/utils/Helpers.h"
@@ -11,7 +11,8 @@
 #include <algorithm>
 #include <io.h>
 
-Script::Script(ScriptEngine* engine, const wchar_t* file, ScriptType type, uint argc, JSAutoStructuredCloneBuffer** argv)
+Script::Script(ScriptEngine* engine, const wchar_t* file, ScriptType type, uint argc,
+               JSAutoStructuredCloneBuffer** argv)
     : engine_(engine), type_(type), argv_(argv), argc_(argc) {
   event_signal_ = CreateEvent(nullptr, true, false, nullptr);
 

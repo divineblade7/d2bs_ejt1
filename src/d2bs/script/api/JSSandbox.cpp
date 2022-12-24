@@ -1,6 +1,6 @@
 #include "d2bs/script/api/JSSandbox.h"
 
-#include "d2bs/D2BS.h"
+#include "d2bs/engine.h"
 #include "d2bs/script/ScriptEngine.h"
 #include "d2bs/utils/Helpers.h"
 

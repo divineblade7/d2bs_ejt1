@@ -93,7 +93,7 @@ set(D2BS_SRCS
   src/d2bs/utils/sqlite3.c
   src/d2bs/utils/stringhash.cpp
 
-  src/d2bs/D2BS.cpp
+  src/d2bs/engine.cpp
   src/d2bs/entry.cpp)
 
 if(WIN32)

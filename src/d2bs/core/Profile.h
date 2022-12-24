@@ -1,7 +1,7 @@
 #ifndef PROFILE_H
 #define PROFILE_H
 
-#include "d2bs/D2BS.h"
+#include "d2bs/engine.h"
 
 enum ProfileType {
   PROFILETYPE_INVALID,

@@ -1,6 +1,6 @@
 #include "d2bs/diablo/handlers/D2NetHandlers.h"
 
-#include "d2bs/D2BS.h"
+#include "d2bs/engine.h"
 #include "d2bs/core/Core.h"
 #include "d2bs/core/MPQStats.h"
 #include "d2bs/core/ScreenHook.h"
