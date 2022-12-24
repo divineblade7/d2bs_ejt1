@@ -5,6 +5,7 @@
 #include "d2bs/script/api/JSUnit.h"
 #include "d2bs/script/event.h"
 #include "d2bs/script/js32.h"
+#include "d2bs/utils/mpmc_queue.h"
 
 #include <list>
 #include <map>
@@ -61,6 +62,7 @@ class Script {
   void ClearEvent(const char* evtName);
   void ClearAllEvents();
   void FireEvent(Event*);
+  void process_events();
 
   inline const wchar_t* filename() {
     return filename_.c_str();
@@ -149,6 +151,8 @@ class Script {
   DWORD last_gc_ = 0;
   bool hasActiveCX_ = false;  // hack to get away from JS_IsRunning
   HANDLE event_signal_;
+
+  d2bs::mpmc_queue<Event*> event_queue_;  // new event system ~ ejt
 };
 
 struct RUNCOMMANDSTRUCT {
@@ -158,3 +162,6 @@ struct RUNCOMMANDSTRUCT {
 
 DWORD WINAPI RunCommandThread(void* data);
 DWORD WINAPI ScriptThread(void* data);
+bool ExecScriptEvent(Event* evt, bool clearList);
+JSBool operationCallback(JSContext* cx);
+JSBool contextCallback(JSContext* cx, uint contextOp);

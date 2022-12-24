@@ -138,6 +138,9 @@ JSAPI_FUNC(my_delay) {
         break;
       }
 
+      // TEMPORARY: Still to much to detangle from the current event system to figure out where to put this call
+      script->process_events();
+
       auto& events = script->events();
       while (events.size() > 0 && !!!(JSBool)(script->is_stopped() || ((script->type() == ScriptType::InGame) &&
                                                                        ClientState() == ClientStateMenu))) {

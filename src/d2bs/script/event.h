@@ -12,7 +12,6 @@ typedef std::list<AutoRoot*> FunctionList;
 typedef std::map<std::string, FunctionList> FunctionMap;
 
 struct Event {
-  Event() : count(0){};
   Script* owner;
   JSObject* object;
   FunctionList functions;
@@ -24,7 +23,7 @@ struct Event {
   void* arg3;
   void* arg4;
   void* arg5;
-  volatile long count;
+  volatile long count = 0;
 };
 
 bool ChatEvent(const char* lpszNick, const wchar_t* lpszMsg);

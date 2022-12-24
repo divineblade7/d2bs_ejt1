@@ -25,6 +25,7 @@ JSObject* BuildObject(JSContext* cx, JSClass* classp, JSFunctionSpec* funcs, JSP
   JS_EndRequest(cx);
   return obj;
 }
+
 JSScript* JS_CompileFile(JSContext* cx, JSObject* globalObject, std::wstring fileName) {
   std::ifstream t(fileName.c_str(), std::ios::binary);
   std::string str;
@@ -58,12 +59,15 @@ JSScript* JS_CompileFile(JSContext* cx, JSObject* globalObject, std::wstring fil
 
   return rval;
 }
+
 JSBool JSVAL_IS_OBJECT(jsval v) {
-  return !JSVAL_IS_PRIMITIVE(v);
+  return JSVAL_IS_PRIMITIVE(v) == JS_FALSE;
 }
+
 void* JS_GetPrivate(JSContext*, JSObject* obj) {
   return JS_GetPrivate(obj);
 }
+
 void JS_SetPrivate(JSContext*, JSObject* obj, void* data) {
   return JS_SetPrivate(obj, data);
 }

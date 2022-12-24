@@ -98,7 +98,7 @@ set(D2BS_SRCS
 
 # Set debug only sources
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
-  list(D2BS_SRCS APPEND
+  list(APPEND D2BS_SRCS
     src/d2bs/utils/Stackwalker.cpp)
 endif()
 

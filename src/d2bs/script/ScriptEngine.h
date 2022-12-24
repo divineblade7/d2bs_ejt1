@@ -46,10 +46,6 @@ class ScriptEngine {
   bool ForEachScript(ScriptCallback callback, void* argv, uint argc);
   unsigned int GetCount(bool active = true, bool unexecuted = false);
 
-  void InitClass(JSContext* context, JSObject* globalObject, JSClass* classp, JSFunctionSpec* methods,
-                 JSPropertySpec* props, JSFunctionSpec* s_methods, JSPropertySpec* s_props);
-  void DefineConstant(JSContext* context, JSObject* globalObject, const char* name, int value);
-
   void StopAll(bool forceStop = false);
   void UpdateConsole();
 
@@ -97,9 +93,6 @@ struct EventHelper {
   bool executed;
 };
 
-JSBool operationCallback(JSContext* cx);
-JSBool contextCallback(JSContext* cx, uint contextOp);
 // gcCallback(JSContext* cx, JSGCStatus status);
 void reportError(JSContext* cx, const char* message, JSErrorReport* report);
-bool ExecScriptEvent(Event* evt, bool clearList);
 void CALLBACK EventTimerProc(LPVOID lpArg, DWORD dwTimerLowValue, DWORD dwTimerHighValue);

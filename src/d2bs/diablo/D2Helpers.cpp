@@ -214,6 +214,10 @@ BOOL SetSkill(JSContext* cx, WORD wSkillId, BOOL bLeft, DWORD dwItemId) {
     while (amt > 0) {  // had a script deadlock here, make sure were positve with amt
       WaitForSingleObjectEx(script->event_signal(), amt, true);
       ResetEvent(script->event_signal());
+
+      // TEMPORARY: Still to much to detangle from the current event system to figure out where to put this call
+      script->process_events();
+
       auto& events = script->events();
       while (events.size() > 0 && !!!(JSBool)(script->is_stopped() || ((script->type() == ScriptType::InGame) &&
                                                                       ClientState() == ClientStateMenu))) {

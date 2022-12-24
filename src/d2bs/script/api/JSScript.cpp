@@ -120,10 +120,7 @@ JSAPI_FUNC(script_send) {
     evt->argv[i]->write(cx, JS_ARGV(cx, vp)[i]);
   }
 
-  EnterCriticalSection(&Vars.cEventSection);
-  evt->owner->events().push_front(evt);
-  LeaveCriticalSection(&Vars.cEventSection);
-  evt->owner->TriggerOperationCallback();
+  script->FireEvent(evt);
 
   return JS_TRUE;
 }

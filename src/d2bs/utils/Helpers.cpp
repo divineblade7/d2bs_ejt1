@@ -230,7 +230,6 @@ LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* ptrs) {
 
   int len;
   char* szString;
-  char* dllAddrs;
 
   len = _scprintf(
       "EXCEPTION!\n*** 0x%08x at 0x%p\n"
@@ -256,7 +255,6 @@ LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* ptrs) {
       ctx->SegSs, ctx->SegFs, ctx->SegGs, ctx->Eax, ctx->Ebx, ctx->Ecx, ctx->Edx, ctx->Esi, ctx->Edi, ctx->Ebp,
       ctx->EFlags);
 
-  free(dllAddrs);
   delete[] szString;
   return EXCEPTION_EXECUTE_HANDLER;
 }

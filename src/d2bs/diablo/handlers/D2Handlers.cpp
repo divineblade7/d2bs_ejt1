@@ -152,6 +152,7 @@ void CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD) {
     Vars.bGameLoopEntered = true;
     Vars.dwGameThreadId = GetCurrentThreadId();
   }
+
   if (Vars.SectionCount) {
     Sleep(5);
   }

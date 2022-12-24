@@ -1,5 +1,6 @@
 // Diablo II Botting System Core
 
+
 #include "engine.h"
 
 #include "d2bs/core/Control.h"
@@ -131,6 +132,7 @@ void Engine::update() {
         script_engine_.ForEachScript(UpdatePlayerGid, NULL, 0);
         script_engine_.UpdateConsole();
         Vars.bQuitting = false;
+
         on_game_enter();
 
         bInGame = true;
@@ -145,7 +147,11 @@ void Engine::update() {
         Sleep(100);
       }
 
-      on_menu_enter();
+      if (first_menu_call_) {
+        on_game_enter();
+        first_menu_call_ = false;
+      }
+
       if (bInGame) {
         Vars.dwGameTime = NULL;
         bInGame = false;
@@ -168,21 +174,6 @@ void Engine::on_game_enter() {
       else
         Print(L"\u00FFc2D2BS\u00FFc0 :: Failed to start %s!", starter);
     }
-  }
-}
-
-void Engine::on_menu_enter() {
-  if (first_menu_call_ && !Vars.bUseProfileScript) {
-    const wchar_t* starter = GetStarterScriptName();
-    if (starter != NULL) {
-      Print(L"\u00FFc2D2BS\u00FFc0 :: Starting %s", starter);
-      if (StartScript(starter, GetStarterScriptState())) {
-        Print(L"\u00FFc2D2BS\u00FFc0 :: %s running.", starter);
-      } else {
-        Print(L"\u00FFc2D2BS\u00FFc0 :: Failed to start %s!", starter);
-      }
-    }
-    first_menu_call_ = false;
   }
 }
 
@@ -235,6 +226,10 @@ void Engine::run_chicken() {
 }
 
 DWORD __stdcall thread_entry(void*) {
+#ifdef DEBUG
+  SetThreadDescription(GetCurrentThread(), L"MainThread");
+#endif
+
   auto engine = sEngine;
 
   // TODO REMOVE: Temporary during refactoring of ScriptEngine
@@ -303,15 +298,15 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
       return TRUE;
 
     case WM_KEYDOWN:
-    case WM_KEYUP:
     case WM_SYSKEYDOWN:
-    case WM_SYSKEYUP:
-    case WM_CHAR: {
+    case WM_KEYUP:
+    case WM_SYSKEYUP: {
       // This is straight copy-pasted from previous KeyPress function, needs a cleanup
+      short key = LOWORD(wparam);
       WORD repeatCount = LOWORD(lparam);
-      bool altState = !!(HIWORD(lparam) & KF_ALTDOWN);
-      bool previousState = !!(HIWORD(lparam) & KF_REPEAT);
-      bool transitionState = !!(HIWORD(lparam) & KF_UP);
+      bool altState = (HIWORD(lparam) & KF_ALTDOWN) == KF_ALTDOWN;
+      bool previousState = (HIWORD(lparam) & KF_REPEAT) == KF_REPEAT;
+      bool transitionState = (HIWORD(lparam) & KF_UP) == KF_UP;
       bool isRepeat = !transitionState && repeatCount != 1;
       bool isDown = !(previousState && transitionState);
       bool isUp = previousState && transitionState;
@@ -328,7 +323,7 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         return 1;
       }
 
-      if (wparam == VK_HOME && !(chatBoxOpen || escMenuOpen)) {
+      if (key == VK_HOME && !(chatBoxOpen || escMenuOpen)) {
         if (isDown && !isRepeat) {
           if (!altState)
             sConsole->ToggleBuffer();
@@ -337,7 +332,7 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
           return (LONG)CallWindowProcA(engine->orig_wndproc_, hwnd, msg, wparam, lparam);
         }
-      } else if (wparam == VK_ESCAPE && sConsole->IsVisible()) {
+      } else if (key == VK_ESCAPE && sConsole->IsVisible()) {
         if (isDown && !isRepeat) {
           sConsole->Hide();
           return 1;
@@ -346,7 +341,7 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
       } else if (sConsole->IsEnabled()) {
         BYTE layout[256] = {0};
         WORD out[2] = {0};
-        switch (wparam) {
+        switch (key) {
           case VK_TAB:
             if (isUp)
               for (int i = 0; i < 5; i++) sConsole->AddKey(' ');
@@ -384,7 +379,7 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         }
         return 1;
       } else if (!isRepeat && !(chatBoxOpen || escMenuOpen)) {
-        if (KeyDownUpEvent(wparam, isUp)) return 1;
+        if (KeyDownUpEvent(key, isUp)) return 1;
       }
 
       break;
