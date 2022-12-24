@@ -61,7 +61,7 @@ class Script {
   void UnregisterEvent(const char* evtName, jsval evtFunc);
   void ClearEvent(const char* evtName);
   void ClearAllEvents();
-  void FireEvent(Event*);
+  void FireEvent(std::shared_ptr<Event>);
   void process_events();
 
   inline const wchar_t* filename() {
@@ -92,7 +92,7 @@ class Script {
     }
   }
 
-  std::list<Event*>& events() {
+  std::list<std::shared_ptr<Event>>& events() {
     return EventList_;
   }
 
@@ -136,7 +136,7 @@ class Script {
   std::wstring filename_;
   int execCount_ = 0;
   myUnit* me_ = nullptr;
-  std::list<Event*> EventList_;
+  std::list<std::shared_ptr<Event>> EventList_;
 
   IncludeList includes_;
   IncludeList inProgress_;
@@ -152,7 +152,7 @@ class Script {
   bool hasActiveCX_ = false;  // hack to get away from JS_IsRunning
   HANDLE event_signal_;
 
-  d2bs::mpmc_queue<Event*> event_queue_;  // new event system ~ ejt
+  d2bs::mpmc_queue<std::shared_ptr<Event>> event_queue_;  // new event system ~ ejt
 };
 
 struct RUNCOMMANDSTRUCT {
@@ -162,6 +162,6 @@ struct RUNCOMMANDSTRUCT {
 
 DWORD WINAPI RunCommandThread(void* data);
 DWORD WINAPI ScriptThread(void* data);
-bool ExecScriptEvent(Event* evt, bool clearList);
+bool ExecScriptEvent(std::shared_ptr<Event> evt, bool clearList);
 JSBool operationCallback(JSContext* cx);
 JSBool contextCallback(JSContext* cx, uint contextOp);

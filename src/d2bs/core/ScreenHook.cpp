@@ -209,16 +209,14 @@ Genhook::~Genhook(void) {
 bool Genhook::Click(int button, POINT* loc) {
   if (!IsInRange(loc)) return false;
 
-  bool block = false;
+  auto evt = std::make_shared<ScreenHookClickEvent>();
   if (owner && JSVAL_IS_FUNCTION(owner->context(), clicked)) {
-    Event* evt = new Event;
     evt->owner = owner;
     evt->argc = 3;
-    evt->name = _strdup("ScreenHookClick");
-    evt->arg1 = new DWORD((DWORD)button);
-    evt->arg2 = new DWORD((DWORD)loc->x);
-    evt->arg3 = new DWORD((DWORD)loc->y);
-    evt->arg4 = new DWORD(false);
+    evt->name = "ScreenHookClick";
+    evt->button = button;
+    evt->x = loc->x;
+    evt->y = loc->y;
 
     ResetEvent(Vars.eventSignal);
     AutoRoot* root = new AutoRoot(evt->owner->context(), clicked);
@@ -226,29 +224,23 @@ bool Genhook::Click(int button, POINT* loc) {
     owner->FireEvent(evt);
 
     if (WaitForSingleObject(Vars.eventSignal, 3000) == WAIT_TIMEOUT) return false;
-    bool* global = (bool*)evt->arg4;
-    block = *global;
-    delete evt->arg1;
-    delete evt->arg2;
-    delete evt->arg3;
-    delete evt->arg4;
+
     delete root;
-    delete evt;
   }
-  return block;
+  return evt->block;
 }
 
 void Genhook::Hover(POINT* loc) {
   if (!IsInRange(loc)) return;
 
   if (owner && JSVAL_IS_FUNCTION(owner->context(), hovered)) {
-    Event* evt = new Event;
+    auto evt = std::make_shared<MouseMoveEvent>();
     evt->owner = owner;
     evt->argc = 2;
     evt->functions.push_back(new AutoRoot((owner->context(), hovered)));
-    evt->name = _strdup("ScreenHookHover");
-    evt->arg1 = new DWORD((DWORD)loc->x);
-    evt->arg2 = new DWORD((DWORD)loc->y);
+    evt->name = "ScreenHookHover";
+    evt->x = loc->x;
+    evt->y = loc->y;
 
     owner->FireEvent(evt);
   }

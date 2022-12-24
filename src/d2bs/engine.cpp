@@ -291,7 +291,7 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
           else
             Print(L"\u00FFc2D2BS\u00FFc0 :: Profile %s not found", lpwData);
         else
-          CopyDataEvent(pCopy->dwData, lpwData);
+          FireCopyDataEvent(pCopy->dwData, lpwData);
         delete[] lpwData;
       }
 
@@ -366,7 +366,7 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             break;
           case VK_MENU:  // alt
             // Send the alt to the scripts to fix sticky alt. There may be a better way.
-            KeyDownUpEvent(wparam, isUp);
+            FireKeyDownUpEvent(wparam, isUp);
             return (LONG)CallWindowProcA(engine->orig_wndproc_, hwnd, msg, wparam, lparam);
             break;
           default:
@@ -379,7 +379,7 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         }
         return 1;
       } else if (!isRepeat && !(chatBoxOpen || escMenuOpen)) {
-        if (KeyDownUpEvent(key, isUp)) return 1;
+        if (FireKeyDownUpEvent(key, isUp)) return 1;
       }
 
       break;
@@ -406,7 +406,7 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
       }
 
       HookClickHelper helper = {-1, {pt.x, pt.y}};
-      MouseClickEvent(button, pt, false);
+      FireMouseClickEvent(button, pt, false);
       helper.button = button;
       if (Genhook::ForEachVisibleHook(ClickHook, &helper, 1)) {
         // a positive result means a function used the message, swallow it by returning here.
@@ -431,7 +431,7 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         return 0;
       }
 
-      MouseClickEvent(button, pt, true);
+      FireMouseClickEvent(button, pt, true);
       break;
     }
 
@@ -443,7 +443,7 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
       }
 
       // would be nice to enable these events but they bog down too much
-      MouseMoveEvent(pt);
+      FireMouseMoveEvent(pt);
       // Genhook::ForEachVisibleHook(HoverHook, &helper, 1);
       break;
   }

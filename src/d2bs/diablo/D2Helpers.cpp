@@ -222,7 +222,7 @@ BOOL SetSkill(JSContext* cx, WORD wSkillId, BOOL bLeft, DWORD dwItemId) {
       while (events.size() > 0 && !!!(JSBool)(script->is_stopped() || ((script->type() == ScriptType::InGame) &&
                                                                       ClientState() == ClientStateMenu))) {
         EnterCriticalSection(&Vars.cEventSection);
-        Event* evt = events.back();
+        std::shared_ptr<Event> evt = events.back();
         events.pop_back();
         LeaveCriticalSection(&Vars.cEventSection);
         ExecScriptEvent(evt, false);

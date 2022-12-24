@@ -82,10 +82,10 @@ JSAPI_FUNC(my_setTimeout) {
     Script* self = (Script*)JS_GetContextPrivate(cx);
     int freq = JSVAL_TO_INT(JS_ARGV(cx, vp)[1]);
     self->RegisterEvent("setTimeout", JS_ARGV(cx, vp)[0]);
-    Event* evt = new Event;
+    auto evt = std::make_shared<TimeoutEvent>();
     evt->owner = self;
-    evt->name = _strdup("setTimeout");
-    evt->arg3 = new jsval(JS_ARGV(cx, vp)[0]);
+    evt->name = "setTimeout";
+    evt->val = new jsval(JS_ARGV(cx, vp)[0]);
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(sEngine->script_engine()->AddDelayedEvent(evt, freq)));
   }
 
@@ -101,15 +101,16 @@ JSAPI_FUNC(my_setInterval) {
     Script* self = (Script*)JS_GetContextPrivate(cx);
     int freq = JSVAL_TO_INT(JS_ARGV(cx, vp)[1]);
     self->RegisterEvent("setInterval", JS_ARGV(cx, vp)[0]);
-    Event* evt = new Event;
+    auto evt = std::make_shared<TimeoutEvent>();
     evt->owner = self;
-    evt->name = _strdup("setInterval");
-    evt->arg3 = new jsval(JS_ARGV(cx, vp)[0]);
+    evt->name = "setInterval";
+    evt->val = new jsval(JS_ARGV(cx, vp)[0]);
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(sEngine->script_engine()->AddDelayedEvent(evt, freq)));
   }
 
   return JS_TRUE;
 }
+
 JSAPI_FUNC(my_clearInterval) {
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
   if (argc != 1 || !JSVAL_IS_NUMBER(JS_ARGV(cx, vp)[0])) JS_ReportError(cx, "invalid params passed to clearInterval");
@@ -117,6 +118,7 @@ JSAPI_FUNC(my_clearInterval) {
   sEngine->script_engine()->RemoveDelayedEvent(JSVAL_TO_INT(JS_ARGV(cx, vp)[0]));
   return JS_TRUE;
 }
+
 JSAPI_FUNC(my_delay) {
   uint32 nDelay = 0;
   JS_BeginRequest(cx);
@@ -145,7 +147,7 @@ JSAPI_FUNC(my_delay) {
       while (events.size() > 0 && !!!(JSBool)(script->is_stopped() || ((script->type() == ScriptType::InGame) &&
                                                                        ClientState() == ClientStateMenu))) {
         EnterCriticalSection(&Vars.cEventSection);
-        Event* evt = events.back();
+        std::shared_ptr<Event> evt = events.back();
         events.pop_back();
         LeaveCriticalSection(&Vars.cEventSection);
         ExecScriptEvent(evt, false);
@@ -526,7 +528,7 @@ JSAPI_FUNC(my_scriptBroadcast) {
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
   if (argc < 1) THROW_ERROR(cx, "You must specify something to broadcast");
 
-  ScriptBroadcastEvent(cx, argc, JS_ARGV(cx, vp));
+  FireScriptBroadcastEvent(cx, argc, JS_ARGV(cx, vp));
   return JS_TRUE;
 }
 

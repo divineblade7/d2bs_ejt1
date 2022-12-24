@@ -261,11 +261,11 @@ void Script::RunCommand(const wchar_t* command) {
     // HANDLE hwnd = CreateThread(NULL, 0, RunCommandThread, (void*) rcs, 0, NULL);
   }
 
-  Event* evt = new Event;
+  std::shared_ptr<CommandEvent> evt = std::make_shared<CommandEvent>();
   evt->owner = this;
   evt->argc = argc_;
-  evt->name = _strdup("Command");
-  evt->arg1 = _wcsdup(command);
+  evt->name = "Command";
+  evt->command = command;
 
   evt->owner->FireEvent(evt);
 }
@@ -411,9 +411,7 @@ void Script::ClearAllEvents() {
   functions_.clear();
 }
 
-void Script::FireEvent(Event* evt) {
-  event_queue_.enqueue(std::move(evt));
-
+void Script::FireEvent(std::shared_ptr<Event> evt) {
   EnterCriticalSection(&Vars.cEventSection);
   evt->owner->events().push_front(evt);
   LeaveCriticalSection(&Vars.cEventSection);
@@ -422,13 +420,15 @@ void Script::FireEvent(Event* evt) {
     evt->owner->TriggerOperationCallback();
   }
   SetEvent(event_signal_);
+
+  event_queue_.enqueue(std::move(evt));
 }
 
 void Script::process_events() {
-  Event* evt = nullptr;
+  std::shared_ptr<Event> evt;
 
   while (event_queue_.dequeue_for(evt, std::chrono::milliseconds(10))) {
-    auto name = AnsiToUnicode(evt->name);
+    auto name = AnsiToUnicode(evt->name.c_str());
     Print(L"Process event: %s", name);
     delete[] name;
   }
@@ -489,276 +489,244 @@ DWORD WINAPI ScriptThread(void* data) {
   return 0;
 }
 
-bool ExecScriptEvent(Event* evt, bool clearList) {
+bool ExecScriptEvent(std::shared_ptr<Event> evt, bool clearList) {
   JSContext* cx = nullptr;
 
   if (!clearList) {
     cx = evt->owner->context();
   }
 
-  char* evtName = (char*)evt->name;
-  if (strcmp(evtName, "itemaction") == 0) {
-    if (!clearList) {
-      DWORD* gid = (DWORD*)evt->arg1;
-      char* code = (char*)evt->arg2;
-      DWORD* mode = (DWORD*)evt->arg3;
-      bool* global = (bool*)evt->arg4;
+  if (evt->name == "itemaction") {
+    auto item_evt = std::static_pointer_cast<ItemEvent>(evt);
 
-      jsval* argv = new jsval[evt->argc];
-      JS_BeginRequest(cx);
+    jsval* argv = new jsval[evt->argc];
+    JS_BeginRequest(cx);
 
-      argv[0] = JS_NumberValue(*gid);
-      argv[1] = JS_NumberValue(*mode);
-      argv[2] = (STRING_TO_JSVAL(JS_NewStringCopyZ(cx, code)));
-      argv[3] = (BOOLEAN_TO_JSVAL(*global));
-      for (int j = 0; j < 4; j++) {
-        JS_AddValueRoot(cx, &argv[j]);
-      }
-
-      jsval rval;
-      bool block = false;
-      for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
-           it != evt->owner->functions()[evtName].end(); it++) {
-        JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 4, argv, &rval);
-        block |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
-      }
-
-      JS_EndRequest(cx);
-
-      for (int j = 0; j < 4; j++) {
-        JS_RemoveValueRoot(cx, &argv[j]);
-      }
+    argv[0] = JS_NumberValue(item_evt->id);
+    argv[1] = JS_NumberValue(item_evt->mode);
+    argv[2] = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, item_evt->code.c_str()));
+    argv[3] = BOOLEAN_TO_JSVAL(item_evt->global);
+    for (int j = 0; j < 4; j++) {
+      JS_AddValueRoot(cx, &argv[j]);
     }
 
-    delete evt->arg1;
-    free(evt->arg2);
-    delete evt->arg3;
-    delete evt->arg4;
-    free(evt->name);
-    delete evt;
+    jsval rval;
+    for (FunctionList::iterator it = evt->owner->functions()[evt->name].begin();
+         it != evt->owner->functions()[evt->name].end(); it++) {
+      JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 4, argv, &rval);
+      item_evt->block |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
+    }
+
+    JS_EndRequest(cx);
+
+    for (int j = 0; j < 4; j++) {
+      JS_RemoveValueRoot(cx, &argv[j]);
+    }
+
     return true;
   }
-  if (strcmp(evtName, "gameevent") == 0) {
-    if (!clearList) {
-      jsval* argv = new jsval[5];
-      JS_BeginRequest(cx);
-      argv[0] = JS_NumberValue(*(BYTE*)evt->arg1);
-      argv[1] = JS_NumberValue(*(DWORD*)evt->arg2);
-      argv[2] = JS_NumberValue(*(DWORD*)evt->arg3);
-      argv[3] = (STRING_TO_JSVAL(JS_NewStringCopyZ(cx, (char*)evt->arg4)));
-      argv[4] = (STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, (wchar_t*)evt->arg5)));
 
-      for (int j = 0; j < 5; j++) {
-        JS_AddValueRoot(cx, &argv[j]);
-      }
+  if (evt->name == "gameevent") {
+    auto action_evt = std::static_pointer_cast<GameActionEvent>(evt);
 
-      jsval rval;
-      for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
-           it != evt->owner->functions()[evtName].end(); it++) {
-        JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 5, argv, &rval);
-      }
-      JS_EndRequest(cx);
-      for (int j = 0; j < 5; j++) {
-        JS_RemoveValueRoot(cx, &argv[j]);
-      }
+    jsval* argv = new jsval[5];
+    JS_BeginRequest(cx);
+
+    argv[0] = JS_NumberValue(action_evt->mode);
+    argv[1] = JS_NumberValue(action_evt->param1);
+    argv[2] = JS_NumberValue(action_evt->param2);
+    argv[3] = (STRING_TO_JSVAL(JS_NewStringCopyZ(cx, action_evt->name1.c_str())));
+    argv[4] = (STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, action_evt->name2.c_str())));
+
+    for (int j = 0; j < 5; j++) {
+      JS_AddValueRoot(cx, &argv[j]);
     }
 
-    delete evt->arg1;
-    delete evt->arg2;
-    delete evt->arg3;
-    free(evt->arg4);
-    free(evt->arg5);
-    free(evt->name);
-    delete evt;
+    jsval rval;
+    for (FunctionList::iterator it = evt->owner->functions()[evt->name].begin();
+         it != evt->owner->functions()[evt->name].end(); it++) {
+      JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 5, argv, &rval);
+    }
+    JS_EndRequest(cx);
+    for (int j = 0; j < 5; j++) {
+      JS_RemoveValueRoot(cx, &argv[j]);
+    }
+
     return true;
   }
-  if (strcmp(evtName, "copydata") == 0) {
-    if (!clearList) {
-      jsval* argv = new jsval[2];
-      JS_BeginRequest(cx);
-      argv[0] = JS_NumberValue(*(DWORD*)evt->arg1);
-      argv[1] = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, (wchar_t*)evt->arg2));
 
-      for (int j = 0; j < 2; j++) JS_AddValueRoot(cx, &argv[j]);
+  if (evt->name == "copydata") {
+    auto data_evt = std::static_pointer_cast<CopyDataEvent>(evt);
 
-      jsval rval;
-      for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
-           it != evt->owner->functions()[evtName].end(); it++) {
-        JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 2, argv, &rval);
-      }
-      JS_EndRequest(cx);
-      for (int j = 0; j < 2; j++) {
-        JS_RemoveValueRoot(cx, &argv[j]);
-      }
+    jsval* argv = new jsval[2];
+    JS_BeginRequest(cx);
+    argv[0] = JS_NumberValue(data_evt->mode);
+    argv[1] = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, data_evt->msg.c_str()));
+
+    for (int j = 0; j < 2; j++) JS_AddValueRoot(cx, &argv[j]);
+
+    jsval rval;
+    for (FunctionList::iterator it = evt->owner->functions()[evt->name].begin();
+         it != evt->owner->functions()[evt->name].end(); it++) {
+      JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 2, argv, &rval);
     }
-    delete evt->arg1;
-    free(evt->arg2);
-    free(evt->name);
-    delete evt;
+    JS_EndRequest(cx);
+    for (int j = 0; j < 2; j++) {
+      JS_RemoveValueRoot(cx, &argv[j]);
+    }
+
     return true;
   }
-  if (strcmp(evtName, "chatmsg") == 0 || strcmp(evtName, "chatinput") == 0 || strcmp(evtName, "whispermsg") == 0 ||
-      strcmp(evtName, "chatmsgblocker") == 0 || strcmp(evtName, "chatinputblocker") == 0 ||
-      strcmp(evtName, "whispermsgblocker") == 0) {
-    bool block = false;
-    if (!clearList) {
-      jsval* argv = new jsval[2];
-      JS_BeginRequest(cx);
-      argv[0] = (STRING_TO_JSVAL(JS_NewStringCopyZ(cx, (char*)evt->arg1)));
-      argv[1] = (STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, (wchar_t*)evt->arg2)));
 
-      for (int j = 0; j < 2; j++) {
-        JS_AddValueRoot(cx, &argv[j]);
-      }
+  if (evt->name == "chatmsg" || evt->name == "chatinput" || evt->name == "whispermsg" ||
+      evt->name == "chatmsgblocker" || evt->name == "chatinputblocker" || evt->name == "whispermsgblocker") {
+    auto chat_evt = std::static_pointer_cast<ChatEvent>(evt);
 
-      jsval rval;
-      for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
-           it != evt->owner->functions()[evtName].end(); it++) {
-        JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 2, argv, &rval);
-        block |= (JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
-      }
-      JS_EndRequest(cx);
-      for (int j = 0; j < 2; j++) {
-        JS_RemoveValueRoot(cx, &argv[j]);
-      }
+    jsval* argv = new jsval[2];
+    JS_BeginRequest(cx);
+    argv[0] = (STRING_TO_JSVAL(JS_NewStringCopyZ(cx, chat_evt->nick.c_str())));
+    argv[1] = (STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, chat_evt->msg.c_str())));
+
+    for (int j = 0; j < 2; j++) {
+      JS_AddValueRoot(cx, &argv[j]);
     }
-    if (strcmp(evtName, "chatmsgblocker") == 0 || strcmp(evtName, "chatinputblocker") == 0 ||
-        strcmp(evtName, "whispermsgblocker") == 0) {
-      *(DWORD*)evt->arg4 = block;
+
+    jsval rval;
+    for (FunctionList::iterator it = evt->owner->functions()[evt->name].begin();
+         it != evt->owner->functions()[evt->name].end(); it++) {
+      JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 2, argv, &rval);
+      chat_evt->block |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
+    }
+    JS_EndRequest(cx);
+    for (int j = 0; j < 2; j++) {
+      JS_RemoveValueRoot(cx, &argv[j]);
+    }
+
+    if (evt->name == "chatmsgblocker" || evt->name == "chatinputblocker" || evt->name == "whispermsgblocker") {
       SetEvent(Vars.eventSignal);
+    }
+
+    return true;
+  }
+
+  if (evt->name == "mousemove" || evt->name == "ScreenHookHover") {
+    auto mouse_evt = std::static_pointer_cast<MouseMoveEvent>(evt);
+
+    jsval* argv = new jsval[2];
+    JS_BeginRequest(cx);
+    argv[0] = JS_NumberValue(mouse_evt->x);
+    argv[1] = JS_NumberValue(mouse_evt->y);
+
+    for (int j = 0; j < 2; j++) {
+      JS_AddValueRoot(cx, &argv[j]);
+    }
+
+    jsval rval;
+    if (evt->name == "ScreenHookHover") {
+      for (FunctionList::iterator it = evt->functions.begin(); it != evt->functions.end(); it++)
+        JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), evt->argc + 1, argv, &rval);
     } else {
-      free(evt->arg1);
-      free(evt->arg2);
-      free(evt->name);
-      delete evt;
+      for (FunctionList::iterator it = evt->owner->functions()[evt->name].begin();
+           it != evt->owner->functions()[evt->name].end(); it++)
+        JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 2, argv, &rval);
     }
+    JS_EndRequest(cx);
+    for (int j = 0; j < 2; j++) {
+      JS_RemoveValueRoot(cx, &argv[j]);
+    }
+
     return true;
   }
-  if (strcmp(evtName, "mousemove") == 0 || strcmp(evtName, "ScreenHookHover") == 0) {
-    if (!clearList) {
-      jsval* argv = new jsval[2];
-      JS_BeginRequest(cx);
-      argv[0] = JS_NumberValue(*(DWORD*)evt->arg1);
-      argv[1] = JS_NumberValue(*(DWORD*)evt->arg2);
 
-      for (int j = 0; j < 2; j++) {
-        JS_AddValueRoot(cx, &argv[j]);
-      }
+  if (evt->name == "mouseclick") {
+    auto mouse_evt = std::static_pointer_cast<MouseClickEvent>(evt);
 
-      jsval rval;
-      if (strcmp(evtName, "ScreenHookHover") == 0) {
-        for (FunctionList::iterator it = evt->functions.begin(); it != evt->functions.end(); it++)
-          JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), evt->argc + 1, argv, &rval);
-      } else {
-        for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
-             it != evt->owner->functions()[evtName].end(); it++)
-          JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 2, argv, &rval);
-      }
-      JS_EndRequest(cx);
-      for (int j = 0; j < 2; j++) {
-        JS_RemoveValueRoot(cx, &argv[j]);
-      }
+    jsval* argv = new jsval[4];
+    JS_BeginRequest(cx);
+    argv[0] = JS_NumberValue(mouse_evt->button);
+    argv[1] = JS_NumberValue(mouse_evt->x);
+    argv[2] = JS_NumberValue(mouse_evt->y);
+    argv[3] = JS_NumberValue(mouse_evt->up);
+
+    for (uint j = 0; j < evt->argc; j++) JS_AddValueRoot(cx, &argv[j]);
+
+    jsval rval;
+    for (FunctionList::iterator it = evt->owner->functions()[evt->name].begin();
+         it != evt->owner->functions()[evt->name].end(); it++) {
+      JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 4, argv, &rval);
     }
-    delete evt->arg1;
-    delete evt->arg2;
-    free(evt->name);
-    delete evt;
+    JS_EndRequest(cx);
+    for (int j = 0; j < 4; j++) {
+      JS_RemoveValueRoot(cx, &argv[j]);
+    }
+
     return true;
   }
-  if (strcmp(evtName, "mouseclick") == 0) {
-    if (!clearList) {
-      jsval* argv = new jsval[4];
-      JS_BeginRequest(cx);
-      argv[0] = JS_NumberValue(*(DWORD*)evt->arg1);
-      argv[1] = JS_NumberValue(*(DWORD*)evt->arg2);
-      argv[2] = JS_NumberValue(*(DWORD*)evt->arg3);
-      argv[3] = JS_NumberValue(*(DWORD*)evt->arg4);
 
-      for (uint j = 0; j < evt->argc; j++) JS_AddValueRoot(cx, &argv[j]);
+  if (evt->name == "keyup" || evt->name == "keydownblocker" || evt->name == "keydown" || evt->name == "memana" ||
+      evt->name == "melife" || evt->name == "playerassign") {
+    auto key_evt = std::static_pointer_cast<KeyEvent>(evt);
 
-      jsval rval;
-      for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
-           it != evt->owner->functions()[evtName].end(); it++) {
-        JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 4, argv, &rval);
-      }
-      JS_EndRequest(cx);
-      for (int j = 0; j < 4; j++) {
-        JS_RemoveValueRoot(cx, &argv[j]);
-      }
+    jsval* argv = new jsval[1];
+    JS_BeginRequest(cx);
+    argv[0] = JS_NumberValue(key_evt->key);
+    JS_AddValueRoot(cx, &argv[0]);
+    jsval rval;
+    for (FunctionList::iterator it = evt->owner->functions()[evt->name].begin();
+         it != evt->owner->functions()[evt->name].end(); it++) {
+      JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 1, argv, &rval);
+      key_evt->block |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
     }
-    delete evt->arg1;
-    delete evt->arg2;
-    delete evt->arg3;
-    delete evt->arg4;
-    free(evt->name);
-    delete evt;
-    return true;
-  }
-  if (strcmp(evtName, "keyup") == 0 || strcmp(evtName, "keydownblocker") == 0 || strcmp(evtName, "keydown") == 0 ||
-      strcmp(evtName, "memana") == 0 || strcmp(evtName, "melife") == 0 || strcmp(evtName, "playerassign") == 0) {
-    bool block = false;
-    if (!clearList) {
-      jsval* argv = new jsval[1];
-      JS_BeginRequest(cx);
-      argv[0] = JS_NumberValue(*(DWORD*)evt->arg1);
-      JS_AddValueRoot(cx, &argv[0]);
-      jsval rval;
-      for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
-           it != evt->owner->functions()[evtName].end(); it++) {
-        JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 1, argv, &rval);
-        block |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
-      }
-      JS_EndRequest(cx);
-      JS_RemoveValueRoot(cx, &argv[0]);
-    }
-    if (strcmp(evtName, "keydownblocker") == 0) {
-      *(DWORD*)evt->arg4 = block;
+    JS_EndRequest(cx);
+    JS_RemoveValueRoot(cx, &argv[0]);
+
+    if (evt->name == "keydownblocker") {
       SetEvent(Vars.eventSignal);
-    } else {
-      delete evt->arg1;
-      free(evt->name);
-      delete evt;
     }
+
     return true;
   }
-  if (strcmp(evtName, "ScreenHookClick") == 0) {
-    bool block = false;
-    if (!clearList) {
-      jsval* argv = new jsval[3];
-      JS_BeginRequest(cx);
-      argv[0] = JS_NumberValue(*(DWORD*)evt->arg1);
-      argv[1] = JS_NumberValue(*(DWORD*)evt->arg2);
-      argv[2] = JS_NumberValue(*(DWORD*)evt->arg3);
-      for (int j = 0; j < 3; j++) {
-        JS_AddValueRoot(cx, &argv[j]);
-      }
 
-      jsval rval;
-      // diffrent function source for hooks
-      for (FunctionList::iterator it = evt->functions.begin(); it != evt->functions.end(); it++) {
-        JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 3, argv, &rval);
-        block |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
-      }
+  if (evt->name == "ScreenHookClick") {
+    auto click_evt = std::static_pointer_cast<ScreenHookClickEvent>(evt);
 
-      JS_EndRequest(cx);
-      for (int j = 0; j < 3; j++) JS_RemoveValueRoot(cx, &argv[j]);
+    jsval* argv = new jsval[3];
+    JS_BeginRequest(cx);
+    argv[0] = JS_NumberValue(click_evt->button);
+    argv[1] = JS_NumberValue(click_evt->x);
+    argv[2] = JS_NumberValue(click_evt->y);
+    for (int j = 0; j < 3; j++) {
+      JS_AddValueRoot(cx, &argv[j]);
     }
-    *(DWORD*)evt->arg4 = block;
+
+    jsval rval;
+    // diffrent function source for hooks
+    for (FunctionList::iterator it = evt->functions.begin(); it != evt->functions.end(); it++) {
+      JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 3, argv, &rval);
+      evt->block |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
+    }
+
+    JS_EndRequest(cx);
+    for (int j = 0; j < 3; j++) JS_RemoveValueRoot(cx, &argv[j]);
+
     SetEvent(Vars.eventSignal);
 
     return true;
   }
-  if (strcmp(evtName, "Command") == 0) {
-    wchar_t* cmd = (wchar_t*)evt->arg1;
-    std::wstring test;
 
-    test.append(L"try{ ");
-    test.append(cmd);
-    test.append(L" } catch (error){print(error)}");
+  if (evt->name == "Command") {
+    auto cmd_evt = std::static_pointer_cast<CommandEvent>(evt);
+
+    // copy the command
+    std::wstring cmd = cmd_evt->command;
+    cmd.append(L"try{ ");
+    cmd.append(cmd);
+    cmd.append(L" } catch (error){print(error)}");
+
     JS_BeginRequest(cx);
     jsval rval;
 
-    if (JS_EvaluateUCScript(cx, JS_GetGlobalObject(cx), test.data(), test.length(), "Command Line", 0, &rval)) {
+    if (JS_EvaluateUCScript(cx, JS_GetGlobalObject(cx), cmd.data(), cmd.length(), "Command Line", 0, &rval)) {
       if (!JSVAL_IS_NULL(rval) && !JSVAL_IS_VOID(rval)) {
         JS_ConvertValue(cx, rval, JSTYPE_STRING, &rval);
         const wchar_t* text = JS_GetStringCharsZ(cx, JS_ValueToString(cx, rval));
@@ -766,101 +734,95 @@ bool ExecScriptEvent(Event* evt, bool clearList) {
       }
     }
     JS_EndRequest(cx);
-    free(evt->arg1);
-    free(evt->name);
-    delete evt;
   }
-  if (strcmp(evtName, "scriptmsg") == 0) {
-    if (!clearList) {
-      DWORD* argc = (DWORD*)evt->arg1;
-      JS_BeginRequest(cx);
-      jsval* argv = new jsval[*argc];
-      for (uint i = 0; i < *argc; i++) {
-        evt->argv[i]->read(cx, &argv[i]);
-      }
 
-      for (uint j = 0; j < *argc; j++) {
-        JS_AddValueRoot(cx, &argv[j]);
-      }
+  if (evt->name == "scriptmsg") {
+    auto bcast_evt = std::static_pointer_cast<BroadcastEvent>(evt);
 
-      jsval rval;
-      for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
-           it != evt->owner->functions()[evtName].end(); it++) {
-        JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), *argc, argv, &rval);
-      }
-      JS_EndRequest(cx);
-
-      for (uint j = 0; j < *argc; j++) {
-        JS_RemoveValueRoot(cx, &argv[j]);
-      }
+    JS_BeginRequest(cx);
+    jsval* argv = new jsval[evt->argc];
+    for (uint i = 0; i < evt->argc; i++) {
+      evt->argv[i]->read(cx, &argv[i]);
     }
+
+    for (uint j = 0; j < evt->argc; j++) {
+      JS_AddValueRoot(cx, &argv[j]);
+    }
+
+    jsval rval;
+    for (FunctionList::iterator it = evt->owner->functions()[evt->name].begin();
+         it != evt->owner->functions()[evt->name].end(); it++) {
+      JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), evt->argc, argv, &rval);
+    }
+    JS_EndRequest(cx);
+
+    for (uint j = 0; j < evt->argc; j++) {
+      JS_RemoveValueRoot(cx, &argv[j]);
+    }
+
     for (uint i = 0; i < evt->argc; i++) {
       evt->argv[i]->clear();
       delete evt->argv[i];
     }
-    delete evt->arg1;
-    free(evt->name);
-    delete evt;
-    return true;
-  }
-  if (strcmp(evtName, "gamepacket") == 0 || strcmp(evtName, "gamepacketsent") == 0 ||
-      strcmp(evtName, "realmpacket") == 0) {
-    bool block = false;
-    if (!clearList) {
-      BYTE* help = (BYTE*)evt->arg1;
-      DWORD* size = (DWORD*)evt->arg2;
-      //  DWORD* argc = (DWORD*)1;
-      JS_BeginRequest(cx);
-
-      JSObject* arr = JS_NewUint8Array(cx, *size);
-      // JSObject* arr = JS_NewArrayObject(cx, 0, NULL);
-
-      JS_AddRoot(cx, &arr);
-      for (uint i = 0; i < *size; i++) {
-        jsval jsarr = UINT_TO_JSVAL(help[i]);
-        JS_SetElement(cx, arr, i, &jsarr);
-      }
-      jsval argv = OBJECT_TO_JSVAL(arr);
-      // evt->argv[0]->read(cx, &argv[0]);
-      // JS_AddValueRoot(cx, &argv[0]);
-
-      jsval rval;
-      for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
-           it != evt->owner->functions()[evtName].end(); it++) {
-        JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 1, &argv, &rval);
-        block |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
-      }
-      *(DWORD*)evt->arg4 = block;
-      JS_RemoveRoot(cx, &arr);
-      SetEvent(Vars.eventSignal);
-      JS_EndRequest(cx);
-      //	for(int j = 0 ; j < *argc; j++)
-      //	JS_RemoveValueRoot(cx, &argv[j]);
-    }
-
-    // delete evt->arg1;
-    // delete evt->arg2;
 
     return true;
   }
-  if (strcmp(evtName, "setTimeout") == 0 || strcmp(evtName, "setInterval") == 0) {
-    if (!clearList) {
-      JS_BeginRequest(cx);
-      jsval rval;
-      for (FunctionList::iterator it = evt->owner->functions()[evtName].begin();
-           it != evt->owner->functions()[evtName].end(); it++) {
-        JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 0, &rval, &rval);
-      }
-      JS_EndRequest(cx);
+
+  if (evt->name == "gamepacket" || evt->name == "gamepacketsent" || evt->name == "realmpacket") {
+    auto packet_evt = std::static_pointer_cast<PacketEvent>(evt);
+
+    BYTE* help = packet_evt->bytes.data();
+    DWORD size = packet_evt->bytes.size();
+    //  DWORD* argc = (DWORD*)1;
+    JS_BeginRequest(cx);
+
+    JSObject* arr = JS_NewUint8Array(cx, size);
+    // JSObject* arr = JS_NewArrayObject(cx, 0, NULL);
+
+    JS_AddRoot(cx, &arr);
+    for (uint i = 0; i < size; i++) {
+      jsval jsarr = UINT_TO_JSVAL(help[i]);
+      JS_SetElement(cx, arr, i, &jsarr);
+    }
+    jsval argv = OBJECT_TO_JSVAL(arr);
+    // evt->argv[0]->read(cx, &argv[0]);
+    // JS_AddValueRoot(cx, &argv[0]);
+
+    jsval rval;
+    for (FunctionList::iterator it = evt->owner->functions()[evt->name].begin();
+         it != evt->owner->functions()[evt->name].end(); it++) {
+      JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 1, &argv, &rval);
+      evt->block |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
     }
 
-    if (strcmp(evtName, "setTimeout") == 0) {
-      evt->owner->engine()->RemoveDelayedEvent(*(DWORD*)evt->arg1);
+    JS_RemoveRoot(cx, &arr);
+    SetEvent(Vars.eventSignal);
+    JS_EndRequest(cx);
+    //	for(int j = 0 ; j < *argc; j++)
+    //	JS_RemoveValueRoot(cx, &argv[j]);
+
+    return true;
+  }
+
+  if (evt->name == "setTimeout" || evt->name == "setInterval") {
+    auto timeout_evt = std::static_pointer_cast<TimeoutEvent>(evt);
+
+    JS_BeginRequest(cx);
+    jsval rval;
+    for (FunctionList::iterator it = evt->owner->functions()[evt->name].begin();
+         it != evt->owner->functions()[evt->name].end(); it++) {
+      JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 0, &rval, &rval);
+    }
+    JS_EndRequest(cx);
+
+    if (evt->name == "setTimeout") {
+      evt->owner->engine()->RemoveDelayedEvent(timeout_evt->key);
     }
 
     return true;
   }
-  if (strcmp(evtName, "DisposeMe") == 0) {
+
+  if (evt->name == "DisposeMe") {
     evt->owner->engine()->DisposeScript(evt->owner);
   }
 
@@ -886,7 +848,7 @@ JSBool operationCallback(JSContext* cx) {
     while (events.size() > 0 && !!!(JSBool)(script->is_stopped() || ((script->type() == ScriptType::InGame) &&
                                                                      ClientState() == ClientStateMenu))) {
       EnterCriticalSection(&Vars.cEventSection);
-      Event* evt = events.back();
+      std::shared_ptr<Event> evt = events.back();
       events.pop_back();
       LeaveCriticalSection(&Vars.cEventSection);
       ExecScriptEvent(evt, false);
@@ -968,7 +930,7 @@ JSBool contextCallback(JSContext* cx, uint contextOp) {
       auto& events = script->events();
       while (events.size() > 0) {
         EnterCriticalSection(&Vars.cEventSection);
-        Event* evt = events.back();
+        std::shared_ptr<Event> evt = events.back();
         events.pop_back();
         LeaveCriticalSection(&Vars.cEventSection);
         ExecScriptEvent(evt, true);  // clean list and pop events

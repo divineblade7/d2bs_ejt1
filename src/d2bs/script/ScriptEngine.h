@@ -49,7 +49,7 @@ class ScriptEngine {
   void StopAll(bool forceStop = false);
   void UpdateConsole();
 
-  int AddDelayedEvent(Event* evt, int freq);
+  int AddDelayedEvent(std::shared_ptr<TimeoutEvent> evt, int freq);
   void RemoveDelayedEvent(int key);
 
   JSRuntime* GetRuntime(void) {
@@ -74,7 +74,7 @@ class ScriptEngine {
   EngineState state_ = Stopped;
   ScriptMap scripts_{};
 
-  std::list<Event*> DelayedExecList_;
+  std::list<std::shared_ptr<TimeoutEvent>> DelayedExecList_;
   int delayedExecKey_;
 
   std::mutex script_list_mutex_{};

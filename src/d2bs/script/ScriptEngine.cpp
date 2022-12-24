@@ -158,7 +158,7 @@ void ScriptEngine::DisposeScript(Script* script) {
     delete script;
   } else {
     // bad things happen if we delete from another thread
-    Event* evt = new Event;
+    std::shared_ptr<Event> evt = std::make_shared<Event>();
     evt->owner = script;
     evt->name = _strdup("DisposeMe");
     script->FireEvent(evt);
@@ -221,10 +221,10 @@ void ScriptEngine::UpdateConsole() {
   }
 }
 
-int ScriptEngine::AddDelayedEvent(Event* evt, int freq) {
+int ScriptEngine::AddDelayedEvent(std::shared_ptr<TimeoutEvent> evt, int freq) {
   delayedExecKey_++;
-  evt->arg1 = new DWORD(delayedExecKey_);
-  evt->arg2 = CreateWaitableTimer(NULL, true, NULL);
+  evt->key = delayedExecKey_;
+  evt->handle = CreateWaitableTimer(NULL, true, NULL);
 
   __int64 start;
   start = freq * -10000;
@@ -232,28 +232,27 @@ int ScriptEngine::AddDelayedEvent(Event* evt, int freq) {
   // Copy the relative time into a LARGE_INTEGER.
   lStart.LowPart = (DWORD)(start & 0xFFFFFFFF);
   lStart.HighPart = (LONG)(start >> 32);
-  freq = (strcmp(evt->name, "setInterval") == 0) ? freq : 0;
+  freq = (evt->name == "setInterval") ? freq : 0;
   EnterCriticalSection(&Vars.cEventSection);
   DelayedExecList_.push_back(evt);
-  SetWaitableTimer((HANDLE*)evt->arg2, &lStart, freq, &EventTimerProc, evt, false);
+  Log(L"&evt could crash");
+  Print(L"&evt could crash");
+  SetWaitableTimer((HANDLE*)evt->handle, &lStart, freq, &EventTimerProc, &evt, false);
   LeaveCriticalSection(&Vars.cEventSection);
 
   return delayedExecKey_;
 }
 
 void ScriptEngine::RemoveDelayedEvent(int key) {
-  std::list<Event*>::iterator it;
+  std::list<std::shared_ptr<TimeoutEvent>>::iterator it;
   it = DelayedExecList_.begin();
   while (it != DelayedExecList_.end()) {
-    if (*(DWORD*)(*it)->arg1 == static_cast<DWORD>(key)) {
-      CancelWaitableTimer((HANDLE*)(*it)->arg2);
-      CloseHandle((HANDLE*)(*it)->arg2);
-      Event* evt = *it;
-      evt->owner->UnregisterEvent(evt->name, *(jsval*)evt->arg3);
-      delete evt->arg1;
-      delete evt->arg3;
-      free(evt->name);
-      delete evt;
+    if ((*it)->key == key) {
+      CancelWaitableTimer((*it)->handle);
+      CloseHandle((*it)->handle);
+      std::shared_ptr<TimeoutEvent> evt = *it;
+      evt->owner->UnregisterEvent(evt->name.c_str(), *evt->val);
+      delete evt->val;
       it = DelayedExecList_.erase(it);
     } else {
       it++;
@@ -299,6 +298,6 @@ void reportError(JSContext*, const char* message, JSErrorReport* report) {
 }
 
 void CALLBACK EventTimerProc(LPVOID lpArg, DWORD, DWORD) {
-  Event* evt = (Event*)lpArg;
-  evt->owner->FireEvent(evt);
+  std::shared_ptr<Event>* evt = (std::shared_ptr<Event>*)lpArg;
+  (*evt)->owner->FireEvent(*evt);
 }

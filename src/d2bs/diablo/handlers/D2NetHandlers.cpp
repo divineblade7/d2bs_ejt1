@@ -37,13 +37,13 @@ DWORD HPMPUpdateHandler(BYTE* pPacket, [[maybe_unused]] DWORD dwSize) {
   static WORD SaveLife = 0;
   if (SaveLife != Life) {
     SaveLife = Life;
-    LifeEvent(Life);
+    FireLifeEvent(Life);
   }
 
   static WORD SaveMana = 0;
   if (SaveMana != Mana) {
     SaveMana = Mana;
-    ManaEvent(Mana);
+    FireManaEvent(Mana);
   }
 
   return TRUE;
@@ -57,7 +57,7 @@ DWORD ChatEventHandler(BYTE* pPacket, [[maybe_unused]] DWORD dwSize) {
 
   if (Vars.bDontCatchNextMsg) Vars.bDontCatchNextMsg = FALSE;
 
-  DWORD result = !(ChatEvent(pName, uc));
+  DWORD result = !(FireChatEvent(pName, uc));
   //    delete[] enc;
   delete[] uc;
 
@@ -69,7 +69,7 @@ DWORD NPCTransactionHandler(BYTE* pPacket, [[maybe_unused]] DWORD dwSize) {
   BYTE mode = pPacket[0x02];  // [BYTE Result - 0x00 =  Purchased || 0x01 = Sold || 0x0c = Insuffecient Gold]
   DWORD gid = *(DWORD*)(pPacket + 0x07);
 
-  ItemActionEvent(gid, code, (100 + mode), false);
+  FireItemActionEvent(gid, code, (100 + mode), false);
 
   return TRUE;
 }
@@ -114,10 +114,10 @@ DWORD EventMessagesHandler(BYTE* pPacket, [[maybe_unused]] DWORD dwSize) {
 
   if (!wname2) {
     wname2 = AnsiToUnicode(name2, CP_ACP);
-    GameActionEvent(mode, param1, param2, name1, wname2);
+    FireGameActionEvent(mode, param1, param2, name1, wname2);
     delete[] wname2;
   } else
-    GameActionEvent(mode, param1, param2, name1, wname2);
+    FireGameActionEvent(mode, param1, param2, name1, wname2);
 
   return TRUE;
 }
@@ -157,7 +157,7 @@ DWORD ItemActionHandler(BYTE* pPacket, [[maybe_unused]] DWORD dwSize) {
   /*if(strcmp(code, "gld") == 0)
           GoldDropEvent(gid, mode);
   else*/
-  ItemActionEvent(gid, code, mode, (pPacket[0] == 0x9d));
+  FireItemActionEvent(gid, code, mode, (pPacket[0] == 0x9d));
 
   return TRUE;
 }

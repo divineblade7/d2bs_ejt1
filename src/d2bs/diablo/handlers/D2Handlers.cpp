@@ -26,7 +26,7 @@ DWORD __fastcall GameInput(wchar_t* wMsg) {
   if (Vars.bDontCatchNextMsg)
     Vars.bDontCatchNextMsg = false;
   else {
-    send = !((wMsg[0] == L'.' && ProcessCommand(wMsg + 1, false)) || ChatInputEvent(wMsg));
+    send = !((wMsg[0] == L'.' && ProcessCommand(wMsg + 1, false)) || FireChatInputEvent(wMsg));
   }
 
   return send ? 0 : -1;  // -1 means block, 0 means send
@@ -38,7 +38,7 @@ DWORD __fastcall ChannelInput(wchar_t* wMsg) {
   if (Vars.bDontCatchNextMsg)
     Vars.bDontCatchNextMsg = false;
   else {
-    send = !((wMsg[0] == L'.' && ProcessCommand(wMsg + 1, false)) || ChatInputEvent(wMsg));
+    send = !((wMsg[0] == L'.' && ProcessCommand(wMsg + 1, false)) || FireChatInputEvent(wMsg));
   }
 
   return send;  // false means ignore, true means send
@@ -51,28 +51,28 @@ DWORD __fastcall GamePacketReceived(BYTE* pPacket, DWORD dwSize) {
       TerminateProcess(GetCurrentProcess(), 0);
       break;
     case 0x15:
-      return !GamePacketEvent(pPacket, dwSize) && ReassignPlayerHandler(pPacket, dwSize);
+      return !FireGamePacketEvent(pPacket, dwSize) && ReassignPlayerHandler(pPacket, dwSize);
     case 0x26:
-      return !GamePacketEvent(pPacket, dwSize) && ChatEventHandler(pPacket, dwSize);
+      return !FireGamePacketEvent(pPacket, dwSize) && ChatEventHandler(pPacket, dwSize);
     case 0x2A:
-      return !GamePacketEvent(pPacket, dwSize) && NPCTransactionHandler(pPacket, dwSize);
+      return !FireGamePacketEvent(pPacket, dwSize) && NPCTransactionHandler(pPacket, dwSize);
     case 0x5A:
-      return !GamePacketEvent(pPacket, dwSize) && EventMessagesHandler(pPacket, dwSize);
+      return !FireGamePacketEvent(pPacket, dwSize) && EventMessagesHandler(pPacket, dwSize);
     case 0x18:
     case 0x95:
-      return !GamePacketEvent(pPacket, dwSize) && HPMPUpdateHandler(pPacket, dwSize);
+      return !FireGamePacketEvent(pPacket, dwSize) && HPMPUpdateHandler(pPacket, dwSize);
     case 0x9C:
     case 0x9D:
-      return !GamePacketEvent(pPacket, dwSize) && ItemActionHandler(pPacket, dwSize);
+      return !FireGamePacketEvent(pPacket, dwSize) && ItemActionHandler(pPacket, dwSize);
     case 0xA7:
-      return !GamePacketEvent(pPacket, dwSize) && DelayedStateHandler(pPacket, dwSize);
+      return !FireGamePacketEvent(pPacket, dwSize) && DelayedStateHandler(pPacket, dwSize);
   }
 
-  return !GamePacketEvent(pPacket, dwSize);
+  return !FireGamePacketEvent(pPacket, dwSize);
 }
 
 DWORD __fastcall GamePacketSent(BYTE* pPacket, DWORD dwSize) {
-  return !GamePacketSentEvent(pPacket, dwSize);
+  return !FireGamePacketSentEvent(pPacket, dwSize);
 }
 
 void FlushPrint() {
@@ -123,7 +123,7 @@ void SetMaxDiff(void) {
 void __fastcall WhisperHandler(char* szAcc, char* szText) {
   if (!Vars.bDontCatchNextMsg) {
     wchar_t* szwText = AnsiToUnicode(szText, CP_ACP);
-    WhisperEvent(szAcc, szwText);
+    FireWhisperEvent(szAcc, szwText);
     delete[] szwText;
   } else
     Vars.bDontCatchNextMsg = FALSE;
@@ -142,7 +142,7 @@ DWORD __fastcall GameAttack(UnitInteraction* pAttack) {
 void __fastcall GamePlayerAssignment(UnitAny* pPlayer) {
   if (!pPlayer) return;
 
-  PlayerAssignEvent(pPlayer->dwUnitId);
+  FirePlayerAssignEvent(pPlayer->dwUnitId);
 }
 
 void CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD) {
@@ -167,7 +167,7 @@ void GameLeave(void) {
 }
 
 BOOL __fastcall RealmPacketRecv(BYTE* pPacket, DWORD dwSize) {
-  return !RealmPacketEvent(pPacket, dwSize);
+  return !FireRealmPacketEvent(pPacket, dwSize);
 }
 
 BOOL __fastcall ChatPacketRecv(BYTE* pPacket, [[maybe_unused]] int len) {
@@ -181,20 +181,20 @@ BOOL __fastcall ChatPacketRecv(BYTE* pPacket, [[maybe_unused]] int len) {
 
     switch (pPacket[4]) {
       case 0x02:  // channel join
-        ChatEvent(who, L"joined the channel");
+        FireChatEvent(who, L"joined the channel");
         break;
       case 0x03:  // channel leave
-        ChatEvent(who, L"left the channel");
+        FireChatEvent(who, L"left the channel");
         break;
       case 0x04:  // whispers
       case 0x0A:
-        WhisperEvent(who, wsaid);
+        FireWhisperEvent(who, wsaid);
         break;
       case 0x05:  // normal text
       case 0x12:  // info blue text
       case 0x13:  // error message
       case 0x17:  // emoted text
-        ChatEvent(who, wsaid);
+        FireChatEvent(who, wsaid);
         break;
       default:
         break;
