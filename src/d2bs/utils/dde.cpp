@@ -1,11 +1,9 @@
 #include "d2bs/utils/dde.h"
 
+#include "d2bs/D2BS.h"
 #include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/script/ScriptEngine.h"
 #include "d2bs/utils/Helpers.h"
-
-DWORD DdeSrvInst = 0;
-HSZ hszD2BSns;
 
 HDDEDATA CALLBACK DdeCallback(UINT uType, UINT, HCONV, HSZ, HSZ, HDDEDATA hdata, DWORD, DWORD) {
   char pszItem[65535] = "";
@@ -22,40 +20,40 @@ HDDEDATA CALLBACK DdeCallback(UINT uType, UINT, HCONV, HSZ, HSZ, HDDEDATA hdata,
       break;
     case XTYP_EXECUTE:
       DdeGetData(hdata, (LPBYTE)pszItem, sizeof(pszItem), 0);
-      sScriptEngine->RunCommand(pslzItem);
+      sEngine->script_engine()->RunCommand(pslzItem);
       break;
   }
   delete[] pslzItem;
   return (HDDEDATA)0;
 }
 
-DWORD CreateDdeServer() {
+bool DdeServer::init() {
   char buf[1000];
 
-  int ret = DdeInitialize(&DdeSrvInst, DdeCallback,
+  int ret = DdeInitialize(&srv_inst_, DdeCallback,
                           APPCLASS_STANDARD | APPCMD_FILTERINITS | CBF_FAIL_ADVISES | CBF_FAIL_REQUESTS |
                               CBF_SKIP_CONNECT_CONFIRMS | CBF_SKIP_REGISTRATIONS | CBF_SKIP_UNREGISTRATIONS,
                           0);
   if (ret != DMLERR_NO_ERROR) return 0;
   char handle[25];
   sprintf_s(handle, sizeof(handle), "d2bs-%d", GetProcessId(GetCurrentProcess()));
-  hszD2BSns = DdeCreateStringHandle(DdeSrvInst, handle, CP_WINANSI);
+  hszD2BSns = DdeCreateStringHandle(srv_inst_, handle, CP_WINANSI);
   if (!hszD2BSns) return 0;
-  if (!DdeNameService(DdeSrvInst, hszD2BSns, 0L, DNS_REGISTER | DNS_FILTERON)) {
-    sprintf_s(buf, sizeof(buf), "DdeServer DdeNameService Error: %X", DdeGetLastError(DdeSrvInst));
+  if (!DdeNameService(srv_inst_, hszD2BSns, 0L, DNS_REGISTER | DNS_FILTERON)) {
+    sprintf_s(buf, sizeof(buf), "DdeServer DdeNameService Error: %X", DdeGetLastError(srv_inst_));
     OutputDebugString(buf);
     return 0;
   }
-  return GetLastError();
+  return GetLastError() == ERROR_SUCCESS;
 }
 
-BOOL ShutdownDdeServer() {
-  DdeFreeStringHandle(DdeSrvInst, hszD2BSns);
-  return DdeUninitialize(DdeSrvInst);
+bool DdeServer::shutdown() {
+  DdeFreeStringHandle(srv_inst_, hszD2BSns);
+  return DdeUninitialize(srv_inst_);
 }
 
-BOOL SendDDE(int mode, const char* pszDDEServer, const char* pszTopic, const char* pszItem, const char* pszData,
-             char** result, unsigned int size) {
+bool DdeServer::send(int mode, const char* pszDDEServer, const char* pszTopic, const char* pszItem, const char* pszData,
+                     char** result, unsigned int size) {
   DWORD pidInst = 0;
   HCONV hConv;
   DWORD dwTimeout = 5000;

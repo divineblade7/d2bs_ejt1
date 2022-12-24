@@ -1,12 +1,13 @@
 #include "d2bs/script/AutoRoot.h"
 
+#include "d2bs/D2BS.h"
 #include "d2bs/script/ScriptEngine.h"
 
 AutoRoot::AutoRoot(JSContext* ncx, jsval nvar) : cx(ncx), var(nvar), count(0) {
   Take();
 }
 
-AutoRoot::AutoRoot(jsval nvar) : cx(sScriptEngine->GetGlobalContext()), var(nvar), count(0) {
+AutoRoot::AutoRoot(jsval nvar) : cx(sEngine->script_engine()->GetGlobalContext()), var(nvar), count(0) {
   Take();
 }
 

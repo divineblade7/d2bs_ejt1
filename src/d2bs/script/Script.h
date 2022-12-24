@@ -18,9 +18,14 @@ enum class ScriptState { Stopped, Running, Paused };
 
 // This should be typdef'd inside Script but is used by JSSandbox
 typedef std::map<std::wstring, bool> IncludeList;
+class ScriptEngine;
 
 class Script {
-  Script(const wchar_t* file, ScriptType type, uint argc = 0, JSAutoStructuredCloneBuffer** argv = NULL);
+  // Script is aware of the ScriptEngine which owns the Script. This behavior removes the need for a global ScriptEngine
+  // variable, however it also means that Script depends on ScriptEngine which may not be the behavior we want here.
+  // The ideal condition is that Script is completely removed from ScriptEngine and operates independently from it.
+  Script(ScriptEngine* engine, const wchar_t* file, ScriptType type, uint argc = 0,
+         JSAutoStructuredCloneBuffer** argv = NULL);
   ~Script();
 
   Script(const Script&) = delete;
@@ -63,6 +68,10 @@ class Script {
   }
 
   const wchar_t* filename_short();
+
+  ScriptEngine* engine() {
+    return engine_;
+  }
 
   inline JSContext* context() {
     return context_;
@@ -111,6 +120,7 @@ class Script {
   }
 
  private:
+  ScriptEngine* engine_ = nullptr;
   JSRuntime* runtime_ = nullptr;
   JSContext* context_ = nullptr;
   JSScript* script_ = nullptr;

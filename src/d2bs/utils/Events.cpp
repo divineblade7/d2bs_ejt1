@@ -117,9 +117,11 @@ bool __fastcall MouseClickCallback(Script* script, void* argv, uint argc) {
   return true;
 }
 
+#include <d2bs/core/Core.h>
 void MouseClickEvent(int button, POINT pt, bool bUp) {
   QuadArgHelper helper = {static_cast<DWORD>(button), static_cast<DWORD>(pt.x), static_cast<DWORD>(pt.y),
                           static_cast<DWORD>(bUp)};
+  Print(L"MouseClickEvent: button %d x %d y %d up %d", helper.arg1, helper.arg2, helper.arg3, helper.arg4);
   sScriptEngine->ForEachScript(MouseClickCallback, &helper, 4);
 }
 

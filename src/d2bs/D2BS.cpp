@@ -9,6 +9,7 @@
 #include "d2bs/diablo/handlers/D2Handlers.h"
 #include "d2bs/script/ScriptEngine.h"
 #include "d2bs/utils/CommandLine.h"
+#include "d2bs/utils/Console.h"
 #include "d2bs/utils/Helpers.h"
 #include "d2bs/utils/Offset.h"
 #include "d2bs/utils/dde.h"
@@ -27,9 +28,10 @@ bool __fastcall UpdatePlayerGid(Script* script, void*, uint) {
   return true;
 }
 
-// forward-declare `thread_entry` so that is can be defined in the proper
+// forward-declare `thread_entry` and `wndproc` so that is can be defined in the proper
 // order accoring to how it is declared inside `D2BS`
 DWORD __stdcall thread_entry(void* param);
+LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 bool D2BS::startup(HMODULE mod) {
   Vars.hModule = mod;
@@ -70,7 +72,7 @@ bool D2BS::startup(HMODULE mod) {
   DefineOffsets();
   InstallPatches();
   InstallConditional();
-  CreateDdeServer();
+  dde_.init();
 
   thread_handle_ = CreateThread(NULL, NULL, thread_entry, NULL, NULL, NULL);
   if (!thread_handle_) {
@@ -90,11 +92,11 @@ void D2BS::shutdown(bool await_thread) {
     WaitForSingleObject(thread_handle_, INFINITE);
   }
 
-  SetWindowLong(D2GFX_GetHwnd(), GWL_WNDPROC, (LONG)Vars.oldWNDPROC);
+  SetWindowLong(D2GFX_GetHwnd(), GWL_WNDPROC, (LONG)orig_wndproc_);
 
   RemovePatches();
   Genhook::Destroy();
-  ShutdownDdeServer();
+  dde_.shutdown();
 
   KillTimer(D2GFX_GetHwnd(), Vars.uTimer);
 
@@ -234,6 +236,187 @@ DWORD __stdcall thread_entry(void*) {
   return NULL;
 }
 
+LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+  D2BS* engine = sEngine;
+
+  COPYDATASTRUCT* pCopy;
+  switch (msg) {
+    case WM_COPYDATA:
+      pCopy = (COPYDATASTRUCT*)lparam;
+
+      if (pCopy) {
+        wchar_t* lpwData = AnsiToUnicode((const char*)pCopy->lpData);
+        if (pCopy->dwData == 0x1337)  // 0x1337 = Execute Script
+        {
+          while (!Vars.bActive || (sScriptEngine->GetState() != Running)) {
+            Sleep(100);
+          }
+          sScriptEngine->RunCommand(lpwData);
+        } else if (pCopy->dwData == 0x31337)  // 0x31337 = Set Profile
+          if (SwitchToProfile(lpwData))
+            Print(L"\u00FFc2D2BS\u00FFc0 :: Switched to profile %s", lpwData);
+          else
+            Print(L"\u00FFc2D2BS\u00FFc0 :: Profile %s not found", lpwData);
+        else
+          CopyDataEvent(pCopy->dwData, lpwData);
+        delete[] lpwData;
+      }
+
+      return TRUE;
+
+    case WM_KEYDOWN:
+    case WM_KEYUP:
+    case WM_SYSKEYDOWN:
+    case WM_SYSKEYUP:
+    case WM_CHAR: {
+      WORD repeatCount = LOWORD(lparam);
+      bool altState = !!(HIWORD(lparam) & KF_ALTDOWN);
+      bool previousState = !!(HIWORD(lparam) & KF_REPEAT);
+      bool transitionState = !!(HIWORD(lparam) & KF_UP);
+      bool isRepeat = !transitionState && repeatCount != 1;
+      bool isDown = !(previousState && transitionState);
+      bool isUp = previousState && transitionState;
+
+      bool gameState = ClientState() == ClientStateInGame;
+      bool chatBoxOpen = gameState ? !!D2CLIENT_GetUIState(UI_CHAT_CONSOLE) : false;
+      bool escMenuOpen = gameState ? !!D2CLIENT_GetUIState(UI_ESCMENU_MAIN) : false;
+
+      if (altState && wparam == VK_F4) {
+        return (LONG)CallWindowProcA(engine->orig_wndproc_, hwnd, msg, wparam, lparam);
+      }
+
+      if (Vars.bBlockKeys) {
+        return 1;
+      }
+
+      if (wparam == VK_HOME && !(chatBoxOpen || escMenuOpen)) {
+        if (isDown && !isRepeat) {
+          if (!altState)
+            sConsole->ToggleBuffer();
+          else
+            sConsole->TogglePrompt();
+
+          return (LONG)CallWindowProcA(engine->orig_wndproc_, hwnd, msg, wparam, lparam);
+        }
+      } else if (wparam == VK_ESCAPE && sConsole->IsVisible()) {
+        if (isDown && !isRepeat) {
+          sConsole->Hide();
+          return 1;
+        }
+        return (LONG)CallWindowProcA(engine->orig_wndproc_, hwnd, msg, wparam, lparam);
+      } else if (sConsole->IsEnabled()) {
+        BYTE layout[256] = {0};
+        WORD out[2] = {0};
+        switch (wparam) {
+          case VK_TAB:
+            if (isUp)
+              for (int i = 0; i < 5; i++) sConsole->AddKey(' ');
+            break;
+          case VK_RETURN:
+            if (isUp && !isRepeat && !escMenuOpen) sConsole->ExecuteCommand();
+            break;
+          case VK_BACK:
+            if (isDown) sConsole->RemoveLastKey();
+            break;
+          case VK_UP:
+            if (isUp && !isRepeat) sConsole->PrevCommand();
+            break;
+          case VK_DOWN:
+            if (isUp && !isRepeat) sConsole->NextCommand();
+            break;
+          case VK_NEXT:
+            if (isDown) sConsole->ScrollDown();
+            break;
+          case VK_PRIOR:
+            if (isDown) sConsole->ScrollUp();
+            break;
+          case VK_MENU:  // alt
+            // Send the alt to the scripts to fix sticky alt. There may be a better way.
+            KeyDownUpEvent(wparam, isUp);
+            return (LONG)CallWindowProcA(engine->orig_wndproc_, hwnd, msg, wparam, lparam);
+            break;
+          default:
+            if (isDown) {
+              if (GetKeyboardState(layout) && ToAscii(wparam, (lparam & 0xFF0000), layout, out, 0) != 0) {
+                for (int i = 0; i < repeatCount; i++) sConsole->AddKey(out[0]);
+              }
+            }
+            break;
+        }
+        return 1;
+      } else if (!isRepeat && !(chatBoxOpen || escMenuOpen)) {
+        if (KeyDownUpEvent(wparam, isUp)) return 1;
+      }
+
+      break;
+    }
+
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONDBLCLK:
+    case WM_RBUTTONDOWN:
+    case WM_RBUTTONDBLCLK:
+    case WM_MBUTTONDOWN:
+    case WM_MBUTTONDBLCLK:
+    case WM_XBUTTONDOWN:
+    case WM_XBUTTONDBLCLK: {
+      int32_t button = 0;
+      if (msg == WM_LBUTTONDOWN || msg == WM_LBUTTONDBLCLK) button = 0;
+      if (msg == WM_RBUTTONDOWN || msg == WM_RBUTTONDBLCLK) button = 1;
+      if (msg == WM_MBUTTONDOWN || msg == WM_MBUTTONDBLCLK) button = 2;
+      if (msg == WM_XBUTTONDOWN || msg == WM_XBUTTONDBLCLK) button = (GET_XBUTTON_WPARAM(wparam) == XBUTTON1) ? 3 : 4;
+
+      POINT pt = {static_cast<LONG>(LOWORD(lparam)), static_cast<LONG>(HIWORD(lparam))};
+      Vars.pMouseCoords = pt;
+      if (Vars.bBlockMouse) {
+        return 0;
+      }
+
+      HookClickHelper helper = {-1, {pt.x, pt.y}};
+      MouseClickEvent(button, pt, false);
+      helper.button = button;
+      if (Genhook::ForEachVisibleHook(ClickHook, &helper, 1)) {
+        // a positive result means a function used the message, swallow it by returning here.
+        return 0;
+      }
+      break;
+    }
+
+    case WM_LBUTTONUP:
+    case WM_RBUTTONUP:
+    case WM_MBUTTONUP:
+    case WM_XBUTTONUP: {
+      int32_t button = 0;
+      if (msg == WM_LBUTTONUP) button = 0;
+      if (msg == WM_RBUTTONUP) button = 1;
+      if (msg == WM_MBUTTONUP) button = 2;
+      if (msg == WM_XBUTTONUP) button = (GET_XBUTTON_WPARAM(wparam) == XBUTTON1) ? 3 : 4;
+
+      POINT pt = {static_cast<LONG>(LOWORD(lparam)), static_cast<LONG>(HIWORD(lparam))};
+      Vars.pMouseCoords = pt;
+      if (Vars.bBlockMouse) {
+        return 0;
+      }
+
+      MouseClickEvent(button, pt, true);
+      break;
+    }
+
+    case WM_MOUSEMOVE:
+      POINT pt = {static_cast<LONG>(LOWORD(lparam)), static_cast<LONG>(HIWORD(lparam))};
+      Vars.pMouseCoords = pt;
+      if (Vars.bBlockMouse) {
+        return 0;
+      }
+
+      // would be nice to enable these events but they bog down too much
+      MouseMoveEvent(pt);
+      // Genhook::ForEachVisibleHook(HoverHook, &helper, 1);
+      break;
+  }
+
+  return (LONG)CallWindowProcA(engine->orig_wndproc_, hwnd, msg, wparam, lparam);
+}
+
 void D2BS::parse_commandline_args() {
   CommandLine cmdline(GetCommandLineA());
   for (const auto& [arg, val] : cmdline.args()) {
@@ -262,9 +445,9 @@ void D2BS::parse_commandline_args() {
     } else if (arg == "-profile") {
       const wchar_t* profile = AnsiToUnicode(val.c_str());
       if (SwitchToProfile(profile))
-        Print(L"\u00FFc2D2BS\u00FFc0 :: Switched to profile %s", profile);
+        Print(L"\u00FFc2D2BS\u00FFc0 :: Switched to profile %s (-profile)", profile);
       else
-        Print(L"\u00FFc2D2BS\u00FFc0 :: Profile %s not found", profile);
+        Print(L"\u00FFc2D2BS\u00FFc0 :: Profile %s not found (-profile)", profile);
       delete[] profile;  // ugh...
     }
   }
@@ -344,33 +527,18 @@ void D2BS::init_settings() {
     Vars.dwMemUsage = 50;
   }
   Vars.dwMemUsage *= 1024 * 1024;
-  Vars.oldWNDPROC = NULL;
+  orig_wndproc_ = nullptr;
 }
 
 bool D2BS::init_hooks() {
   // Is this sleep necessary? ~ ejt
   Sleep(50);
 
-  while (!Vars.oldWNDPROC) {
-    Vars.oldWNDPROC = (WNDPROC)SetWindowLong(D2GFX_GetHwnd(), GWL_WNDPROC, (LONG)GameEventHandler);
+  while (!orig_wndproc_) {
+    orig_wndproc_ = (WNDPROC)SetWindowLong(D2GFX_GetHwnd(), GWL_WNDPROC, (LONG)wndproc);
   }
 
   Vars.uTimer = SetTimer(D2GFX_GetHwnd(), 1, 0, TimerProc);
-
-  DWORD mainThread = GetWindowThreadProcessId(D2GFX_GetHwnd(), 0);
-  // refactor this hook into the WndProc instead
-  Vars.hKeybHook = SetWindowsHookEx(WH_KEYBOARD, KeyPress, NULL, mainThread);
-  if (!Vars.hKeybHook) {
-    MessageBox(0, "Failed to install keylogger!", "D2BS", 0);
-    return false;
-  }
-
-  // refactor this hook into the WndProc instead
-  Vars.hMouseHook = SetWindowsHookEx(WH_MOUSE, MouseMove, NULL, mainThread);
-  if (!Vars.hMouseHook) {
-    MessageBox(0, "Failed to install mouselogger!", "D2BS", 0);
-    return false;
-  }
 
   // is this variable necessary? ~ ejt
   Vars.bActive = TRUE;

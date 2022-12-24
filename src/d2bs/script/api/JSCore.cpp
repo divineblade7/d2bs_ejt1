@@ -8,6 +8,7 @@
 #include "d2bs/utils/Events.h"
 #include "d2bs/utils/Helpers.h"
 #include "d2bs/utils/dde.h"
+#include "d2bs/D2BS.h"
 
 #include <ddeml.h>
 #include <io.h>
@@ -85,7 +86,7 @@ JSAPI_FUNC(my_setTimeout) {
     evt->owner = self;
     evt->name = _strdup("setTimeout");
     evt->arg3 = new jsval(JS_ARGV(cx, vp)[0]);
-    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(sScriptEngine->AddDelayedEvent(evt, freq)));
+    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(sEngine->script_engine()->AddDelayedEvent(evt, freq)));
   }
 
   return JS_TRUE;
@@ -104,7 +105,7 @@ JSAPI_FUNC(my_setInterval) {
     evt->owner = self;
     evt->name = _strdup("setInterval");
     evt->arg3 = new jsval(JS_ARGV(cx, vp)[0]);
-    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(sScriptEngine->AddDelayedEvent(evt, freq)));
+    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(sEngine->script_engine()->AddDelayedEvent(evt, freq)));
   }
 
   return JS_TRUE;
@@ -113,7 +114,7 @@ JSAPI_FUNC(my_clearInterval) {
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
   if (argc != 1 || !JSVAL_IS_NUMBER(JS_ARGV(cx, vp)[0])) JS_ReportError(cx, "invalid params passed to clearInterval");
 
-  sScriptEngine->RemoveDelayedEvent(JSVAL_TO_INT(JS_ARGV(cx, vp)[0]));
+  sEngine->script_engine()->RemoveDelayedEvent(JSVAL_TO_INT(JS_ARGV(cx, vp)[0]));
   return JS_TRUE;
 }
 JSAPI_FUNC(my_delay) {
@@ -190,7 +191,7 @@ JSAPI_FUNC(my_load) {
     autoBuffer[i - 1]->write(cx, JS_ARGV(cx, vp)[i]);
   }
 
-  Script* newScript = sScriptEngine->CompileFile(path.c_str(), type, argc - 1, autoBuffer);
+  Script* newScript = sEngine->script_engine()->CompileFile(path.c_str(), type, argc - 1, autoBuffer);
 
   if (newScript) {
     newScript->BeginThread(ScriptThread);
@@ -234,7 +235,7 @@ JSAPI_FUNC(my_stop) {
     Script* script = (Script*)JS_GetContextPrivate(cx);
     if (script) script->stop();
   } else
-    sScriptEngine->StopAll();
+    sEngine->script_engine()->StopAll();
 
   return JS_FALSE;
 }
@@ -426,7 +427,7 @@ JSAPI_FUNC(my_sendDDE) {
 
   JS_EndRequest(cx);
   char buffer[255] = "";
-  BOOL result = SendDDE(mode, pszDDEServer ? pszDDEServer : "\"\"", pszTopic ? pszTopic : "\"\"",
+  BOOL result = sEngine->dde()->send(mode, pszDDEServer ? pszDDEServer : "\"\"", pszTopic ? pszTopic : "\"\"",
                         pszItem ? pszTopic : "\"\"", pszData ? pszTopic : "\"\"", (char**)&buffer, sizeof(buffer));
 
   JS_free(cx, pszDDEServer);

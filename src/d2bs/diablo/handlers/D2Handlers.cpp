@@ -75,124 +75,20 @@ DWORD __fastcall GamePacketSent(BYTE* pPacket, DWORD dwSize) {
   return !GamePacketSentEvent(pPacket, dwSize);
 }
 
-LONG WINAPI GameEventHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-  COPYDATASTRUCT* pCopy;
-  switch (uMsg) {
-    case WM_COPYDATA:
-      pCopy = (COPYDATASTRUCT*)lParam;
-
-      if (pCopy) {
-        wchar_t* lpwData = AnsiToUnicode((const char*)pCopy->lpData);
-        if (pCopy->dwData == 0x1337)  // 0x1337 = Execute Script
-        {
-          while (!Vars.bActive || (sScriptEngine->GetState() != Running)) {
-            Sleep(100);
-          }
-          sScriptEngine->RunCommand(lpwData);
-        } else if (pCopy->dwData == 0x31337)  // 0x31337 = Set Profile
-          if (SwitchToProfile(lpwData))
-            Print(L"\u00FFc2D2BS\u00FFc0 :: Switched to profile %s", lpwData);
-          else
-            Print(L"\u00FFc2D2BS\u00FFc0 :: Profile %s not found", lpwData);
-        else
-          CopyDataEvent(pCopy->dwData, lpwData);
-        delete[] lpwData;
-      }
-
-      return TRUE;
-  }
-
-  return (LONG)CallWindowProcA(Vars.oldWNDPROC, hWnd, uMsg, wParam, lParam);
-}
-
-LRESULT CALLBACK KeyPress(int code, WPARAM wParam, LPARAM lParam) {
-  if (code >= HC_ACTION) {
-    WORD repeatCount = LOWORD(lParam);
-    bool altState = !!(HIWORD(lParam) & KF_ALTDOWN);
-    bool previousState = !!(HIWORD(lParam) & KF_REPEAT);
-    bool transitionState = !!(HIWORD(lParam) & KF_UP);
-    bool isRepeat = !transitionState && repeatCount != 1;
-    bool isDown = !(previousState && transitionState);
-    bool isUp = previousState && transitionState;
-
-    bool gameState = ClientState() == ClientStateInGame;
-    bool chatBoxOpen = gameState ? !!D2CLIENT_GetUIState(UI_CHAT_CONSOLE) : false;
-    bool escMenuOpen = gameState ? !!D2CLIENT_GetUIState(UI_ESCMENU_MAIN) : false;
-
-    if (altState && wParam == VK_F4) return CallNextHookEx(NULL, code, wParam, lParam);
-
-    if (Vars.bBlockKeys) return 1;
-
-    if (wParam == VK_HOME && !(chatBoxOpen || escMenuOpen)) {
-      if (isDown && !isRepeat && code == HC_ACTION) {
-        if (!altState)
-          sConsole->ToggleBuffer();
-        else
-          sConsole->TogglePrompt();
-
-        return CallNextHookEx(NULL, code, wParam, lParam);
-      }
-    } else if (wParam == VK_ESCAPE && sConsole->IsVisible()) {
-      if (isDown && !isRepeat && code == HC_ACTION) {
-        sConsole->Hide();
-        return 1;
-      }
-      return CallNextHookEx(NULL, code, wParam, lParam);
-    } else if (sConsole->IsEnabled()) {
-      BYTE layout[256] = {0};
-      WORD out[2] = {0};
-      switch (wParam) {
-        case VK_TAB:
-          if (isUp)
-            for (int i = 0; i < 5; i++) sConsole->AddKey(' ');
-          break;
-        case VK_RETURN:
-          if (isUp && !isRepeat && !escMenuOpen) sConsole->ExecuteCommand();
-          break;
-        case VK_BACK:
-          if (isDown) sConsole->RemoveLastKey();
-          break;
-        case VK_UP:
-          if (isUp && !isRepeat) sConsole->PrevCommand();
-          break;
-        case VK_DOWN:
-          if (isUp && !isRepeat) sConsole->NextCommand();
-          break;
-        case VK_NEXT:
-          if (isDown) sConsole->ScrollDown();
-          break;
-        case VK_PRIOR:
-          if (isDown) sConsole->ScrollUp();
-          break;
-        case VK_MENU:  // alt
-          // Send the alt to the scripts to fix sticky alt. There may be a better way.
-          KeyDownUpEvent(wParam, isUp);
-          return CallNextHookEx(NULL, code, wParam, lParam);
-          break;
-        default:
-          if (isDown) {
-            if (GetKeyboardState(layout) && ToAscii(wParam, (lParam & 0xFF0000), layout, out, 0) != 0) {
-              for (int i = 0; i < repeatCount; i++) sConsole->AddKey(out[0]);
-            }
-          }
-          break;
-      }
-      return 1;
-    } else if (code == HC_ACTION && !isRepeat && !(chatBoxOpen || escMenuOpen))
-      if (KeyDownUpEvent(wParam, isUp)) return 1;
-  }
-  return CallNextHookEx(NULL, code, wParam, lParam);
-}
-
 LRESULT CALLBACK MouseMove(int code, WPARAM wParam, LPARAM lParam) {
   MOUSEHOOKSTRUCT* mouse = (MOUSEHOOKSTRUCT*)lParam;
   POINT pt = mouse->pt;
   ScreenToClient(mouse->hwnd, &pt);
 
   // filter out clicks on the window border
-  if (code == HC_ACTION && (pt.x < 0 || pt.y < 0)) return CallNextHookEx(NULL, code, wParam, lParam);
+  if (code == HC_ACTION && (pt.x < 0 || pt.y < 0)) {
+    return CallNextHookEx(NULL, code, wParam, lParam);
+  }
+
   Vars.pMouseCoords = pt;
-  if (Vars.bBlockMouse) return 1;
+  if (Vars.bBlockMouse) {
+    return 1;
+  }
 
   if (code == HC_ACTION) {
     bool clicked = false;
@@ -202,7 +98,9 @@ LRESULT CALLBACK MouseMove(int code, WPARAM wParam, LPARAM lParam) {
       case WM_LBUTTONDOWN:
         MouseClickEvent(0, pt, false);
         helper.button = 0;
-        if (Genhook::ForEachVisibleHook(ClickHook, &helper, 1)) clicked = true;
+        if (Genhook::ForEachVisibleHook(ClickHook, &helper, 1)) {
+          clicked = true;
+        }
         break;
       case WM_LBUTTONUP:
         MouseClickEvent(0, pt, true);
@@ -210,7 +108,9 @@ LRESULT CALLBACK MouseMove(int code, WPARAM wParam, LPARAM lParam) {
       case WM_RBUTTONDOWN:
         MouseClickEvent(1, pt, false);
         helper.button = 1;
-        if (Genhook::ForEachVisibleHook(ClickHook, &helper, 1)) clicked = true;
+        if (Genhook::ForEachVisibleHook(ClickHook, &helper, 1)) {
+          clicked = true;
+        }
         break;
       case WM_RBUTTONUP:
         MouseClickEvent(1, pt, true);
@@ -218,7 +118,9 @@ LRESULT CALLBACK MouseMove(int code, WPARAM wParam, LPARAM lParam) {
       case WM_MBUTTONDOWN:
         MouseClickEvent(2, pt, false);
         helper.button = 2;
-        if (Genhook::ForEachVisibleHook(ClickHook, &helper, 1)) clicked = true;
+        if (Genhook::ForEachVisibleHook(ClickHook, &helper, 1)) {
+          clicked = true;
+        }
         break;
       case WM_MBUTTONUP:
         MouseClickEvent(2, pt, true);

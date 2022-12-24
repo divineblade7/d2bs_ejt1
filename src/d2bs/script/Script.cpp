@@ -11,8 +11,8 @@
 #include <algorithm>
 #include <io.h>
 
-Script::Script(const wchar_t* file, ScriptType type, uint argc, JSAutoStructuredCloneBuffer** argv)
-    : type_(type), argv_(argv), argc_(argc) {
+Script::Script(ScriptEngine* engine, const wchar_t* file, ScriptType type, uint argc, JSAutoStructuredCloneBuffer** argv)
+    : engine_(engine), type_(type), argv_(argv), argc_(argc) {
   event_signal_ = CreateEvent(nullptr, true, false, nullptr);
 
   if (type_ == ScriptType::Command && wcslen(file) < 1) {
@@ -469,7 +469,7 @@ DWORD WINAPI ScriptThread(void* data) {
 #endif
     script->run();
     if (Vars.bDisableCache) {
-      sScriptEngine->DisposeScript(script);
+      script->engine()->DisposeScript(script);
     }
   }
   return 0;

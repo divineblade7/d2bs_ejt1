@@ -17,14 +17,14 @@
 
 // internal ForEachScript helper functions
 bool __fastcall DisposeScript(Script* script, void*, uint) {
-  sScriptEngine->DisposeScript(script);
+  script->engine()->DisposeScript(script);
   return true;
 }
 
 bool __fastcall StopScript(Script* script, void* argv, uint) {
   script->TriggerOperationCallback();
   if (script->type() != ScriptType::Command) {
-    script->stop(*(bool*)(argv), sScriptEngine->GetState() == Stopping);
+    script->stop(*(bool*)(argv), script->engine()->GetState() == Stopping);
   }
   return true;
 }
@@ -37,9 +37,9 @@ BOOL ScriptEngine::Startup(void) {
     Script* console = nullptr;
     if (wcslen(Vars.szConsole) > 0) {
       auto path = (Vars.script_dir / Vars.szConsole).make_preferred().wstring();
-      console = new Script(path.c_str(), ScriptType::Command);
+      console = new Script(this, path.c_str(), ScriptType::Command);
     } else {
-      console = new Script(L"", ScriptType::Command);
+      console = new Script(this, L"", ScriptType::Command);
     }
     console->BeginThread(ScriptThread);
     scripts_[L"console"] = console;
@@ -115,7 +115,7 @@ Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptType type, uint arg
       scripts_[fileName]->stop();
     }
 
-    Script* script = new Script(fileName, type, argc, argv);
+    Script* script = new Script(this, fileName, type, argc, argv);
     scripts_[fileName] = script;
     free(fileName);
     return script;
@@ -378,7 +378,7 @@ JSBool contextCallback(JSContext* cx, uint contextOp) {
     lpUnit->_dwPrivateType = PRIVATE_UNIT;
 
     for (JSClassSpec* entry = global_classes; entry->classp != NULL; entry++)
-      sScriptEngine->InitClass(cx, globalObject, entry->classp, entry->methods, entry->properties,
+      sEngine->script_engine()->InitClass(cx, globalObject, entry->classp, entry->methods, entry->properties,
                                entry->static_methods, entry->static_properties);
 
     JSObject* meObject = BuildObject(cx, &unit_class, unit_methods, me_props, lpUnit);
@@ -389,7 +389,7 @@ JSBool contextCallback(JSContext* cx, uint contextOp) {
       return JS_FALSE;
     }
 
-#define DEFCONST(vp) sScriptEngine->DefineConstant(cx, globalObject, #vp, vp)
+#define DEFCONST(vp) sEngine->script_engine()->DefineConstant(cx, globalObject, #vp, vp)
     DEFCONST(FILE_READ);
     DEFCONST(FILE_WRITE);
     DEFCONST(FILE_APPEND);
@@ -774,13 +774,13 @@ bool ExecScriptEvent(Event* evt, bool clearList) {
     }
 
     if (strcmp(evtName, "setTimeout") == 0) {
-      sScriptEngine->RemoveDelayedEvent(*(DWORD*)evt->arg1);
+      evt->owner->engine()->RemoveDelayedEvent(*(DWORD*)evt->arg1);
     }
 
     return true;
   }
   if (strcmp(evtName, "DisposeMe") == 0) {
-    sScriptEngine->DisposeScript(evt->owner);
+    evt->owner->engine()->DisposeScript(evt->owner);
   }
 
   return true;

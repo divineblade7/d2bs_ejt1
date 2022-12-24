@@ -73,7 +73,6 @@ struct Variables {
   char szLod[30];
   wchar_t szTitle[256];
 
-  WNDPROC oldWNDPROC;
   HHOOK hMouseHook;
   HHOOK hKeybHook;
 
