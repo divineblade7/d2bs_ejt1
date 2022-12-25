@@ -225,8 +225,9 @@ BOOL SetSkill(JSContext* cx, WORD wSkillId, BOOL bLeft, DWORD dwItemId) {
         std::shared_ptr<Event> evt = events.back();
         events.pop_back();
         LeaveCriticalSection(&Vars.cEventSection);
-        ExecScriptEvent(evt, false);
+        ExecScriptEvent(evt);
       }
+
       amt = 100 - (GetTickCount() - start);
       // SleepEx(10,true);	// ex for delayed setTimer
     }

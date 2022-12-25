@@ -136,7 +136,6 @@ class Script {
   std::wstring filename_;
   int execCount_ = 0;
   myUnit* me_ = nullptr;
-  std::list<std::shared_ptr<Event>> EventList_;
 
   IncludeList includes_;
   IncludeList inProgress_;
@@ -150,18 +149,13 @@ class Script {
 
   DWORD last_gc_ = 0;
   bool hasActiveCX_ = false;  // hack to get away from JS_IsRunning
-  HANDLE event_signal_;
 
+  HANDLE event_signal_;
+  std::list<std::shared_ptr<Event>> EventList_;
   d2bs::mpmc_queue<std::shared_ptr<Event>> event_queue_;  // new event system ~ ejt
 };
 
-struct RUNCOMMANDSTRUCT {
-  Script* script;
-  const wchar_t* command;
-};
-
-DWORD WINAPI RunCommandThread(void* data);
 DWORD WINAPI ScriptThread(void* data);
-bool ExecScriptEvent(std::shared_ptr<Event> evt, bool clearList);
+bool ExecScriptEvent(std::shared_ptr<Event> evt);
 JSBool operationCallback(JSContext* cx);
 JSBool contextCallback(JSContext* cx, uint contextOp);

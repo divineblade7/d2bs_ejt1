@@ -150,8 +150,9 @@ JSAPI_FUNC(my_delay) {
         std::shared_ptr<Event> evt = events.back();
         events.pop_back();
         LeaveCriticalSection(&Vars.cEventSection);
-        ExecScriptEvent(evt, false);
+        ExecScriptEvent(evt);
       }
+
       if (JS_GetGCParameter(script->runtime(), JSGC_BYTES) - script->last_gc() > 524288)  // gc every .5 mb
       {
         JS_GC(JS_GetRuntime(cx));

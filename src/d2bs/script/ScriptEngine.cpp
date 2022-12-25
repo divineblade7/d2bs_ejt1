@@ -158,9 +158,9 @@ void ScriptEngine::DisposeScript(Script* script) {
     delete script;
   } else {
     // bad things happen if we delete from another thread
-    std::shared_ptr<Event> evt = std::make_shared<Event>();
+    auto evt = std::make_shared<DisposeEvent>();
     evt->owner = script;
-    evt->name = _strdup("DisposeMe");
+    evt->name = "DisposeMe";
     script->FireEvent(evt);
   }
 }

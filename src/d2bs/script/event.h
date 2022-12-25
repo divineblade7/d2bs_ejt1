@@ -11,7 +11,11 @@ class Script;
 typedef std::list<AutoRoot*> FunctionList;
 typedef std::map<std::string, FunctionList> FunctionMap;
 
-struct Event {
+class Event {
+ public:
+  // We don't process enough events for the overhead of polymorphic class to be a bottleneck
+  virtual void process() = 0;
+
   Script* owner = nullptr;
   JSObject* object = nullptr;
   FunctionList functions;
@@ -20,80 +24,117 @@ struct Event {
   bool block = false;
 };
 
-struct CopyDataEvent : Event {
+class CopyDataEvent : public Event {
+ public:
+  void process();
   DWORD mode;
   std::wstring msg;
 };
 
-struct CommandEvent : Event {
+struct CommandEvent : public Event {
+ public:
+  void process();
   std::wstring command;
 };
 
-struct ChatEvent : Event {
+struct ChatEvent : public Event {
+ public:
+  void process();
   std::string name1, nick;
   std::wstring msg;
 };
 
-struct PacketEvent : Event {
+struct PacketEvent : public Event {
+ public:
+  void process();
   std::string name1;
   std::vector<uint8_t> bytes;
 };
 
-struct BroadcastEvent : Event {};
+struct BroadcastEvent : public Event {
+ public:
+  void process();
+};
 
-struct GameActionEvent : Event {
+struct GameActionEvent : public Event {
+ public:
+  void process();
   BYTE mode;
   DWORD param1, param2;
   std::string name1;
   std::wstring name2;
 };
 
-struct KeyEvent : Event {
+struct KeyEvent : public Event {
+ public:
+  void process();
   BOOL up;
   WPARAM key;
 };
 
-struct ItemEvent : Event {
+struct ItemEvent : public Event {
+ public:
+  void process();
   DWORD id;
   std::string code;
   WORD mode;
   bool global;
 };
 
-struct TimeoutEvent : Event {
+struct TimeoutEvent : public Event {
+ public:
+  void process();
   int key;
   HANDLE handle;
   jsval* val;
 };
 
-struct LifeEvent : Event {
+struct LifeEvent : public Event {
+ public:
+  void process();
   DWORD life;
 };
 
-struct ManaEvent : Event {
+struct ManaEvent : public Event {
+ public:
+  void process();
   DWORD mana;
 };
 
-struct PlayerAssignEvent : Event {
+struct PlayerAssignEvent : public Event {
+ public:
+  void process();
   DWORD unit_id;
 };
 
-struct MouseClickEvent : Event {
+struct MouseClickEvent : public Event {
+ public:
+  void process();
   DWORD button;
   DWORD x;
   DWORD y;
   DWORD up;
 };
 
-struct ScreenHookClickEvent : Event {
+struct ScreenHookClickEvent : public Event {
+ public:
+  void process();
   int button;
   LONG x;
   LONG y;
 };
 
-struct MouseMoveEvent : Event {
+struct MouseMoveEvent : public Event {
+ public:
+  void process();
+
   DWORD x;
   DWORD y;
+};
+
+struct DisposeEvent : public Event {
+ public:
+  void process();
 };
 
 bool FireChatEvent(const char* lpszNick, const wchar_t* lpszMsg);
