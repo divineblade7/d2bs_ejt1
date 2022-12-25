@@ -46,8 +46,6 @@ Script::~Script() {
     JS_EndRequest(context_);
   }
 
-  std::lock_guard<std::mutex> lock(mutex_);
-
   JS_DestroyContext(context_);
   JS_DestroyRuntime(runtime_);
 
@@ -394,9 +392,9 @@ void Script::ClearEvent(const char* evtName) {
 }
 
 void Script::ClearAllEvents() {
-  std::lock_guard<std::mutex> lock(mutex_);
-
-  for (FunctionMap::iterator it = functions_.begin(); it != functions_.end(); it++) ClearEvent(it->first.c_str());
+  for (FunctionMap::iterator it = functions_.begin(); it != functions_.end(); it++) {
+    ClearEvent(it->first.c_str());
+  }
   functions_.clear();
 }
 

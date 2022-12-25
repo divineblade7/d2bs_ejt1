@@ -39,20 +39,20 @@ void LogNoFormat(const wchar_t* szString) {
   localtime_s(&timestamp, &tTime);
   strftime(szTime, sizeof(szTime), "%Y%m%d", &timestamp);
   swprintf_s(path, _countof(path), L"%s\\d2bs-%s-%S.log", Vars.log_dir.wstring().c_str(), Vars.szProfile, szTime);
-#ifdef DEBUG
-  FILE* log = stderr;
-#else
+//#ifdef DEBUG
+//  FILE* log = stderr;
+//#else
   FILE* log = _wfsopen(path, L"a+", _SH_DENYNO);
-#endif
+//#endif
   static DWORD id = GetProcessId(GetCurrentProcess());
   char* sString = UnicodeToAnsi(szString);
   strftime(szTime, sizeof(szTime), "%x %X", &timestamp);
   fprintf(log, "[%s] D2BS %d: %s\n", szTime, id, sString);
   delete[] sString;
-#ifndef DEBUG
+//#ifndef DEBUG
   fflush(log);
   fclose(log);
-#endif
+//#endif
 }
 
 bool InArea(int x, int y, int x2, int y2, int sizex, int sizey) {
