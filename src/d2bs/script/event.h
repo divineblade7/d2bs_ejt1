@@ -15,10 +15,8 @@ struct Event {
   Script* owner = nullptr;
   JSObject* object = nullptr;
   FunctionList functions;
-  JSAutoStructuredCloneBuffer** argv = nullptr;
-  uint argc = 0;
+  std::vector<std::shared_ptr<JSAutoStructuredCloneBuffer>> args;
   std::string name;
-  volatile long count = 0;
   bool block = false;
 };
 

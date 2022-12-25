@@ -3,12 +3,11 @@
 #include "d2bs/engine.h"
 #include "d2bs/script/ScriptEngine.h"
 
-bool __fastcall LifeEventCallback(Script* script, void* argv, uint argc) {
+bool __fastcall LifeEventCallback(Script* script, void* argv, uint) {
   SingleArgHelper* helper = (SingleArgHelper*)argv;
   if (script->is_running() && script->IsListenerRegistered("melife")) {
     auto evt = std::make_shared<LifeEvent>();
     evt->owner = script;
-    evt->argc = argc;
     evt->name = "melife";
     evt->life = helper->arg1;
 
@@ -22,12 +21,11 @@ void FireLifeEvent(DWORD dwLife) {
   sScriptEngine->ForEachScript(LifeEventCallback, &helper, 1);
 }
 
-bool __fastcall ManaEventCallback(Script* script, void* argv, uint argc) {
+bool __fastcall ManaEventCallback(Script* script, void* argv, uint) {
   SingleArgHelper* helper = (SingleArgHelper*)argv;
   if (script->is_running() && script->IsListenerRegistered("memana")) {
     auto evt = std::make_shared<ManaEvent>();
     evt->owner = script;
-    evt->argc = argc;
     evt->name = "memana";
     evt->mana = helper->arg1;
 
@@ -41,14 +39,13 @@ void FireManaEvent(DWORD dwMana) {
   sScriptEngine->ForEachScript(ManaEventCallback, &helper, 1);
 }
 
-bool __fastcall KeyEventCallback(Script* script, void* argv, uint argc) {
+bool __fastcall KeyEventCallback(Script* script, void* argv, uint) {
   KeyEventHelper* helper = (KeyEventHelper*)argv;
   const char* name = (helper->up ? "keyup" : "keydown");
   auto evt = std::make_shared<KeyEvent>();
 
   if (script->is_running() && script->IsListenerRegistered(name)) {
     evt->owner = script;
-    evt->argc = argc;
     evt->name = name;
     evt->key = helper->key;
     evt->up = helper->up;
@@ -59,7 +56,6 @@ bool __fastcall KeyEventCallback(Script* script, void* argv, uint argc) {
   name = (helper->up ? "keyupblocker" : "keydownblocker");
   if (script->is_running() && script->IsListenerRegistered(name)) {
     evt->owner = script;
-    evt->argc = argc;
     evt->name = name;
     evt->key = helper->key;
     evt->up = helper->up;
@@ -80,12 +76,11 @@ bool FireKeyDownUpEvent(WPARAM key, BYTE bUp) {
   return sScriptEngine->ForEachScript(KeyEventCallback, &helper, 2);
 }
 
-bool __fastcall PlayerAssignCallback(Script* script, void* argv, uint argc) {
+bool __fastcall PlayerAssignCallback(Script* script, void* argv, uint) {
   SingleArgHelper* helper = (SingleArgHelper*)argv;
   if (script->is_running() && script->IsListenerRegistered("playerassign")) {
     auto evt = std::make_shared<PlayerAssignEvent>();
     evt->owner = script;
-    evt->argc = argc;
     evt->name = "playerassign";
     evt->unit_id = helper->arg1;
 
@@ -99,12 +94,11 @@ void FirePlayerAssignEvent(DWORD dwUnitId) {
   sScriptEngine->ForEachScript(PlayerAssignCallback, &helper, 1);
 }
 
-bool __fastcall MouseClickCallback(Script* script, void* argv, uint argc) {
+bool __fastcall MouseClickCallback(Script* script, void* argv, uint) {
   QuadArgHelper* helper = (QuadArgHelper*)argv;
   if (script->is_running() && script->IsListenerRegistered("mouseclick")) {
     auto evt = std::make_shared<MouseClickEvent>();
     evt->owner = script;
-    evt->argc = argc;
     evt->name = "mouseclick";
     evt->button = helper->arg1;
     evt->x = helper->arg2;
@@ -122,12 +116,11 @@ void FireMouseClickEvent(int button, POINT pt, bool bUp) {
   sScriptEngine->ForEachScript(MouseClickCallback, &helper, 4);
 }
 
-bool __fastcall MouseMoveCallback(Script* script, void* argv, uint argc) {
+bool __fastcall MouseMoveCallback(Script* script, void* argv, uint) {
   DoubleArgHelper* helper = (DoubleArgHelper*)argv;
   if (script->is_running() && script->IsListenerRegistered("mousemove")) {
     auto evt = std::make_shared<MouseMoveEvent>();
     evt->owner = script;
-    evt->argc = argc;
     evt->name = "mousemove";
     evt->x = helper->arg1;
     evt->y = helper->arg2;
@@ -151,11 +144,9 @@ bool __fastcall BCastEventCallback(Script* script, void* argv, uint argc) {
     evt->owner = script;
     evt->name = "scriptmsg";
 
-    evt->argc = argc;
-    evt->argv = new JSAutoStructuredCloneBuffer*[argc];
-    for (uint i = 0; i < argc; i++) {
-      evt->argv[i] = new JSAutoStructuredCloneBuffer;
-      evt->argv[i]->write(helper->cx, helper->argv[i]);
+    for (uint i = 0; i < argc; ++i) {
+      evt->args.push_back(std::make_shared<JSAutoStructuredCloneBuffer>());
+      evt->args.back()->write(helper->cx, helper->argv[i]);
     }
 
     script->FireEvent(evt);
@@ -168,13 +159,12 @@ void FireScriptBroadcastEvent(JSContext* cx, uint argc, jsval* args) {
   sScriptEngine->ForEachScript(BCastEventCallback, &helper, argc);
 }
 
-bool __fastcall ChatEventCallback(Script* script, void* argv, uint argc) {
+bool __fastcall ChatEventCallback(Script* script, void* argv, uint) {
   ChatEventHelper* helper = (ChatEventHelper*)argv;
   auto evt = std::make_shared<ChatEvent>();
 
   if (script->is_running() && script->IsListenerRegistered(helper->name)) {
     evt->owner = script;
-    evt->argc = argc;
     evt->name1 = helper->name;
     evt->nick = helper->nick;
     evt->msg = helper->msg;
@@ -187,7 +177,6 @@ bool __fastcall ChatEventCallback(Script* script, void* argv, uint argc) {
 
   if (script->is_running() && script->IsListenerRegistered(evtname.c_str())) {
     evt->owner = script;
-    evt->argc = argc;
     evt->name = evtname;
     evt->name1 = helper->name;
     evt->nick = helper->nick;
@@ -216,12 +205,11 @@ bool FireWhisperEvent(const char* lpszNick, const wchar_t* lpszMsg) {
   return sScriptEngine->ForEachScript(ChatEventCallback, &helper, 2);
 }
 
-bool __fastcall CopyDataCallback(Script* script, void* argv, uint argc) {
+bool __fastcall CopyDataCallback(Script* script, void* argv, uint) {
   CopyDataHelper* helper = (CopyDataHelper*)argv;
   if (script->is_running() && script->IsListenerRegistered("copydata")) {
     auto evt = std::make_shared<CopyDataEvent>();
     evt->owner = script;
-    evt->argc = argc;
     evt->name = "copydata";
     evt->mode = helper->mode;
     evt->msg = helper->msg;
@@ -236,12 +224,11 @@ void FireCopyDataEvent(DWORD dwMode, wchar_t* lpszMsg) {
   sScriptEngine->ForEachScript(CopyDataCallback, &helper, 2);
 }
 
-bool __fastcall ItemEventCallback(Script* script, void* argv, uint argc) {
+bool __fastcall ItemEventCallback(Script* script, void* argv, uint) {
   ItemEventHelper* helper = (ItemEventHelper*)argv;
   if (script->is_running() && script->IsListenerRegistered("itemaction")) {
     auto evt = std::make_shared<ItemEvent>();
     evt->owner = script;
-    evt->argc = argc;
     evt->name = "itemaction";
     evt->id = helper->id;
     evt->code = helper->code;
@@ -258,12 +245,11 @@ void FireItemActionEvent(DWORD GID, char* Code, BYTE Mode, bool Global) {
   sScriptEngine->ForEachScript(ItemEventCallback, &helper, 4);
 }
 
-bool __fastcall GameActionEventCallback(Script* script, void* argv, uint argc) {
+bool __fastcall GameActionEventCallback(Script* script, void* argv, uint) {
   GameActionEventHelper* helper = (GameActionEventHelper*)argv;
   if (script->is_running() && script->IsListenerRegistered("gameevent")) {
     auto evt = std::make_shared<GameActionEvent>();
     evt->owner = script;
-    evt->argc = argc;
     evt->name = "gameevent";
     evt->mode = helper->mode;
     evt->param1 = helper->param1;
@@ -281,13 +267,12 @@ void FireGameActionEvent(BYTE mode, DWORD param1, DWORD param2, char* name1, wch
   sScriptEngine->ForEachScript(GameActionEventCallback, &helper, 5);
 }
 
-bool __fastcall PacketEventCallback(Script* script, void* argv, uint argc) {
+bool __fastcall PacketEventCallback(Script* script, void* argv, uint) {
   PacketEventHelper* helper = (PacketEventHelper*)argv;
 
   if (script->is_running() && script->IsListenerRegistered(helper->name)) {
     auto evt = std::make_shared<PacketEvent>();
     evt->owner = script;
-    evt->argc = argc;
     evt->name1 = helper->name;
     evt->bytes.resize(helper->dwSize);
     memcpy(evt->bytes.data(), helper->pPacket, helper->dwSize);

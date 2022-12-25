@@ -212,7 +212,6 @@ bool Genhook::Click(int button, POINT* loc) {
   auto evt = std::make_shared<ScreenHookClickEvent>();
   if (owner && JSVAL_IS_FUNCTION(owner->context(), clicked)) {
     evt->owner = owner;
-    evt->argc = 3;
     evt->name = "ScreenHookClick";
     evt->button = button;
     evt->x = loc->x;
@@ -236,7 +235,6 @@ void Genhook::Hover(POINT* loc) {
   if (owner && JSVAL_IS_FUNCTION(owner->context(), hovered)) {
     auto evt = std::make_shared<MouseMoveEvent>();
     evt->owner = owner;
-    evt->argc = 2;
     evt->functions.push_back(new AutoRoot((owner->context(), hovered)));
     evt->name = "ScreenHookHover";
     evt->x = loc->x;

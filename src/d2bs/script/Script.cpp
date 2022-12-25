@@ -263,7 +263,6 @@ void Script::RunCommand(const wchar_t* command) {
 
   std::shared_ptr<CommandEvent> evt = std::make_shared<CommandEvent>();
   evt->owner = this;
-  evt->argc = argc_;
   evt->name = "Command";
   evt->command = command;
 
@@ -499,7 +498,7 @@ bool ExecScriptEvent(std::shared_ptr<Event> evt, bool clearList) {
   if (evt->name == "itemaction") {
     auto item_evt = std::static_pointer_cast<ItemEvent>(evt);
 
-    jsval* argv = new jsval[evt->argc];
+    jsval* argv = new jsval[4];
     JS_BeginRequest(cx);
 
     argv[0] = JS_NumberValue(item_evt->id);
@@ -624,7 +623,7 @@ bool ExecScriptEvent(std::shared_ptr<Event> evt, bool clearList) {
     jsval rval;
     if (evt->name == "ScreenHookHover") {
       for (FunctionList::iterator it = evt->functions.begin(); it != evt->functions.end(); it++)
-        JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), evt->argc + 1, argv, &rval);
+        JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 2 + 1, argv, &rval);
     } else {
       for (FunctionList::iterator it = evt->owner->functions()[evt->name].begin();
            it != evt->owner->functions()[evt->name].end(); it++)
@@ -648,7 +647,9 @@ bool ExecScriptEvent(std::shared_ptr<Event> evt, bool clearList) {
     argv[2] = JS_NumberValue(mouse_evt->y);
     argv[3] = JS_NumberValue(mouse_evt->up);
 
-    for (uint j = 0; j < evt->argc; j++) JS_AddValueRoot(cx, &argv[j]);
+    for (uint j = 0; j < 4; j++) {
+      JS_AddValueRoot(cx, &argv[j]);
+    }
 
     jsval rval;
     for (FunctionList::iterator it = evt->owner->functions()[evt->name].begin();
@@ -740,29 +741,29 @@ bool ExecScriptEvent(std::shared_ptr<Event> evt, bool clearList) {
     auto bcast_evt = std::static_pointer_cast<BroadcastEvent>(evt);
 
     JS_BeginRequest(cx);
-    jsval* argv = new jsval[evt->argc];
-    for (uint i = 0; i < evt->argc; i++) {
-      evt->argv[i]->read(cx, &argv[i]);
+    auto argc = evt->args.size();
+    jsval* argv = new jsval[evt->args.size()];
+    for (uint i = 0; i < argc; i++) {
+      evt->args[i]->read(cx, &argv[i]);
     }
 
-    for (uint j = 0; j < evt->argc; j++) {
+    for (uint j = 0; j < argc; j++) {
       JS_AddValueRoot(cx, &argv[j]);
     }
 
     jsval rval;
     for (FunctionList::iterator it = evt->owner->functions()[evt->name].begin();
          it != evt->owner->functions()[evt->name].end(); it++) {
-      JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), evt->argc, argv, &rval);
+      JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), argc, argv, &rval);
     }
     JS_EndRequest(cx);
 
-    for (uint j = 0; j < evt->argc; j++) {
+    for (uint j = 0; j < argc; j++) {
       JS_RemoveValueRoot(cx, &argv[j]);
     }
 
-    for (uint i = 0; i < evt->argc; i++) {
-      evt->argv[i]->clear();
-      delete evt->argv[i];
+    for (uint i = 0; i < argc; i++) {
+      evt->args[i]->clear();
     }
 
     return true;

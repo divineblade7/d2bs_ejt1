@@ -113,11 +113,9 @@ JSAPI_FUNC(script_send) {
   evt->owner = script;
   evt->name = "scriptmsg";
 
-  evt->argc = argc;
-  evt->argv = new JSAutoStructuredCloneBuffer*[argc];
-  for (uint i = 0; i < argc; i++) {
-    evt->argv[i] = new JSAutoStructuredCloneBuffer;
-    evt->argv[i]->write(cx, JS_ARGV(cx, vp)[i]);
+  for (uint i = 0; i < argc; ++i) {
+    evt->args.push_back(std::make_shared<JSAutoStructuredCloneBuffer>());
+    evt->args.back()->write(cx, JS_ARGV(cx, vp)[i]);
   }
 
   script->FireEvent(evt);
