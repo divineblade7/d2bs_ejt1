@@ -140,7 +140,7 @@ void Genhook::Clean(Script* owner) {
   while (it != visible.end()) {
     if ((*it)->owner->is_stopped()) {
       // Genhook* i = *it;
-      it = invisible.erase(it);
+      it = visible.erase(it);
       //	delete(i);
     } else
       it++;
@@ -235,7 +235,7 @@ void Genhook::Hover(POINT* loc) {
   if (owner && JSVAL_IS_FUNCTION(owner->context(), hovered)) {
     auto evt = std::make_shared<MouseMoveEvent>();
     evt->owner = owner;
-    evt->functions.push_back(new AutoRoot((owner->context(), hovered)));
+    evt->functions.push_back(new AutoRoot(owner->context(), hovered));
     evt->name = "ScreenHookHover";
     evt->x = loc->x;
     evt->y = loc->y;
