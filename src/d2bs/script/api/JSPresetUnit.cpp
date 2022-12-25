@@ -51,26 +51,34 @@ JSAPI_PROP(presetunit_getProperty) {
 }
 
 JSAPI_FUNC(my_getPresetUnits) {
-  if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
-  if (argc < 1) {
+  if (!WaitForGameReady()) {
+    THROW_WARNING(cx, vp, "Game not ready");
+  }
+
+  if (args.length() < 1) {
     JS_SET_RVAL(cx, vp, JSVAL_FALSE);
     return JS_TRUE;
   }
 
-  uint32 levelId;
-  JS_BeginRequest(cx);
-  JS_ValueToECMAUint32(cx, JS_ARGV(cx, vp)[0], &levelId);
-  JS_EndRequest(cx);
+  uint32 levelId = args[0].toInt32();
   Level* pLevel = GetLevel(levelId);
 
-  if (!pLevel) THROW_ERROR(cx, "getPresetUnits failed, couldn't access the level!");
+  if (!pLevel) {
+    THROW_ERROR(cx, "getPresetUnits failed, couldn't access the level!");
+  }
 
   uint nClassId = NULL;
   uint nType = NULL;
 
-  if (argc >= 2) nType = JSVAL_TO_INT(JS_ARGV(cx, vp)[1]);
-  if (argc >= 3) nClassId = JSVAL_TO_INT(JS_ARGV(cx, vp)[2]);
+  if (args.length() >= 2 && !args[1].isUndefined()) {
+    nType = args.get(1).toInt32();
+  }
+  // BUG: For some reason we get argc == 3 even if only 2 args is supplied!
+  if (args.length() >= 3 && !args[2].isUndefined()) {
+    nClassId = args.get(2).toInt32();
+  }
 
   CriticalRoom cRoom;
 

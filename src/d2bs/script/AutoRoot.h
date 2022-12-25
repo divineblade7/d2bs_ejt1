@@ -4,9 +4,8 @@
 
 class AutoRoot {
  public:
-  AutoRoot() : var(JSVAL_NULL), count(0) {}
+  AutoRoot() {}
   AutoRoot(JSContext* cx, jsval var);
-  AutoRoot(jsval var);
   ~AutoRoot();
 
   AutoRoot(const AutoRoot&) = delete;
@@ -28,7 +27,7 @@ class AutoRoot {
   void Release();
 
  private:
-  jsval var;
-  int count;
-  JSContext* cx;
+  JSContext* cx = nullptr;
+  jsval var = JSVAL_NULL;
+  int count = 0;
 };

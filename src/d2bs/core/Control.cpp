@@ -106,7 +106,9 @@ Control* findControl(int Type, const wchar_t* Text, int Disabled, int PosX, int 
 }
 
 bool clickControl(Control* pControl, int x, int y) {
-  if (ClientState() != ClientStateMenu) return false;
+  if (ClientState() != ClientStateMenu) {
+    return false;
+  }
 
   if (pControl) {
     if (x == -1) x = pControl->dwPosX + (pControl->dwSizeX / 2);

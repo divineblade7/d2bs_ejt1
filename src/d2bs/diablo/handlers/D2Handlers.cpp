@@ -163,7 +163,6 @@ void CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD) {
 void GameLeave(void) {
   Vars.bQuitting = false;
   sScriptEngine->for_each([](Script* script) {
-    Print(L"Stop script %s", script->filename());
     if (script->type() == ScriptType::InGame) {
       script->stop(true);
     }

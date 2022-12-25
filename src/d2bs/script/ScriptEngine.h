@@ -63,15 +63,15 @@ class ScriptEngine {
   int AddDelayedEvent(std::shared_ptr<TimeoutEvent> evt, int freq);
   void RemoveDelayedEvent(int key);
 
-  JSRuntime* GetRuntime(void) {
+  JSRuntime* runtime() {
     return runtime_;
   }
 
-  JSContext* GetGlobalContext(void) {
+  JSContext* context() {
     return context_;
   }
 
-  EngineState GetState(void) {
+  EngineState GetState() {
     return state_;
   }
 

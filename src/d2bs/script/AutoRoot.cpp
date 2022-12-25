@@ -1,20 +1,15 @@
 #include "d2bs/script/AutoRoot.h"
 
-#include "d2bs/engine.h"
-#include "d2bs/script/ScriptEngine.h"
+#include <intrin.h> // __debugbreak
 
 AutoRoot::AutoRoot(JSContext* ncx, jsval nvar) : cx(ncx), var(nvar), count(0) {
-  Take();
-}
-
-AutoRoot::AutoRoot(jsval nvar) : cx(sEngine->script_engine()->GetGlobalContext()), var(nvar), count(0) {
   Take();
 }
 
 AutoRoot::~AutoRoot() {
   if (count < 0) {
     fprintf(stderr, "AutoRoot failed: Count is still %i, but the root is being destroyed", count);
-    DebugBreak();
+    __debugbreak();
     exit(3);
   }
   JS_BeginRequest(cx);
@@ -31,7 +26,7 @@ void AutoRoot::Release() {
   count--;
   if (count < 0) {
     fprintf(stderr, "Improper AutoRoot usage: Count is less than 0");
-    DebugBreak();
+    __debugbreak();
     exit(3);
   }
 }

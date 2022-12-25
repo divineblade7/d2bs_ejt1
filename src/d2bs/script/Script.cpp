@@ -62,11 +62,11 @@ Script::~Script() {
 void Script::run() {
   try {
     runtime_ = JS_NewRuntime(Vars.dwMemUsage, JS_NO_HELPER_THREADS);
-    JS_SetNativeStackQuota(runtime_, (size_t)50000);
+    JS_SetNativeStackQuota(runtime_, 50 * 1024);
     // JS_SetRuntimeThread(runtime);
     JS_SetContextCallback(runtime_, contextCallback);
 
-    context_ = JS_NewContext(runtime_, 0x2000);
+    context_ = JS_NewContext(runtime_, 0x4000);
     if (!context_) {
       throw std::exception("Couldn't create the context");
     }
@@ -292,7 +292,9 @@ bool Script::Include(const wchar_t* file) {
   // a solution on how to deal with that.
 
   wchar_t* fname = _wcsdup(file);
-  if (!fname) return false;
+  if (!fname) {
+    return false;
+  }
   _wcslwr_s(fname, wcslen(fname) + 1);
   StringReplace(fname, L'/', L'\\', wcslen(fname));
 
