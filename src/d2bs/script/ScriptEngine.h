@@ -43,8 +43,6 @@ class ScriptEngine {
 
   std::unique_lock<std::mutex> lock_script_list(const char* loc);
 
-  bool ForEachScript(ScriptCallback callback, void* argv, uint argc);
-
   // TODO: Add constraint to Fn. Signature should be fn(Script*, Args...)
   template <typename Fn, typename... Args>
   bool for_each(Fn fn, Args&&... args) {

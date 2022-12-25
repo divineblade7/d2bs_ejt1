@@ -16,15 +16,15 @@
 #include <vector>
 
 // internal ForEachScript helper functions
-bool __fastcall DisposeScript(Script* script, void*, uint) {
-  script->engine()->DisposeScript(script);
+bool __fastcall DisposeScript(Script* script, ScriptEngine* engine) {
+  engine->DisposeScript(script);
   return true;
 }
 
-bool __fastcall StopScript(Script* script, void* argv, uint) {
+bool __fastcall StopScript(Script* script, ScriptEngine* engine, bool force) {
   script->TriggerOperationCallback();
   if (script->type() != ScriptType::Command) {
-    script->stop(*(bool*)(argv), script->engine()->GetState() == Stopping);
+    script->stop(force, engine->GetState() == Stopping);
   }
   return true;
 }
@@ -60,7 +60,7 @@ void ScriptEngine::Shutdown(void) {
     }
 
     // clear all scripts now that they're stopped
-    ForEachScript(::DisposeScript, NULL, 0);
+    for_each(::DisposeScript, this);
 
     if (!scripts_.empty()) {
       scripts_.clear();
@@ -93,7 +93,7 @@ void ScriptEngine::FlushCache(void) {
 
   isFlushing = true;
 
-  ForEachScript(::DisposeScript, NULL, 0);
+  for_each(::DisposeScript, this);
 
   isFlushing = false;
 
@@ -171,23 +171,6 @@ std::unique_lock<std::mutex> ScriptEngine::lock_script_list(const char*) {
   // Log(loc);
 }
 
-bool ScriptEngine::ForEachScript(ScriptCallback callback, void* argv, uint argc) {
-  if (!callback || scripts_.empty()) {
-    return false;
-  }
-
-  auto lock = lock_script_list("forEachScript");
-
-  bool block = false;
-  for (const auto& [_, script] : scripts_) {
-    if (callback(script, argv, argc)) {
-      block = true;
-    }
-  }
-
-  return block;
-}
-
 unsigned int ScriptEngine::GetCount(bool active, bool unexecuted) {
   if (GetState() != Running) {
     return 0;
@@ -209,7 +192,7 @@ unsigned int ScriptEngine::GetCount(bool active, bool unexecuted) {
 
 void ScriptEngine::StopAll(bool forceStop) {
   if (GetState() == Running) {
-    ForEachScript(StopScript, &forceStop, 1);
+    for_each(::StopScript, this, forceStop);
   }
 }
 
