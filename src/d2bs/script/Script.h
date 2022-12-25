@@ -62,7 +62,13 @@ class Script {
   void ClearEvent(const char* evtName);
   void ClearAllEvents();
   void FireEvent(std::shared_ptr<Event>);
-  void process_events();
+
+  /**
+   * @brief
+   * @todo Make sure this function is thread safe.
+   * @param debug_str
+   */
+  void process_events(const std::wstring& debug_str = L"");
 
   inline const wchar_t* filename() {
     return filename_.c_str();

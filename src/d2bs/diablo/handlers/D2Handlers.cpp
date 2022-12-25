@@ -162,7 +162,13 @@ void CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD) {
 
 void GameLeave(void) {
   Vars.bQuitting = false;
-  sScriptEngine->ForEachScript(StopIngameScript, NULL, 0);
+  sScriptEngine->for_each([](Script* script) {
+    Print(L"Stop script %s", script->filename());
+    if (script->type() == ScriptType::InGame) {
+      script->stop(true);
+    }
+    return true;
+  });
   ActMap::ClearCache();
 }
 

@@ -141,7 +141,7 @@ JSAPI_FUNC(my_delay) {
       }
 
       // TEMPORARY: Still to much to detangle from the current event system to figure out where to put this call
-      script->process_events();
+      script->process_events(L"Delay");
 
       auto& events = script->events();
       while (events.size() > 0 && !!!(JSBool)(script->is_stopped() || ((script->type() == ScriptType::InGame) &&

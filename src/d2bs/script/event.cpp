@@ -4,184 +4,152 @@
 #include "d2bs/engine.h"
 #include "d2bs/script/ScriptEngine.h"
 
-bool __fastcall LifeEventCallback(Script* script, void* argv, uint) {
-  SingleArgHelper* helper = (SingleArgHelper*)argv;
-  if (script->is_running() && script->IsListenerRegistered("melife")) {
-    auto evt = std::make_shared<LifeEvent>();
-    evt->owner = script;
-    evt->name = "melife";
-    evt->life = helper->arg1;
-
-    script->FireEvent(evt);
-  }
-  return true;
-}
-
 void FireLifeEvent(DWORD dwLife) {
-  SingleArgHelper helper = {dwLife};
-  sScriptEngine->ForEachScript(LifeEventCallback, &helper, 1);
-}
+  sScriptEngine->for_each([&](Script* script) {
+    if (script->is_running() && script->IsListenerRegistered("melife")) {
+      auto evt = std::make_shared<LifeEvent>();
+      evt->owner = script;
+      evt->name = "melife";
+      evt->life = dwLife;
 
-bool __fastcall ManaEventCallback(Script* script, void* argv, uint) {
-  SingleArgHelper* helper = (SingleArgHelper*)argv;
-  if (script->is_running() && script->IsListenerRegistered("memana")) {
-    auto evt = std::make_shared<ManaEvent>();
-    evt->owner = script;
-    evt->name = "memana";
-    evt->mana = helper->arg1;
-
-    script->FireEvent(evt);
-  }
-  return true;
+      script->FireEvent(evt);
+    }
+    return true;
+  });
 }
 
 void FireManaEvent(DWORD dwMana) {
-  SingleArgHelper helper = {dwMana};
-  sScriptEngine->ForEachScript(ManaEventCallback, &helper, 1);
-}
+  sScriptEngine->for_each([&](Script* script) {
+    if (script->is_running() && script->IsListenerRegistered("memana")) {
+      auto evt = std::make_shared<ManaEvent>();
+      evt->owner = script;
+      evt->name = "memana";
+      evt->mana = dwMana;
 
-bool __fastcall KeyEventCallback(Script* script, void* argv, uint) {
-  KeyEventHelper* helper = (KeyEventHelper*)argv;
-  const char* name = (helper->up ? "keyup" : "keydown");
-  auto evt = std::make_shared<KeyEvent>();
-
-  if (script->is_running() && script->IsListenerRegistered(name)) {
-    evt->owner = script;
-    evt->name = name;
-    evt->key = helper->key;
-    evt->up = helper->up;
-
-    script->FireEvent(evt);
-  }
-
-  name = (helper->up ? "keyupblocker" : "keydownblocker");
-  if (script->is_running() && script->IsListenerRegistered(name)) {
-    evt->owner = script;
-    evt->name = name;
-    evt->key = helper->key;
-    evt->up = helper->up;
-
-    ResetEvent(Vars.eventSignal);
-    script->FireEvent(evt);
-
-    if (WaitForSingleObject(Vars.eventSignal, 1000) == WAIT_TIMEOUT) {
-      return false;
+      script->FireEvent(evt);
     }
-  }
-
-  return evt->block;
+    return true;
+  });
 }
 
 bool FireKeyDownUpEvent(WPARAM key, BYTE bUp) {
-  KeyEventHelper helper = {bUp, key};
-  return sScriptEngine->ForEachScript(KeyEventCallback, &helper, 2);
-}
-
-bool __fastcall PlayerAssignCallback(Script* script, void* argv, uint) {
-  SingleArgHelper* helper = (SingleArgHelper*)argv;
-  if (script->is_running() && script->IsListenerRegistered("playerassign")) {
-    auto evt = std::make_shared<PlayerAssignEvent>();
+  return sScriptEngine->for_each([&](Script* script) {
+    const char* name = (bUp ? "keyup" : "keydown");
+    auto evt = std::make_shared<KeyEvent>();
     evt->owner = script;
-    evt->name = "playerassign";
-    evt->unit_id = helper->arg1;
+    evt->name = name;
+    evt->key = key;
+    evt->up = bUp;
 
-    script->FireEvent(evt);
-  }
-  return true;
+    if (script->is_running() && script->IsListenerRegistered(name)) {
+      script->FireEvent(evt);
+    }
+
+    name = (bUp ? "keyupblocker" : "keydownblocker");
+    if (script->is_running() && script->IsListenerRegistered(name)) {
+      evt->name = name;
+
+      ResetEvent(Vars.eventSignal);
+      script->FireEvent(evt);
+
+      if (WaitForSingleObject(Vars.eventSignal, 1000) == WAIT_TIMEOUT) {
+        return false;
+      }
+    }
+
+    return evt->block;
+  });
 }
 
 void FirePlayerAssignEvent(DWORD dwUnitId) {
-  SingleArgHelper helper = {dwUnitId};
-  sScriptEngine->ForEachScript(PlayerAssignCallback, &helper, 1);
-}
+  sScriptEngine->for_each([&](Script* script) {
+    if (script->is_running() && script->IsListenerRegistered("playerassign")) {
+      auto evt = std::make_shared<PlayerAssignEvent>();
+      evt->owner = script;
+      evt->name = "playerassign";
+      evt->unit_id = dwUnitId;
 
-bool __fastcall MouseClickCallback(Script* script, void* argv, uint) {
-  QuadArgHelper* helper = (QuadArgHelper*)argv;
-  if (script->is_running() && script->IsListenerRegistered("mouseclick")) {
-    auto evt = std::make_shared<MouseClickEvent>();
-    evt->owner = script;
-    evt->name = "mouseclick";
-    evt->button = helper->arg1;
-    evt->x = helper->arg2;
-    evt->y = helper->arg3;
-    evt->up = helper->arg4;
-
-    script->FireEvent(evt);
-  }
-  return true;
+      script->FireEvent(evt);
+    }
+    return true;
+  });
 }
 
 void FireMouseClickEvent(int button, POINT pt, bool bUp) {
-  QuadArgHelper helper = {static_cast<DWORD>(button), static_cast<DWORD>(pt.x), static_cast<DWORD>(pt.y),
-                          static_cast<DWORD>(bUp)};
-  sScriptEngine->ForEachScript(MouseClickCallback, &helper, 4);
-}
+  sScriptEngine->for_each([&](Script* script) {
+    if (script->is_running() && script->IsListenerRegistered("mouseclick")) {
+      auto evt = std::make_shared<MouseClickEvent>();
+      evt->owner = script;
+      evt->name = "mouseclick";
+      evt->button = button;
+      evt->x = static_cast<DWORD>(pt.x);
+      evt->y = static_cast<DWORD>(pt.y);
+      evt->up = bUp;
 
-bool __fastcall MouseMoveCallback(Script* script, void* argv, uint) {
-  DoubleArgHelper* helper = (DoubleArgHelper*)argv;
-  if (script->is_running() && script->IsListenerRegistered("mousemove")) {
-    auto evt = std::make_shared<MouseMoveEvent>();
-    evt->owner = script;
-    evt->name = "mousemove";
-    evt->x = helper->arg1;
-    evt->y = helper->arg2;
-
-    script->FireEvent(evt);
-  }
-  return true;
+      script->FireEvent(evt);
+    }
+    return true;
+  });
 }
 
 void FireMouseMoveEvent(POINT pt) {
-  if (pt.x < 1 || pt.y < 1) return;
-  DoubleArgHelper helper = {static_cast<DWORD>(pt.x), static_cast<DWORD>(pt.y)};
-  sScriptEngine->ForEachScript(MouseMoveCallback, &helper, 2);
-}
-
-bool __fastcall BCastEventCallback(Script* script, void* argv, uint argc) {
-  BCastEventHelper* helper = (BCastEventHelper*)argv;
-
-  if (script->is_running() && script->IsListenerRegistered("scriptmsg")) {
-    auto evt = std::make_shared<BroadcastEvent>();
-    evt->owner = script;
-    evt->name = "scriptmsg";
-
-    for (uint i = 0; i < argc; ++i) {
-      evt->args.push_back(std::make_shared<JSAutoStructuredCloneBuffer>());
-      evt->args.back()->write(helper->cx, helper->argv[i]);
-    }
-
-    script->FireEvent(evt);
+  if (pt.x < 1 || pt.y < 1) {
+    return;
   }
-  return true;
+
+  sScriptEngine->for_each([&](Script* script) {
+    if (script->is_running() && script->IsListenerRegistered("mousemove")) {
+      auto evt = std::make_shared<MouseMoveEvent>();
+      evt->owner = script;
+      evt->name = "mousemove";
+      evt->x = static_cast<DWORD>(pt.x);
+      evt->y = static_cast<DWORD>(pt.y);
+
+      script->FireEvent(evt);
+    }
+    return true;
+  });
 }
 
 void FireScriptBroadcastEvent(JSContext* cx, uint argc, jsval* args) {
-  BCastEventHelper helper = {cx, args, argc};
-  sScriptEngine->ForEachScript(BCastEventCallback, &helper, argc);
+  sScriptEngine->for_each([&](Script* script) {
+    if (script->is_running() && script->IsListenerRegistered("scriptmsg")) {
+      auto evt = std::make_shared<BroadcastEvent>();
+      evt->owner = script;
+      evt->name = "scriptmsg";
+
+      for (uint i = 0; i < argc; ++i) {
+        evt->args.push_back(std::make_shared<JSAutoStructuredCloneBuffer>());
+        evt->args.back()->write(cx, args[i]);
+      }
+
+      script->FireEvent(evt);
+    }
+    return true;
+  });
 }
 
-bool __fastcall ChatEventCallback(Script* script, void* argv, uint) {
-  ChatEventHelper* helper = (ChatEventHelper*)argv;
+bool ChatEventCallback(Script* script, const char* name, const char* nick, const wchar_t* msg) {
   auto evt = std::make_shared<ChatEvent>();
 
-  if (script->is_running() && script->IsListenerRegistered(helper->name)) {
+  if (script->is_running() && script->IsListenerRegistered(name)) {
     evt->owner = script;
-    evt->name1 = helper->name;
-    evt->nick = helper->nick;
-    evt->msg = helper->msg;
+    evt->name1 = name;
+    evt->nick = nick;
+    evt->msg = msg;
 
     script->FireEvent(evt);
   }
 
-  std::string evtname = helper->name;
+  std::string evtname = name;
   evtname = evtname + "blocker";
 
   if (script->is_running() && script->IsListenerRegistered(evtname.c_str())) {
     evt->owner = script;
     evt->name = evtname;
-    evt->name1 = helper->name;
-    evt->nick = helper->nick;
-    evt->msg = helper->msg;
+    evt->name1 = name;
+    evt->nick = nick;
+    evt->msg = msg;
     ResetEvent(Vars.eventSignal);
     script->FireEvent(evt);
 
@@ -192,97 +160,79 @@ bool __fastcall ChatEventCallback(Script* script, void* argv, uint) {
 }
 
 bool FireChatEvent(const char* lpszNick, const wchar_t* lpszMsg) {
-  ChatEventHelper helper = {"chatmsg", lpszNick, lpszMsg};
-  return sScriptEngine->ForEachScript(ChatEventCallback, &helper, 2);
+  return sScriptEngine->for_each(ChatEventCallback, "chatmsg", lpszNick, lpszMsg);
 }
 
 bool FireChatInputEvent(wchar_t* lpszMsg) {
-  ChatEventHelper helper = {"chatinput", "me", lpszMsg};
-  return sScriptEngine->ForEachScript(ChatEventCallback, &helper, 2);
+  return sScriptEngine->for_each(ChatEventCallback, "chatinput", "me", lpszMsg);
 }
 
 bool FireWhisperEvent(const char* lpszNick, const wchar_t* lpszMsg) {
-  ChatEventHelper helper = {"whispermsg", lpszNick, lpszMsg};
-  return sScriptEngine->ForEachScript(ChatEventCallback, &helper, 2);
-}
-
-bool __fastcall CopyDataCallback(Script* script, void* argv, uint) {
-  CopyDataHelper* helper = (CopyDataHelper*)argv;
-  if (script->is_running() && script->IsListenerRegistered("copydata")) {
-    auto evt = std::make_shared<CopyDataEvent>();
-    evt->owner = script;
-    evt->name = "copydata";
-    evt->mode = helper->mode;
-    evt->msg = helper->msg;
-
-    script->FireEvent(evt);
-  }
-  return true;
+  return sScriptEngine->for_each(ChatEventCallback, "whispermsg", lpszNick, lpszMsg);
 }
 
 void FireCopyDataEvent(DWORD dwMode, wchar_t* lpszMsg) {
-  CopyDataHelper helper = {dwMode, lpszMsg};
-  sScriptEngine->ForEachScript(CopyDataCallback, &helper, 2);
-}
+  sScriptEngine->for_each([&](Script* script) {
+    if (script->is_running() && script->IsListenerRegistered("copydata")) {
+      auto evt = std::make_shared<CopyDataEvent>();
+      evt->owner = script;
+      evt->name = "copydata";
+      evt->mode = dwMode;
+      evt->msg = lpszMsg;
 
-bool __fastcall ItemEventCallback(Script* script, void* argv, uint) {
-  ItemEventHelper* helper = (ItemEventHelper*)argv;
-  if (script->is_running() && script->IsListenerRegistered("itemaction")) {
-    auto evt = std::make_shared<ItemEvent>();
-    evt->owner = script;
-    evt->name = "itemaction";
-    evt->id = helper->id;
-    evt->code = helper->code;
-    evt->mode = helper->mode;
-    evt->global = helper->global;
-
-    script->FireEvent(evt);
-  }
-  return true;
+      script->FireEvent(evt);
+    }
+    return true;
+  });
 }
 
 void FireItemActionEvent(DWORD GID, char* Code, BYTE Mode, bool Global) {
-  ItemEventHelper helper = {GID, Code, Mode, Global};
-  sScriptEngine->ForEachScript(ItemEventCallback, &helper, 4);
-}
+  sScriptEngine->for_each([&](Script* script) {
+    if (script->is_running() && script->IsListenerRegistered("itemaction")) {
+      auto evt = std::make_shared<ItemEvent>();
+      evt->owner = script;
+      evt->name = "itemaction";
+      evt->id = GID;
+      evt->code = Code;
+      evt->mode = Mode;
+      evt->global = Global;
 
-bool __fastcall GameActionEventCallback(Script* script, void* argv, uint) {
-  GameActionEventHelper* helper = (GameActionEventHelper*)argv;
-  if (script->is_running() && script->IsListenerRegistered("gameevent")) {
-    auto evt = std::make_shared<GameActionEvent>();
-    evt->owner = script;
-    evt->name = "gameevent";
-    evt->mode = helper->mode;
-    evt->param1 = helper->param1;
-    evt->param2 = helper->param2;
-    evt->name1 = helper->name1;
-    evt->name2 = helper->name2;
-
-    script->FireEvent(evt);
-  }
-  return true;
+      script->FireEvent(evt);
+    }
+    return true;
+  });
 }
 
 void FireGameActionEvent(BYTE mode, DWORD param1, DWORD param2, char* name1, wchar_t* name2) {
-  GameActionEventHelper helper = {mode, param1, param2, name1, name2};
-  sScriptEngine->ForEachScript(GameActionEventCallback, &helper, 5);
+  sScriptEngine->for_each([&](Script* script) {
+    if (script->is_running() && script->IsListenerRegistered("gameevent")) {
+      auto evt = std::make_shared<GameActionEvent>();
+      evt->owner = script;
+      evt->name = "gameevent";
+      evt->mode = mode;
+      evt->param1 = param1;
+      evt->param2 = param2;
+      evt->name1 = name1;
+      evt->name2 = name2;
+
+      script->FireEvent(evt);
+    }
+    return true;
+  });
 }
 
-bool __fastcall PacketEventCallback(Script* script, void* argv, uint) {
-  PacketEventHelper* helper = (PacketEventHelper*)argv;
-
-  if (script->is_running() && script->IsListenerRegistered(helper->name)) {
+bool PacketEventCallback(Script* script, const char* name, BYTE* pPacket, DWORD dwSize) {
+  if (script->is_running() && script->IsListenerRegistered(name)) {
     auto evt = std::make_shared<PacketEvent>();
     evt->owner = script;
-    evt->name1 = helper->name;
-    evt->bytes.resize(helper->dwSize);
-    memcpy(evt->bytes.data(), helper->pPacket, helper->dwSize);
+    evt->name1 = name;
+    evt->bytes.resize(dwSize);
+    memcpy(evt->bytes.data(), pPacket, dwSize);
 
     if (GetCurrentThreadId() == evt->owner->thread_id()) {
-      script->process_events();
+      script->process_events(L"PacketEventCallback");
       ExecScriptEvent(evt);
-    }
-    else {
+    } else {
       ResetEvent(Vars.eventSignal);
       script->FireEvent(evt);
       static DWORD result;
@@ -300,18 +250,15 @@ bool __fastcall PacketEventCallback(Script* script, void* argv, uint) {
 }
 
 bool FireGamePacketEvent(BYTE* pPacket, DWORD dwSize) {
-  PacketEventHelper helper = {"gamepacket", pPacket, dwSize};
-  return sScriptEngine->ForEachScript(PacketEventCallback, &helper, 3);
+  return sScriptEngine->for_each(PacketEventCallback, "gamepacket", pPacket, dwSize);
 }
 
 bool FireGamePacketSentEvent(BYTE* pPacket, DWORD dwSize) {
-  PacketEventHelper helper = {"gamepacketsent", pPacket, dwSize};
-  return sScriptEngine->ForEachScript(PacketEventCallback, &helper, 3);
+  return sScriptEngine->for_each(PacketEventCallback, "gamepacketsent", pPacket, dwSize);
 }
 
 bool FireRealmPacketEvent(BYTE* pPacket, DWORD dwSize) {
-  PacketEventHelper helper = {"realmpacket", pPacket, dwSize};
-  return sScriptEngine->ForEachScript(PacketEventCallback, &helper, 3);
+  return sScriptEngine->for_each(PacketEventCallback, "realmpacket", pPacket, dwSize);
 }
 
 void ReleaseGameLock(void) {
@@ -335,8 +282,8 @@ void CopyDataEvent::process() {
   for (int j = 0; j < 2; j++) JS_AddValueRoot(cx, &argv[j]);
 
   jsval rval;
-  for (FunctionList::iterator it = owner->functions()[name].begin(); it != owner->functions()[name].end(); it++) {
-    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 2, argv, &rval);
+  for (const auto& fn : owner->functions()[name]) {
+    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 2, argv, &rval);
   }
   JS_EndRequest(cx);
   for (int j = 0; j < 2; j++) {
@@ -379,8 +326,8 @@ void ChatEvent::process() {
   }
 
   jsval rval;
-  for (FunctionList::iterator it = owner->functions()[name].begin(); it != owner->functions()[name].end(); it++) {
-    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 2, argv, &rval);
+  for (const auto& fn : owner->functions()[name]) {
+    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 2, argv, &rval);
     block |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
   }
   JS_EndRequest(cx);
@@ -415,8 +362,8 @@ void PacketEvent::process() {
   // JS_AddValueRoot(cx, &argv[0]);
 
   jsval rval;
-  for (FunctionList::iterator it = owner->functions()[name].begin(); it != owner->functions()[name].end(); it++) {
-    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 1, &argv, &rval);
+  for (const auto& fn : owner->functions()[name]) {
+    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 1, &argv, &rval);
     block |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
   }
 
@@ -440,8 +387,8 @@ void BroadcastEvent::process() {
   }
 
   jsval rval;
-  for (FunctionList::iterator it = owner->functions()[name].begin(); it != owner->functions()[name].end(); it++) {
-    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), argc, argv, &rval);
+  for (const auto& fn : owner->functions()[name]) {
+    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), argc, argv, &rval);
   }
   JS_EndRequest(cx);
 
@@ -471,8 +418,8 @@ void GameActionEvent::process() {
   }
 
   jsval rval;
-  for (FunctionList::iterator it = owner->functions()[name].begin(); it != owner->functions()[name].end(); it++) {
-    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 5, argv, &rval);
+  for (const auto& fn : owner->functions()[name]) {
+    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 5, argv, &rval);
   }
   JS_EndRequest(cx);
   for (int j = 0; j < 5; j++) {
@@ -487,9 +434,10 @@ void KeyEvent::process() {
   JS_BeginRequest(cx);
   argv[0] = JS_NumberValue(key);
   JS_AddValueRoot(cx, &argv[0]);
+
   jsval rval;
-  for (FunctionList::iterator it = owner->functions()[name].begin(); it != owner->functions()[name].end(); it++) {
-    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 1, argv, &rval);
+  for (const auto& fn : owner->functions()[name]) {
+    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 1, argv, &rval);
     block |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
   }
   JS_EndRequest(cx);
@@ -515,9 +463,8 @@ void ItemEvent::process() {
   }
 
   jsval rval;
-  for (FunctionList::iterator it = owner->functions()[name].begin();
-       it != owner->functions()[name].end(); it++) {
-    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 4, argv, &rval);
+  for (const auto& fn : owner->functions()[name]) {
+    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 4, argv, &rval);
     block |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
   }
 
@@ -533,8 +480,8 @@ void TimeoutEvent::process() {
 
   JS_BeginRequest(cx);
   jsval rval;
-  for (FunctionList::iterator it = owner->functions()[name].begin(); it != owner->functions()[name].end(); it++) {
-    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 0, &rval, &rval);
+  for (const auto& fn : owner->functions()[name]) {
+    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 0, &rval, &rval);
   }
   JS_EndRequest(cx);
 
@@ -550,9 +497,10 @@ void LifeEvent::process() {
   JS_BeginRequest(cx);
   argv[0] = JS_NumberValue(life);
   JS_AddValueRoot(cx, &argv[0]);
+
   jsval rval;
-  for (FunctionList::iterator it = owner->functions()[name].begin(); it != owner->functions()[name].end(); it++) {
-    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 1, argv, &rval);
+  for (const auto& fn : owner->functions()[name]) {
+    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 1, argv, &rval);
     block |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
   }
   JS_EndRequest(cx);
@@ -566,9 +514,10 @@ void ManaEvent::process() {
   JS_BeginRequest(cx);
   argv[0] = JS_NumberValue(mana);
   JS_AddValueRoot(cx, &argv[0]);
+
   jsval rval;
-  for (FunctionList::iterator it = owner->functions()[name].begin(); it != owner->functions()[name].end(); it++) {
-    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 1, argv, &rval);
+  for (const auto& fn : owner->functions()[name]) {
+    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 1, argv, &rval);
     block |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
   }
   JS_EndRequest(cx);
@@ -582,9 +531,10 @@ void PlayerAssignEvent::process() {
   JS_BeginRequest(cx);
   argv[0] = JS_NumberValue(unit_id);
   JS_AddValueRoot(cx, &argv[0]);
+
   jsval rval;
-  for (FunctionList::iterator it = owner->functions()[name].begin(); it != owner->functions()[name].end(); it++) {
-    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 1, argv, &rval);
+  for (const auto& fn : owner->functions()[name]) {
+    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 1, argv, &rval);
     block |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
   }
   JS_EndRequest(cx);
@@ -606,8 +556,8 @@ void MouseClickEvent::process() {
   }
 
   jsval rval;
-  for (FunctionList::iterator it = owner->functions()[name].begin(); it != owner->functions()[name].end(); it++) {
-    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 4, argv, &rval);
+  for (const auto& fn : owner->functions()[name]) {
+    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 4, argv, &rval);
   }
   JS_EndRequest(cx);
   for (int j = 0; j < 4; j++) {
@@ -629,13 +579,15 @@ void ScreenHookClickEvent::process() {
 
   jsval rval;
   // diffrent function source for hooks
-  for (FunctionList::iterator it = functions.begin(); it != functions.end(); it++) {
-    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 3, argv, &rval);
+  for (const auto& fn : functions) {
+    JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 3, argv, &rval);
     block |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
   }
 
   JS_EndRequest(cx);
-  for (int j = 0; j < 3; j++) JS_RemoveValueRoot(cx, &argv[j]);
+  for (int j = 0; j < 3; j++) {
+    JS_RemoveValueRoot(cx, &argv[j]);
+  }
 
   SetEvent(Vars.eventSignal);
 }
@@ -654,11 +606,13 @@ void MouseMoveEvent::process() {
 
   jsval rval;
   if (name == "ScreenHookHover") {
-    for (FunctionList::iterator it = functions.begin(); it != functions.end(); it++)
-      JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 2 + 1, argv, &rval);
+    for (const auto& fn : functions) {
+      JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 2 + 1, argv, &rval);
+    }
   } else {
-    for (FunctionList::iterator it = owner->functions()[name].begin(); it != owner->functions()[name].end(); it++)
-      JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *(*it)->value(), 2, argv, &rval);
+    for (const auto& fn : owner->functions()[name]) {
+      JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 2, argv, &rval);
+    }
   }
   JS_EndRequest(cx);
   for (int j = 0; j < 2; j++) {

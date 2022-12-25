@@ -13,8 +13,8 @@ struct FindHelper {
   Script* script;
 };
 
-bool __fastcall FindScriptByTid(Script* script, void* argv, uint argc);
-bool __fastcall FindScriptByName(Script* script, void* argv, uint argc);
+bool __fastcall FindScriptByTid(Script* script, FindHelper* helper);
+bool __fastcall FindScriptByName(Script* script, FindHelper* helper);
 
 JSAPI_PROP(script_getProperty) {
   Script* script = (Script*)JS_GetInstancePrivate(cx, obj, &script_class, NULL);
@@ -141,7 +141,7 @@ JSAPI_FUNC(my_getScript) {
     // loop over the Scripts in ScriptEngine and find the one with the right threadid
     DWORD tid = (DWORD)JSVAL_TO_INT(JS_ARGV(cx, vp)[0]);
     FindHelper args = {tid, NULL, NULL};
-    sEngine->script_engine()->ForEachScript(FindScriptByTid, &args, 1);
+    sEngine->script_engine()->for_each(FindScriptByTid, &args);
     if (args.script != NULL)
       iterp = args.script;
     else
@@ -150,7 +150,7 @@ JSAPI_FUNC(my_getScript) {
     wchar_t* name = _wcsdup(JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0])));
     if (name) StringReplace(name, L'/', L'\\', wcslen(name));
     FindHelper args = {0, name, NULL};
-    sEngine->script_engine()->ForEachScript(FindScriptByName, &args, 1);
+    sEngine->script_engine()->for_each(FindScriptByName, &args);
     free(name);
     if (args.script != NULL) {
       iterp = args.script;
@@ -196,8 +196,7 @@ JSAPI_FUNC(my_getScripts) {
   JS_EndRequest(cx);
   return JS_TRUE;
 }
-bool __fastcall FindScriptByName(Script* script, void* argv, uint) {
-  FindHelper* helper = (FindHelper*)argv;
+bool __fastcall FindScriptByName(Script* script, FindHelper* helper) {
   const wchar_t* fname = script->filename_short();
   if (_wcsicmp(fname, helper->name) == 0) {
     helper->script = script;
@@ -206,8 +205,7 @@ bool __fastcall FindScriptByName(Script* script, void* argv, uint) {
   return true;
 }
 
-bool __fastcall FindScriptByTid(Script* script, void* argv, uint) {
-  FindHelper* helper = (FindHelper*)argv;
+bool __fastcall FindScriptByTid(Script* script, FindHelper* helper) {
   if (script->thread_id() == helper->tid) {
     helper->script = script;
     return false;

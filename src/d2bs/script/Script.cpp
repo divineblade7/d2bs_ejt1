@@ -413,13 +413,19 @@ void Script::FireEvent(std::shared_ptr<Event> evt) {
   event_queue_.enqueue(std::move(evt));
 }
 
-void Script::process_events() {
+void Script::process_events(const std::wstring& debug_str) {
   std::shared_ptr<Event> evt;
 
   while (event_queue_.dequeue_for(evt, std::chrono::milliseconds(10))) {
     auto name = AnsiToUnicode(evt->name.c_str());
-    Print(L"Process event: %s", name);
+    if (!debug_str.empty()) {
+      Print(L"Process event (%s): %s", debug_str.c_str(), name);
+    } else {
+      Print(L"Process event: %s", debug_str.c_str());
+    }
     delete[] name;
+
+    evt->process();
   }
 }
 
@@ -478,7 +484,7 @@ JSBool operationCallback(JSContext* cx) {
   if (!!!(JSBool)(script->is_stopped() ||
                   ((script->type() == ScriptType::InGame) && ClientState() == ClientStateMenu))) {
     // TEMPORARY: Still to much to detangle from the current event system to figure out where to put this call
-    script->process_events();
+    script->process_events(L"OperationCallback");
 
     auto& events = script->events();
     while (events.size() > 0 && !!!(JSBool)(script->is_stopped() || ((script->type() == ScriptType::InGame) &&
@@ -560,7 +566,7 @@ JSBool contextCallback(JSContext* cx, uint contextOp) {
       Script* script = (Script*)JS_GetContextPrivate(cx);
       script->set_has_active_cx(false);
       // TEMPORARY: Still to much to detangle from the current event system to figure out where to put this call
-      script->process_events();
+      script->process_events(L"ContextCallback");
 
       auto& events = script->events();
       while (events.size() > 0) {

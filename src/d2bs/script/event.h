@@ -17,7 +17,6 @@ class Event {
   virtual void process() = 0;
 
   Script* owner = nullptr;
-  JSObject* object = nullptr;
   FunctionList functions;
   std::vector<std::shared_ptr<JSAutoStructuredCloneBuffer>> args;
   std::string name;
@@ -27,6 +26,7 @@ class Event {
 class CopyDataEvent : public Event {
  public:
   void process();
+
   DWORD mode;
   std::wstring msg;
 };
@@ -34,12 +34,14 @@ class CopyDataEvent : public Event {
 struct CommandEvent : public Event {
  public:
   void process();
+
   std::wstring command;
 };
 
 struct ChatEvent : public Event {
  public:
   void process();
+
   std::string name1, nick;
   std::wstring msg;
 };
@@ -47,6 +49,7 @@ struct ChatEvent : public Event {
 struct PacketEvent : public Event {
  public:
   void process();
+
   std::string name1;
   std::vector<uint8_t> bytes;
 };
@@ -59,6 +62,7 @@ struct BroadcastEvent : public Event {
 struct GameActionEvent : public Event {
  public:
   void process();
+
   BYTE mode;
   DWORD param1, param2;
   std::string name1;
@@ -68,6 +72,7 @@ struct GameActionEvent : public Event {
 struct KeyEvent : public Event {
  public:
   void process();
+
   BOOL up;
   WPARAM key;
 };
@@ -75,6 +80,7 @@ struct KeyEvent : public Event {
 struct ItemEvent : public Event {
  public:
   void process();
+
   DWORD id;
   std::string code;
   WORD mode;
@@ -84,6 +90,7 @@ struct ItemEvent : public Event {
 struct TimeoutEvent : public Event {
  public:
   void process();
+
   int key;
   HANDLE handle;
   jsval* val;
@@ -92,24 +99,28 @@ struct TimeoutEvent : public Event {
 struct LifeEvent : public Event {
  public:
   void process();
+
   DWORD life;
 };
 
 struct ManaEvent : public Event {
  public:
   void process();
+
   DWORD mana;
 };
 
 struct PlayerAssignEvent : public Event {
  public:
   void process();
+
   DWORD unit_id;
 };
 
 struct MouseClickEvent : public Event {
  public:
   void process();
+
   DWORD button;
   DWORD x;
   DWORD y;
@@ -119,6 +130,7 @@ struct MouseClickEvent : public Event {
 struct ScreenHookClickEvent : public Event {
  public:
   void process();
+
   int button;
   LONG x;
   LONG y;
@@ -156,72 +168,3 @@ bool FireRealmPacketEvent(BYTE* pPacket, DWORD dwSize);
 
 void ReleaseGameLock(void);
 void TakeGameLock(void);
-
-struct ChatEventHelper {
-  const char *name, *nick;
-  const wchar_t* msg;
-};
-
-struct CopyDataHelper {
-  DWORD mode;
-  wchar_t* msg;
-};
-
-struct ItemEventHelper {
-  DWORD id;
-  char* code;
-  WORD mode;
-  bool global;
-};
-
-struct KeyEventHelper {
-  BOOL up;
-  WPARAM key;
-};
-
-struct GameActionEventHelper {
-  BYTE mode;
-  DWORD param1, param2;
-  char* name1;
-  wchar_t* name2;
-};
-
-struct SingleArgHelper {
-  DWORD arg1;
-};
-
-struct DoubleArgHelper {
-  DWORD arg1, arg2;
-};
-
-struct DoubleArgEvent : Event {
-  DWORD arg1, arg2;
-};
-
-struct TripleArgHelper {
-  DWORD arg1, arg2, arg3;
-};
-
-struct TripleArgEvent : Event {
-  DWORD arg1, arg2, arg3;
-};
-
-struct QuadArgHelper {
-  DWORD arg1, arg2, arg3, arg4;
-};
-
-struct QuadArgEvent : Event {
-  DWORD arg1, arg2, arg3, arg4;
-};
-
-struct BCastEventHelper {
-  JSContext* cx;
-  jsval* argv;
-  uint argc;
-};
-
-struct PacketEventHelper {
-  const char* name;
-  BYTE* pPacket;
-  DWORD dwSize;
-};

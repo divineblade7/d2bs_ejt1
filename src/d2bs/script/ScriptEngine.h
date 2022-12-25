@@ -44,6 +44,19 @@ class ScriptEngine {
   std::unique_lock<std::mutex> lock_script_list(const char* loc);
 
   bool ForEachScript(ScriptCallback callback, void* argv, uint argc);
+
+  // TODO: Add constraint to Fn. Signature should be fn(Script*, Args...)
+  template <typename Fn, typename... Args>
+  bool for_each(Fn fn, Args&&... args) {
+    auto lock = lock_script_list("for_each");
+
+    bool block = false;
+    for (const auto& [_, script] : scripts_) {
+      block |= fn(script, std::forward<Args>(args)...);
+    }
+    return block;
+  }
+
   unsigned int GetCount(bool active = true, bool unexecuted = false);
 
   void StopAll(bool forceStop = false);
@@ -82,9 +95,6 @@ class ScriptEngine {
 
 //#define sScriptEngine ScriptEngine::instance()
 inline ScriptEngine* sScriptEngine = nullptr;
-
-// these ForEachScript helpers are exposed in case they can be of use somewhere
-bool __fastcall StopIngameScript(Script* script, void*, uint);
 
 struct EventHelper {
   char* evtName;

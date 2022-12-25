@@ -1,6 +1,5 @@
 // Diablo II Botting System Core
 
-
 #include "engine.h"
 
 #include "d2bs/core/Control.h"
@@ -17,12 +16,6 @@
 
 #include <fcntl.h>
 #include <io.h>
-
-// deprecate this function, some hack workaround implemented by someone long ago...
-bool __fastcall UpdatePlayerGid(Script* script, void*, uint) {
-  script->UpdatePlayerGid();
-  return true;
-}
 
 namespace d2bs {
 
@@ -129,7 +122,10 @@ void Engine::update() {
         Sleep(500);
 
         D2CLIENT_InitInventory();
-        script_engine_.ForEachScript(UpdatePlayerGid, NULL, 0);
+        script_engine_.for_each([](Script* script) {
+          script->UpdatePlayerGid();
+          return true;
+        });
         script_engine_.UpdateConsole();
         Vars.bQuitting = false;
 

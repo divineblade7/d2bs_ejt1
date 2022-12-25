@@ -261,13 +261,6 @@ void ScriptEngine::RemoveDelayedEvent(int key) {
   LeaveCriticalSection(&Vars.cEventSection);
 }
 
-bool __fastcall StopIngameScript(Script* script, void*, uint) {
-  if (script->type() == ScriptType::InGame) {
-    script->stop(true);
-  }
-  return true;
-}
-
 void reportError(JSContext*, const char* message, JSErrorReport* report) {
   bool warn = JSREPORT_IS_WARNING(report->flags);
   bool isStrict = JSREPORT_IS_STRICT(report->flags);
