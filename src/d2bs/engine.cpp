@@ -398,7 +398,7 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
       POINT pt = {static_cast<LONG>(LOWORD(lparam)), static_cast<LONG>(HIWORD(lparam))};
       Vars.pMouseCoords = pt;
       if (Vars.bBlockMouse) {
-        return 0;
+        break;
       }
 
       HookClickHelper helper = {-1, {pt.x, pt.y}};
@@ -424,7 +424,7 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
       POINT pt = {static_cast<LONG>(LOWORD(lparam)), static_cast<LONG>(HIWORD(lparam))};
       Vars.pMouseCoords = pt;
       if (Vars.bBlockMouse) {
-        return 0;
+        break;
       }
 
       FireMouseClickEvent(button, pt, true);
@@ -435,7 +435,7 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
       POINT pt = {static_cast<LONG>(LOWORD(lparam)), static_cast<LONG>(HIWORD(lparam))};
       Vars.pMouseCoords = pt;
       if (Vars.bBlockMouse) {
-        return 0;
+        break;
       }
 
       // would be nice to enable these events but they bog down too much
@@ -554,7 +554,7 @@ void Engine::init_settings() {
   Vars.dwMemUsage = abs(_wtoi(memUsage));
   Vars.dwConsoleFont = abs(_wtoi(consoleFont));
   if (Vars.dwMemUsage < 1) {
-    Vars.dwMemUsage = 50;
+    Vars.dwMemUsage = 500;
   }
   Vars.dwMemUsage *= 1024 * 1024;
   orig_wndproc_ = nullptr;
