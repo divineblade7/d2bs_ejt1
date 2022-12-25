@@ -55,7 +55,6 @@ struct Variables {
   BOOL bReduceFTJ;
   int dwMemUsage;
   int dwConsoleFont;
-  HANDLE eventSignal;
   HMODULE hModule;
   HWND hHandle;
 

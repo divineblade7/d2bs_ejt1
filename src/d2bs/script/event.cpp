@@ -49,12 +49,9 @@ bool FireKeyDownUpEvent(WPARAM key, BYTE bUp) {
     if (script->is_running() && script->IsListenerRegistered(name)) {
       evt->name = name;
 
-      ResetEvent(Vars.eventSignal);
       script->FireEvent(evt);
-
-      if (WaitForSingleObject(Vars.eventSignal, 1000) == WAIT_TIMEOUT) {
-        return false;
-      }
+      // Force process the event
+      script->process_events();
     }
 
     return evt->block;
@@ -150,10 +147,10 @@ bool ChatEventCallback(Script* script, const char* name, const char* nick, const
     evt->name1 = name;
     evt->nick = nick;
     evt->msg = msg;
-    ResetEvent(Vars.eventSignal);
-    script->FireEvent(evt);
 
-    if (WaitForSingleObject(Vars.eventSignal, 500) == WAIT_TIMEOUT) return false;
+    script->FireEvent(evt);
+    // Force process the event
+    script->process_events();
   }
 
   return evt->block;
@@ -232,14 +229,11 @@ bool PacketEventCallback(Script* script, const char* name, BYTE* pPacket, DWORD 
     if (GetCurrentThreadId() == evt->owner->thread_id()) {
       script->process_events();
     } else {
-      ResetEvent(Vars.eventSignal);
       script->FireEvent(evt);
-      static DWORD result;
       ReleaseGameLock();
-      result = WaitForSingleObject(Vars.eventSignal, 500);
+      // Force process the event
+      script->process_events();
       TakeGameLock();
-
-      if (result == WAIT_TIMEOUT) return false;
     }
 
     return evt->block;
@@ -333,10 +327,6 @@ void ChatEvent::process() {
   for (int j = 0; j < 2; j++) {
     JS_RemoveValueRoot(cx, &argv[j]);
   }
-
-  if (name == "chatmsgblocker" || name == "chatinputblocker" || name == "whispermsgblocker") {
-    SetEvent(Vars.eventSignal);
-  }
 }
 
 void PacketEvent::process() {
@@ -345,11 +335,9 @@ void PacketEvent::process() {
   BYTE* help = bytes.data();
   DWORD size = bytes.size();
 
-  //  DWORD* argc = (DWORD*)1;
   JS_BeginRequest(cx);
 
   JSObject* arr = JS_NewUint8Array(cx, size);
-  // JSObject* arr = JS_NewArrayObject(cx, 0, NULL);
 
   JS_AddRoot(cx, &arr);
   for (uint i = 0; i < size; i++) {
@@ -357,8 +345,6 @@ void PacketEvent::process() {
     JS_SetElement(cx, arr, i, &jsarr);
   }
   jsval argv = OBJECT_TO_JSVAL(arr);
-  // evt->argv[0]->read(cx, &argv[0]);
-  // JS_AddValueRoot(cx, &argv[0]);
 
   jsval rval;
   for (const auto& fn : owner->functions()[name]) {
@@ -367,7 +353,6 @@ void PacketEvent::process() {
   }
 
   JS_RemoveRoot(cx, &arr);
-  SetEvent(Vars.eventSignal);
   JS_EndRequest(cx);
 }
 
@@ -441,10 +426,6 @@ void KeyEvent::process() {
   }
   JS_EndRequest(cx);
   JS_RemoveValueRoot(cx, &argv[0]);
-
-  if (name == "keydownblocker") {
-    SetEvent(Vars.eventSignal);
-  }
 }
 
 void ItemEvent::process() {
@@ -587,8 +568,6 @@ void ScreenHookClickEvent::process() {
   for (int j = 0; j < 3; j++) {
     JS_RemoveValueRoot(cx, &argv[j]);
   }
-
-  SetEvent(Vars.eventSignal);
 }
 
 void MouseMoveEvent::process() {

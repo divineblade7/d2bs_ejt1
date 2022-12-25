@@ -61,6 +61,8 @@ class Script {
   void UnregisterEvent(const char* evtName, jsval evtFunc);
   void ClearEvent(const char* evtName);
   void ClearAllEvents();
+
+  // possibly a way to instantly process the event
   void FireEvent(std::shared_ptr<Event>);
 
   /**

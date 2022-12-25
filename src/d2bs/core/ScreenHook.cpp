@@ -217,12 +217,11 @@ bool Genhook::Click(int button, POINT* loc) {
     evt->x = loc->x;
     evt->y = loc->y;
 
-    ResetEvent(Vars.eventSignal);
     AutoRoot* root = new AutoRoot(evt->owner->context(), clicked);
     evt->functions.push_back(root);
     owner->FireEvent(evt);
-
-    if (WaitForSingleObject(Vars.eventSignal, 3000) == WAIT_TIMEOUT) return false;
+    // Force process the event
+    owner->process_events();
 
     delete root;
   }

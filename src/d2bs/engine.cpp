@@ -550,7 +550,6 @@ void Engine::init_settings() {
   Vars.bLogConsole = StringToBool(logConsole);
   Vars.bEnableUnsupported = StringToBool(enableUnsupported);
   Vars.bForwardMessageBox = StringToBool(forwardMessageBox);
-  Vars.eventSignal = CreateEventA(nullptr, true, false, nullptr);
   Vars.dwMemUsage = abs(_wtoi(memUsage));
   Vars.dwConsoleFont = abs(_wtoi(consoleFont));
   if (Vars.dwMemUsage < 1) {
