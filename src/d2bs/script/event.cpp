@@ -230,8 +230,7 @@ bool PacketEventCallback(Script* script, const char* name, BYTE* pPacket, DWORD 
     memcpy(evt->bytes.data(), pPacket, dwSize);
 
     if (GetCurrentThreadId() == evt->owner->thread_id()) {
-      script->process_events(L"PacketEventCallback");
-      ExecScriptEvent(evt);
+      script->process_events();
     } else {
       ResetEvent(Vars.eventSignal);
       script->FireEvent(evt);

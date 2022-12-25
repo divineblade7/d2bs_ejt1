@@ -212,21 +212,8 @@ BOOL SetSkill(JSContext* cx, WORD wSkillId, BOOL bLeft, DWORD dwItemId) {
     int amt = 100 - (GetTickCount() - start);
 
     while (amt > 0) {  // had a script deadlock here, make sure were positve with amt
-      WaitForSingleObjectEx(script->event_signal(), amt, true);
-      ResetEvent(script->event_signal());
-
       // TEMPORARY: Still to much to detangle from the current event system to figure out where to put this call
-      script->process_events(L"SetSkill");
-
-      auto& events = script->events();
-      while (events.size() > 0 && !!!(JSBool)(script->is_stopped() || ((script->type() == ScriptType::InGame) &&
-                                                                      ClientState() == ClientStateMenu))) {
-        EnterCriticalSection(&Vars.cEventSection);
-        std::shared_ptr<Event> evt = events.back();
-        events.pop_back();
-        LeaveCriticalSection(&Vars.cEventSection);
-        ExecScriptEvent(evt);
-      }
+      script->process_events();
 
       amt = 100 - (GetTickCount() - start);
       // SleepEx(10,true);	// ex for delayed setTimer

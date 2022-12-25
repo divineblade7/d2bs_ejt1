@@ -15,8 +15,6 @@
 Script::Script(ScriptEngine* engine, const wchar_t* file, ScriptType type, uint argc,
                JSAutoStructuredCloneBuffer** argv)
     : engine_(engine), type_(type), argv_(argv), argc_(argc) {
-  event_signal_ = CreateEvent(nullptr, true, false, nullptr);
-
   if (type_ == ScriptType::Command && wcslen(file) < 1) {
     filename_ = std::wstring(L"Command Line");
   } else {
@@ -52,7 +50,6 @@ Script::~Script() {
   context_ = nullptr;
   globals_ = nullptr;
   script_ = nullptr;
-  CloseHandle(event_signal_);
   includes_.clear();
   if (thread_handle_ != INVALID_HANDLE_VALUE) {
     CloseHandle(thread_handle_);
@@ -175,7 +172,6 @@ void Script::stop(bool force, bool reallyForce) {
 
   // trigger call back so script ends
   TriggerOperationCallback();
-  SetEvent(event_signal_);
 
   // normal wait: 500ms, forced wait: 300ms, really forced wait: 100ms
   int maxCount = (force ? (reallyForce ? 10 : 30) : 50);
@@ -204,7 +200,6 @@ void Script::pause() {
     state_ = ScriptState::Paused;
   }
   TriggerOperationCallback();
-  SetEvent(event_signal_);
 }
 
 void Script::resume() {
@@ -212,7 +207,6 @@ void Script::resume() {
     state_ = ScriptState::Running;
   }
   TriggerOperationCallback();
-  SetEvent(event_signal_);
 }
 
 bool Script::is_running() {
@@ -401,30 +395,17 @@ void Script::ClearAllEvents() {
 }
 
 void Script::FireEvent(std::shared_ptr<Event> evt) {
-  EnterCriticalSection(&Vars.cEventSection);
-  evt->owner->events().push_front(evt);
-  LeaveCriticalSection(&Vars.cEventSection);
-
   if (evt->owner && evt->owner->is_running()) {
     evt->owner->TriggerOperationCallback();
   }
-  SetEvent(event_signal_);
 
   event_queue_.enqueue(std::move(evt));
 }
 
-void Script::process_events(const std::wstring& debug_str) {
+void Script::process_events() {
   std::shared_ptr<Event> evt;
 
   while (event_queue_.dequeue_for(evt, std::chrono::milliseconds(10))) {
-    auto name = AnsiToUnicode(evt->name.c_str());
-    if (!debug_str.empty()) {
-      Print(L"Process event (%s): %s", debug_str.c_str(), name);
-    } else {
-      Print(L"Process event: %s", debug_str.c_str());
-    }
-    delete[] name;
-
     evt->process();
   }
 }
@@ -465,12 +446,6 @@ DWORD WINAPI ScriptThread(void* data) {
   return 0;
 }
 
-bool ExecScriptEvent(std::shared_ptr<Event> evt) {
-  evt->process();
-
-  return true;
-}
-
 JSBool operationCallback(JSContext* cx) {
   Script* script = (Script*)JS_GetContextPrivate(cx);
   static int callBackCount = 0;
@@ -484,16 +459,8 @@ JSBool operationCallback(JSContext* cx) {
   if (!!!(JSBool)(script->is_stopped() ||
                   ((script->type() == ScriptType::InGame) && ClientState() == ClientStateMenu))) {
     // TEMPORARY: Still to much to detangle from the current event system to figure out where to put this call
-    script->process_events(L"OperationCallback");
+    script->process_events();
 
-    auto& events = script->events();
-    while (events.size() > 0 && !!!(JSBool)(script->is_stopped() || ((script->type() == ScriptType::InGame) &&
-                                                                     ClientState() == ClientStateMenu))) {
-      EnterCriticalSection(&Vars.cEventSection);
-      std::shared_ptr<Event> evt = events.back();
-      events.pop_back();
-      LeaveCriticalSection(&Vars.cEventSection);
-    }
     return !!!(JSBool)(script->is_stopped() ||
                        ((script->type() == ScriptType::InGame) && ClientState() == ClientStateMenu));
   } else {
@@ -565,16 +532,9 @@ JSBool contextCallback(JSContext* cx, uint contextOp) {
     case JSCONTEXT_DESTROY: {
       Script* script = (Script*)JS_GetContextPrivate(cx);
       script->set_has_active_cx(false);
-      // TEMPORARY: Still to much to detangle from the current event system to figure out where to put this call
-      script->process_events(L"ContextCallback");
 
-      auto& events = script->events();
-      while (events.size() > 0) {
-        EnterCriticalSection(&Vars.cEventSection);
-        std::shared_ptr<Event> evt = events.back();
-        events.pop_back();
-        LeaveCriticalSection(&Vars.cEventSection);
-      }
+      // TEMPORARY: Still to much to detangle from the current event system to figure out where to put this call
+      script->process_events();
 
       script->ClearAllEvents();
       Genhook::Clean(script);

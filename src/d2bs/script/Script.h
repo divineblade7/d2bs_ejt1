@@ -68,7 +68,7 @@ class Script {
    * @todo Make sure this function is thread safe.
    * @param debug_str
    */
-  void process_events(const std::wstring& debug_str = L"");
+  void process_events();
 
   inline const wchar_t* filename() {
     return filename_.c_str();
@@ -98,10 +98,6 @@ class Script {
     }
   }
 
-  std::list<std::shared_ptr<Event>>& events() {
-    return EventList_;
-  }
-
   DWORD thread_id() {
     return (thread_handle_ == INVALID_HANDLE_VALUE ? -1 : thread_id_);
   }
@@ -120,10 +116,6 @@ class Script {
 
   void set_has_active_cx(bool val) {
     hasActiveCX_ = val;
-  }
-
-  HANDLE event_signal() {
-    return event_signal_;
   }
 
  private:
@@ -156,12 +148,9 @@ class Script {
   DWORD last_gc_ = 0;
   bool hasActiveCX_ = false;  // hack to get away from JS_IsRunning
 
-  HANDLE event_signal_;
-  std::list<std::shared_ptr<Event>> EventList_;
   d2bs::mpmc_queue<std::shared_ptr<Event>> event_queue_;  // new event system ~ ejt
 };
 
 DWORD WINAPI ScriptThread(void* data);
-bool ExecScriptEvent(std::shared_ptr<Event> evt);
 JSBool operationCallback(JSContext* cx);
 JSBool contextCallback(JSContext* cx, uint contextOp);

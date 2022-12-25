@@ -134,34 +134,20 @@ JSAPI_FUNC(my_delay) {
 
   if (nDelay) {        // loop so we can exec events while in delay
     while (amt > 0) {  // had a script deadlock here, make sure were positve with amt
-      WaitForSingleObjectEx(script->event_signal(), amt, true);
-      ResetEvent(script->event_signal());
       if (script->is_stopped()) {
         break;
       }
 
       // TEMPORARY: Still to much to detangle from the current event system to figure out where to put this call
-      script->process_events(L"Delay");
-
-      auto& events = script->events();
-      while (events.size() > 0 && !!!(JSBool)(script->is_stopped() || ((script->type() == ScriptType::InGame) &&
-                                                                       ClientState() == ClientStateMenu))) {
-        EnterCriticalSection(&Vars.cEventSection);
-        std::shared_ptr<Event> evt = events.back();
-        events.pop_back();
-        LeaveCriticalSection(&Vars.cEventSection);
-        ExecScriptEvent(evt);
-      }
+      script->process_events();
 
       if (JS_GetGCParameter(script->runtime(), JSGC_BYTES) - script->last_gc() > 524288)  // gc every .5 mb
       {
         JS_GC(JS_GetRuntime(cx));
         script->set_last_gc(JS_GetGCParameter(script->runtime(), JSGC_BYTES));
       }
-      /*else
-              JS_MaybeGC(cx);*/
+
       amt = nDelay - (GetTickCount() - start);
-      // SleepEx(10,true);	// ex for delayed setTimer
     }
 
   } else
