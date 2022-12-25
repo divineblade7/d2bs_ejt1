@@ -102,5 +102,4 @@ struct EventHelper {
 };
 
 // gcCallback(JSContext* cx, JSGCStatus status);
-void reportError(JSContext* cx, const char* message, JSErrorReport* report);
 void CALLBACK EventTimerProc(LPVOID lpArg, DWORD dwTimerLowValue, DWORD dwTimerHighValue);

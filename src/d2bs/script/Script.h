@@ -154,5 +154,6 @@ class Script {
 };
 
 DWORD WINAPI ScriptThread(void* data);
+void reportError(JSContext* cx, const char* message, JSErrorReport* report);
 JSBool operationCallback(JSContext* cx);
 JSBool contextCallback(JSContext* cx, uint contextOp);

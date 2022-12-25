@@ -7,6 +7,7 @@
 #include "d2bs/script/ScriptEngine.h"
 #include "d2bs/script/api/JSGlobalFuncs.h"
 #include "d2bs/script/api/JSUnit.h"
+#include "d2bs/utils/Console.h"
 #include "d2bs/utils/Helpers.h"
 
 #include <algorithm>
@@ -444,6 +445,35 @@ DWORD WINAPI ScriptThread(void* data) {
     }
   }
   return 0;
+}
+
+void reportError(JSContext*, const char* message, JSErrorReport* report) {
+  bool warn = JSREPORT_IS_WARNING(report->flags);
+  bool isStrict = JSREPORT_IS_STRICT(report->flags);
+  const char* type = (warn ? "Warning" : "Error");
+  const char* strict = (isStrict ? "Strict " : "");
+  wchar_t* filename = report->filename ? AnsiToUnicode(report->filename) : _wcsdup(L"<unknown>");
+  wchar_t* displayName = filename;
+  if (_wcsicmp(L"Command Line", filename) != 0 && _wcsicmp(L"<unknown>", filename) != 0) {
+    displayName = filename + Vars.working_dir.wstring().length();
+  }
+
+  Log(L"[%hs%hs] Code(%d) File(%s:%d) %hs\nLine: %hs", strict, type, report->errorNumber, filename, report->lineno,
+      message, report->linebuf);
+  Print(L"[\u00FFc%d%hs%hs\u00FFc0 (%d)] File(%s:%d) %hs", (warn ? 9 : 1), strict, type, report->errorNumber,
+        displayName, report->lineno, message);
+
+  if (filename[0] == L'<') {
+    free(filename);
+  } else {
+    delete[] filename;
+  }
+
+  if (Vars.bQuitOnError && !JSREPORT_IS_WARNING(report->flags) && ClientState() == ClientStateInGame) {
+    D2CLIENT_ExitGame();
+  } else {
+    sConsole->ShowBuffer();
+  }
 }
 
 JSBool operationCallback(JSContext* cx) {
