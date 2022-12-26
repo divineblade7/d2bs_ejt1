@@ -46,7 +46,7 @@ set(JSAPI_TEST_SRCS
   testOps.cpp
   testOriginPrincipals.cpp
   testParseJSON.cpp
-  testProfileStrings.cpp
+  #testProfileStrings.cpp
   testPropCache.cpp
   testRegExp.cpp
   testResolveRecursion.cpp
@@ -63,5 +63,5 @@ set(JSAPI_TEST_SRCS
   testXDR.cpp)
 
 add_executable(jsapi-tests ${JSAPI_TEST_SRCS})
-target_link_libraries(jsapi-tests PRIVATE js)
+target_link_libraries(jsapi-tests PRIVATE js nspr winmm)
 add_test(NAME jsapi COMMAND jsapi-tests)

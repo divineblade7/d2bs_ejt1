@@ -5,6 +5,8 @@
 #include <Windows.h>
 #include <list>
 #include <map>
+#include <mutex>
+#include <thread>
 
 class Script;
 
@@ -15,12 +17,19 @@ class Event {
  public:
   // We don't process enough events for the overhead of polymorphic class to be a bottleneck
   virtual void process() = 0;
+  void wait();
 
   Script* owner = nullptr;
   FunctionList functions;
   std::vector<std::shared_ptr<JSAutoStructuredCloneBuffer>> args;
   std::string name;
   bool block = false;
+
+ protected:
+  void notify_all();
+
+ protected:
+  std::atomic_bool is_processed_ = false;
 };
 
 class CopyDataEvent : public Event {

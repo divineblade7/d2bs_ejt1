@@ -22,7 +22,7 @@ bool __fastcall DisposeScript(Script* script, ScriptEngine* engine) {
 }
 
 bool __fastcall StopScript(Script* script, ScriptEngine* engine, bool force) {
-  script->TriggerOperationCallback();
+  script->request_interrupt();
   if (script->type() != ScriptType::Command) {
     script->stop(force, engine->GetState() == Stopping);
   }

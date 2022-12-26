@@ -34,6 +34,7 @@ class ScriptEngine {
   BOOL Startup(void);
   void Shutdown(void);
 
+  // TODO: Figure out what this function actually does and if we need it. ~ ejt
   void FlushCache(void);
 
   Script* CompileFile(const wchar_t* file, ScriptType type, uint argc = 0, JSAutoStructuredCloneBuffer** argv = NULL,

@@ -14,6 +14,11 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 option(MOZJS_BUILD_TESTS "Build tests for mozjs" OFF)
+option(MOZJS_THREADSAFE "Enable thread-safe support" ON)
+
+add_definitions(-DWIN32)
+add_definitions(-D_WIN32_WINNT=0x601)
+add_definitions(-D_WINVER=0x601)
 
 project(mozjs)
 
@@ -21,6 +26,7 @@ include(ConfigurePlatform)
 
 add_subdirectory(js)
 add_subdirectory(mfbt)
+add_subdirectory(nspr)
 
 if(MOZJS_BUILD_TESTS)
   enable_testing()

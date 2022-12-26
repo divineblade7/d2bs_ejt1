@@ -220,8 +220,8 @@ bool Genhook::Click(int button, POINT* loc) {
     AutoRoot* root = new AutoRoot(evt->owner->context(), clicked);
     evt->functions.push_back(root);
     owner->FireEvent(evt);
-    // Force process the event
-    owner->process_events();
+    owner->request_interrupt();
+    evt->wait();
 
     delete root;
   }

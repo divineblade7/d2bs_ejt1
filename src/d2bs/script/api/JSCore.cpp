@@ -138,8 +138,7 @@ JSAPI_FUNC(my_delay) {
         break;
       }
 
-      // TEMPORARY: Still to much to detangle from the current event system to figure out where to put this call
-      script->process_events();
+      script->request_interrupt();
 
       if (JS_GetGCParameter(script->runtime(), JSGC_BYTES) - script->last_gc() > 524288)  // gc every .5 mb
       {

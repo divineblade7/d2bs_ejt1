@@ -9,6 +9,10 @@ if(CMAKE_SIZEOF_VOID_P MATCHES 8)
 else()
   add_definitions(-D_X86_)
 endif()
+
+if(MOZJS_THREADSAFE)
+  add_definitions(-DJS_THREADSAFE)
+endif()
 ## End definitions
 ###############################################################################
 ## Begin source files
@@ -297,8 +301,8 @@ target_include_directories(js
 
 target_link_libraries(js PUBLIC mfbt)
 
-if(WIN32)
-  target_link_libraries(js PUBLIC winmm)
+if(MOZJS_THREADSAFE)
+  target_link_libraries(js PUBLIC nspr winmm)
 endif()
 
 target_compile_options(js PRIVATE /W0)

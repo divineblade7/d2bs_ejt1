@@ -13,6 +13,11 @@
 #include <string>
 #include <windows.h>
 
+DWORD WINAPI ScriptThread(void* data);
+void reportError(JSContext* cx, const char* message, JSErrorReport* report);
+JSBool operationCallback(JSContext* cx);
+JSBool contextCallback(JSContext* cx, uint contextOp);
+
 enum class ScriptType { InGame, OutOfGame, Command };
 enum class ScriptState { Stopped, Running, Paused };
 
@@ -65,13 +70,6 @@ class Script {
   // possibly a way to instantly process the event
   void FireEvent(std::shared_ptr<Event>);
 
-  /**
-   * @brief
-   * @todo Make sure this function is thread safe.
-   * @param debug_str
-   */
-  void process_events();
-
   inline const wchar_t* filename() {
     return filename_.c_str();
   }
@@ -94,9 +92,13 @@ class Script {
     return type_;
   }
 
-  inline void TriggerOperationCallback() {
+  inline void request_interrupt() {
     if (hasActiveCX_) {
-      JS_TriggerOperationCallback(runtime_);
+      if (GetCurrentThreadId() == thread_id_) {
+        operationCallback(context_);
+      } else {
+        JS_TriggerOperationCallback(runtime_);
+      }
     }
   }
 
@@ -119,6 +121,15 @@ class Script {
   void set_has_active_cx(bool val) {
     hasActiveCX_ = val;
   }
+
+  friend JSBool operationCallback(JSContext* cx);
+  friend JSBool contextCallback(JSContext* cx, uint contextOp);
+
+ private:
+  /**
+   * @brief This must be called from the same thread that created JS runtime and context!
+   */
+  void process_events();
 
  private:
   ScriptEngine* engine_ = nullptr;
@@ -152,8 +163,3 @@ class Script {
 
   d2bs::mpmc_queue<std::shared_ptr<Event>> event_queue_;  // new event system ~ ejt
 };
-
-DWORD WINAPI ScriptThread(void* data);
-void reportError(JSContext* cx, const char* message, JSErrorReport* report);
-JSBool operationCallback(JSContext* cx);
-JSBool contextCallback(JSContext* cx, uint contextOp);

@@ -213,7 +213,7 @@ BOOL SetSkill(JSContext* cx, WORD wSkillId, BOOL bLeft, DWORD dwItemId) {
 
     while (amt > 0) {  // had a script deadlock here, make sure were positve with amt
       // TEMPORARY: Still to much to detangle from the current event system to figure out where to put this call
-      script->process_events();
+      script->request_interrupt();
 
       amt = 100 - (GetTickCount() - start);
       // SleepEx(10,true);	// ex for delayed setTimer

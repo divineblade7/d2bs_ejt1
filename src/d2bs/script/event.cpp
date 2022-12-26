@@ -50,10 +50,10 @@ bool FireKeyDownUpEvent(WPARAM key, BYTE bUp) {
       evt->name = name;
 
       script->FireEvent(evt);
-      // Force process the event
-      script->process_events();
+      script->request_interrupt();
     }
 
+    evt->wait();
     return evt->block;
   });
 }
@@ -149,10 +149,10 @@ bool ChatEventCallback(Script* script, const char* name, const char* nick, const
     evt->msg = msg;
 
     script->FireEvent(evt);
-    // Force process the event
-    script->process_events();
+    script->request_interrupt();
   }
 
+  evt->wait();
   return evt->block;
 }
 
@@ -226,16 +226,18 @@ bool PacketEventCallback(Script* script, const char* name, BYTE* pPacket, DWORD 
     evt->bytes.resize(dwSize);
     memcpy(evt->bytes.data(), pPacket, dwSize);
 
-    if (GetCurrentThreadId() == evt->owner->thread_id()) {
-      script->process_events();
-    } else {
-      script->FireEvent(evt);
-      ReleaseGameLock();
-      // Force process the event
-      script->process_events();
-      TakeGameLock();
-    }
+    //if (GetCurrentThreadId() == evt->owner->thread_id()) {
+    //  script->process_events();
+    //} else {
+    //  script->FireEvent(evt);
+    //  ReleaseGameLock();
+    //  // Force process the event
+    //  script->process_events();
+    //  TakeGameLock();
+    //}
 
+    script->request_interrupt();
+    evt->wait();
     return evt->block;
   }
 
@@ -282,6 +284,9 @@ void CopyDataEvent::process() {
   for (int j = 0; j < 2; j++) {
     JS_RemoveValueRoot(cx, &argv[j]);
   }
+
+  is_processed_ = true;
+  is_processed_.notify_all();
 }
 
 void CommandEvent::process() {
@@ -304,6 +309,9 @@ void CommandEvent::process() {
     }
   }
   JS_EndRequest(cx);
+
+  is_processed_ = true;
+  is_processed_.notify_all();
 }
 
 void ChatEvent::process() {
@@ -327,6 +335,9 @@ void ChatEvent::process() {
   for (int j = 0; j < 2; j++) {
     JS_RemoveValueRoot(cx, &argv[j]);
   }
+
+  is_processed_ = true;
+  is_processed_.notify_all();
 }
 
 void PacketEvent::process() {
@@ -354,6 +365,9 @@ void PacketEvent::process() {
 
   JS_RemoveRoot(cx, &arr);
   JS_EndRequest(cx);
+
+  is_processed_ = true;
+  is_processed_.notify_all();
 }
 
 void BroadcastEvent::process() {
@@ -383,6 +397,9 @@ void BroadcastEvent::process() {
   for (uint i = 0; i < argc; i++) {
     args[i]->clear();
   }
+
+  is_processed_ = true;
+  is_processed_.notify_all();
 }
 
 void GameActionEvent::process() {
@@ -409,6 +426,9 @@ void GameActionEvent::process() {
   for (int j = 0; j < 5; j++) {
     JS_RemoveValueRoot(cx, &argv[j]);
   }
+
+  is_processed_ = true;
+  is_processed_.notify_all();
 }
 
 void KeyEvent::process() {
@@ -426,6 +446,9 @@ void KeyEvent::process() {
   }
   JS_EndRequest(cx);
   JS_RemoveValueRoot(cx, &argv[0]);
+
+  is_processed_ = true;
+  is_processed_.notify_all();
 }
 
 void ItemEvent::process() {
@@ -453,6 +476,9 @@ void ItemEvent::process() {
   for (int j = 0; j < 4; j++) {
     JS_RemoveValueRoot(cx, &argv[j]);
   }
+
+  is_processed_ = true;
+  is_processed_.notify_all();
 }
 
 void TimeoutEvent::process() {
@@ -468,6 +494,9 @@ void TimeoutEvent::process() {
   if (name == "setTimeout") {
     owner->engine()->RemoveDelayedEvent(key);
   }
+
+  is_processed_ = true;
+  is_processed_.notify_all();
 }
 
 void LifeEvent::process() {
@@ -485,6 +514,9 @@ void LifeEvent::process() {
   }
   JS_EndRequest(cx);
   JS_RemoveValueRoot(cx, &argv[0]);
+
+  is_processed_ = true;
+  is_processed_.notify_all();
 }
 
 void ManaEvent::process() {
@@ -502,6 +534,9 @@ void ManaEvent::process() {
   }
   JS_EndRequest(cx);
   JS_RemoveValueRoot(cx, &argv[0]);
+
+  is_processed_ = true;
+  is_processed_.notify_all();
 }
 
 void PlayerAssignEvent::process() {
@@ -519,6 +554,9 @@ void PlayerAssignEvent::process() {
   }
   JS_EndRequest(cx);
   JS_RemoveValueRoot(cx, &argv[0]);
+
+  is_processed_ = true;
+  is_processed_.notify_all();
 }
 
 void MouseClickEvent::process() {
@@ -543,6 +581,9 @@ void MouseClickEvent::process() {
   for (int j = 0; j < 4; j++) {
     JS_RemoveValueRoot(cx, &argv[j]);
   }
+
+  is_processed_ = true;
+  is_processed_.notify_all();
 }
 
 void ScreenHookClickEvent::process() {
@@ -568,6 +609,9 @@ void ScreenHookClickEvent::process() {
   for (int j = 0; j < 3; j++) {
     JS_RemoveValueRoot(cx, &argv[j]);
   }
+
+  is_processed_ = true;
+  is_processed_.notify_all();
 }
 
 void MouseMoveEvent::process() {
@@ -596,8 +640,21 @@ void MouseMoveEvent::process() {
   for (int j = 0; j < 2; j++) {
     JS_RemoveValueRoot(cx, &argv[j]);
   }
+
+  is_processed_ = true;
+  is_processed_.notify_all();
 }
 
 void DisposeEvent::process() {
   owner->engine()->DisposeScript(owner);
+  is_processed_ = true;
+  is_processed_.notify_all();
+}
+
+void Event::wait() {
+  is_processed_.wait(true);
+}
+
+void Event::notify_all() {
+  is_processed_.notify_all();
 }

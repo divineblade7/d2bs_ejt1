@@ -59,8 +59,8 @@ Script::~Script() {
 
 void Script::run() {
   try {
-    runtime_ = JS_NewRuntime(Vars.dwMemUsage, JS_NO_HELPER_THREADS);
-    JS_SetNativeStackQuota(runtime_, 50 * 1024);
+    runtime_ = JS_NewRuntime(500 * (1024 * 1024), JS_NO_HELPER_THREADS);
+    JS_SetNativeStackQuota(runtime_, 500 * 1024);
     // JS_SetRuntimeThread(runtime);
     JS_SetContextCallback(runtime_, contextCallback);
 
@@ -144,16 +144,9 @@ void Script::run() {
     JS_RemoveValueRoot(context_, &argvalue[j]);
   }
 
-  /*for(uint i = 0; i < argc; i++)  //crashes spidermonkey cleans itself up?
-  {
-          argv[i]->clear();
-          delete argv[i];
-  }*/
-
   JS_EndRequest(context_);
 
   execCount_++;
-  // Stop();
 }
 
 void Script::stop(bool force, bool reallyForce) {
@@ -172,7 +165,7 @@ void Script::stop(bool force, bool reallyForce) {
   }
 
   // trigger call back so script ends
-  TriggerOperationCallback();
+  request_interrupt();
 
   // normal wait: 500ms, forced wait: 300ms, really forced wait: 100ms
   int maxCount = (force ? (reallyForce ? 10 : 30) : 50);
@@ -200,14 +193,14 @@ void Script::pause() {
   if (!is_stopped() && !is_paused()) {
     state_ = ScriptState::Paused;
   }
-  TriggerOperationCallback();
+  request_interrupt();
 }
 
 void Script::resume() {
   if (!is_stopped() && is_paused()) {
     state_ = ScriptState::Running;
   }
-  TriggerOperationCallback();
+  request_interrupt();
 }
 
 bool Script::is_running() {
@@ -397,7 +390,7 @@ void Script::ClearAllEvents() {
 
 void Script::FireEvent(std::shared_ptr<Event> evt) {
   if (evt->owner && evt->owner->is_running()) {
-    evt->owner->TriggerOperationCallback();
+    evt->owner->request_interrupt();
   }
 
   event_queue_.enqueue(std::move(evt));
@@ -486,16 +479,13 @@ JSBool operationCallback(JSContext* cx) {
     JS_MaybeGC(cx);
   }
 
-  if (!!!(JSBool)(script->is_stopped() ||
-                  ((script->type() == ScriptType::InGame) && ClientState() == ClientStateMenu))) {
-    // TEMPORARY: Still to much to detangle from the current event system to figure out where to put this call
+  if (script->is_running() || (script->type() == ScriptType::InGame && ClientState() == ClientStateInGame)) {
     script->process_events();
 
-    return !!!(JSBool)(script->is_stopped() ||
-                       ((script->type() == ScriptType::InGame) && ClientState() == ClientStateMenu));
-  } else {
-    return false;
+    return (script->is_running() || (script->type() == ScriptType::InGame && ClientState() == ClientStateInGame));
   }
+
+  return false;
 }
 
 JSBool contextCallback(JSContext* cx, uint contextOp) {
@@ -562,10 +552,7 @@ JSBool contextCallback(JSContext* cx, uint contextOp) {
     case JSCONTEXT_DESTROY: {
       Script* script = (Script*)JS_GetContextPrivate(cx);
       script->set_has_active_cx(false);
-
-      // TEMPORARY: Still to much to detangle from the current event system to figure out where to put this call
       script->process_events();
-
       script->ClearAllEvents();
       Genhook::Clean(script);
     } break;
