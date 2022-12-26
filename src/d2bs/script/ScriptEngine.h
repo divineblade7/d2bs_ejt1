@@ -11,8 +11,6 @@
 
 typedef std::map<std::wstring, Script*> ScriptMap;
 
-typedef bool(__fastcall* ScriptCallback)(Script*, void*, uint);
-
 enum EngineState { Starting, Running, Paused, Stopping, Stopped };
 
 class ScriptEngine {
@@ -31,8 +29,9 @@ class ScriptEngine {
     return &_instance;
   }
 
-  BOOL Startup(void);
-  void Shutdown(void);
+  bool init();
+  void shutdown();
+  void StopAll(bool forceStop = false);
 
   // TODO: Figure out what this function actually does and if we need it. ~ ejt
   void FlushCache(void);
@@ -58,21 +57,10 @@ class ScriptEngine {
 
   unsigned int GetCount(bool active = true, bool unexecuted = false);
 
-  void StopAll(bool forceStop = false);
-  void UpdateConsole();
-
   int AddDelayedEvent(std::shared_ptr<TimeoutEvent> evt, int freq);
   void RemoveDelayedEvent(int key);
 
-  JSRuntime* runtime() {
-    return runtime_;
-  }
-
-  JSContext* context() {
-    return context_;
-  }
-
-  EngineState GetState() {
+  EngineState state() {
     return state_;
   }
 
@@ -81,8 +69,6 @@ class ScriptEngine {
   }
 
  private:
-  JSRuntime* runtime_ = nullptr;
-  JSContext* context_ = nullptr;
   EngineState state_ = Stopped;
 
   ScriptMap scripts_{};
@@ -94,7 +80,7 @@ class ScriptEngine {
   int delayedExecKey_;
 };
 
-//#define sScriptEngine ScriptEngine::instance()
+// #define sScriptEngine ScriptEngine::instance()
 inline ScriptEngine* sScriptEngine = nullptr;
 
 struct EventHelper {

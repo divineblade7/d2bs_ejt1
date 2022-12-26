@@ -86,7 +86,6 @@ set(D2BS_SRCS
 
   src/d2bs/utils/CommandLine.cpp
   src/d2bs/utils/Console.cpp
-  src/d2bs/utils/dde.cpp
   src/d2bs/utils/Helpers.cpp
   src/d2bs/utils/Offset.cpp
   src/d2bs/utils/StackWalker.cpp

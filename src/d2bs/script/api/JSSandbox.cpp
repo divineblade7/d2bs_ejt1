@@ -6,7 +6,8 @@
 
 JSAPI_FUNC(sandbox_ctor) {
   sandbox* box = new sandbox;  // leaked?
-  box->context = JS_NewContext(sEngine->script_engine()->runtime(), 0x2000);
+  box->runtime = JS_NewRuntime(Vars.dwMemUsage, JS_NO_HELPER_THREADS);
+  box->context = JS_NewContext(box->runtime, 0x2000);
   if (!box->context) {
     delete box;
     return JS_TRUE;

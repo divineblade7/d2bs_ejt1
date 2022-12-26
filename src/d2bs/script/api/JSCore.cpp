@@ -8,7 +8,6 @@
 #include "d2bs/script/event.h"
 #include "d2bs/utils/Console.h"
 #include "d2bs/utils/Helpers.h"
-#include "d2bs/utils/dde.h"
 
 #include <ddeml.h>
 #include <io.h>
@@ -399,40 +398,7 @@ JSAPI_FUNC(my_sendCopyData) {
 
 JSAPI_FUNC(my_sendDDE) {
   JS_SET_RVAL(cx, vp, JSVAL_FALSE);
-  jsint mode{};
-  char *pszDDEServer = nullptr, *pszTopic = nullptr, *pszItem = nullptr, *pszData = nullptr;
-  JS_BeginRequest(cx);
-
-  if (JSVAL_IS_INT(JS_ARGV(cx, vp)[0])) JS_ValueToECMAUint32(cx, JS_ARGV(cx, vp)[1], (uint32*)&mode);
-
-  if (JSVAL_IS_STRING(JS_ARGV(cx, vp)[1]))
-    pszDDEServer = JS_EncodeStringToUTF8(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[1]));
-
-  if (JSVAL_IS_STRING(JS_ARGV(cx, vp)[2])) pszTopic = JS_EncodeStringToUTF8(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[2]));
-
-  if (JSVAL_IS_STRING(JS_ARGV(cx, vp)[3])) pszItem = JS_EncodeStringToUTF8(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[3]));
-
-  if (JSVAL_IS_STRING(JS_ARGV(cx, vp)[4])) pszData = JS_EncodeStringToUTF8(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[4]));
-
-  JS_EndRequest(cx);
-  char buffer[255] = "";
-  BOOL result =
-      sEngine->dde()->send(mode, pszDDEServer ? pszDDEServer : "\"\"", pszTopic ? pszTopic : "\"\"",
-                           pszItem ? pszTopic : "\"\"", pszData ? pszTopic : "\"\"", (char**)&buffer, sizeof(buffer));
-
-  JS_free(cx, pszDDEServer);
-  JS_free(cx, pszTopic);
-  JS_free(cx, pszItem);
-  JS_free(cx, pszData);
-
-  if (!result) THROW_ERROR(cx, "DDE Failed! Check the log for the error message.");
-
-  if (mode == 0) {
-    wchar_t* buf = AnsiToUnicode(buffer);
-    JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, buf)));
-    delete[] buf;
-  }
-  return JS_TRUE;
+  THROW_ERROR(cx, "sendDDE has been deprecated!");
 }
 
 JSAPI_FUNC(my_keystate) {

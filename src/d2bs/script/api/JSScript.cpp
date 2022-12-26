@@ -107,7 +107,6 @@ JSAPI_FUNC(script_send) {
   if (!script || !script->is_running()) {
     return JS_TRUE;
   }
-  auto lock = sEngine->script_engine()->lock_script_list("script.send");
 
   std::vector<std::shared_ptr<JSAutoStructuredCloneBuffer>> args;
 

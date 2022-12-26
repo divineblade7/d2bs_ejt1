@@ -17,6 +17,7 @@ JSAPI_FUNC(sandbox_clear);
 void sandbox_finalize(JSFreeOp* fop, JSObject* obj);
 
 struct sandbox {
+  JSRuntime* runtime;
   JSContext* context;
   JSObject* innerObj;
   IncludeList list;

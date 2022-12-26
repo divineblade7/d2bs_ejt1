@@ -24,13 +24,13 @@ bool __fastcall DisposeScript(Script* script, ScriptEngine* engine) {
 bool __fastcall StopScript(Script* script, ScriptEngine* engine, bool force) {
   script->request_interrupt();
   if (script->type() != ScriptType::Command) {
-    script->stop(force, engine->GetState() == Stopping);
+    script->stop(force, engine->state() == Stopping);
   }
   return true;
 }
 
-BOOL ScriptEngine::Startup(void) {
-  if (GetState() == Stopped) {
+bool ScriptEngine::init() {
+  if (state_ == Stopped) {
     state_ = Starting;
     auto lock = lock_script_list("startup - enter");
 
@@ -48,16 +48,13 @@ BOOL ScriptEngine::Startup(void) {
   return TRUE;
 }
 
-void ScriptEngine::Shutdown(void) {
-  if (GetState() == Running) {
+void ScriptEngine::shutdown() {
+  if (state_ == Running) {
     // bring the engine down properly
     auto lock = lock_script_list("Shutdown");
+
     state_ = Stopping;
     StopAll(true);
-
-    if (scripts_.contains(L"console")) {
-      scripts_[L"console"]->stop(true, true);
-    }
 
     // clear all scripts now that they're stopped
     for_each(::DisposeScript, this);
@@ -66,18 +63,19 @@ void ScriptEngine::Shutdown(void) {
       scripts_.clear();
     }
 
-    if (runtime_) {
-      JS_DestroyContext(context_);
-      JS_DestroyRuntime(runtime_);
-      JS_ShutDown();
-      runtime_ = NULL;
-    }
+    JS_ShutDown();
     state_ = Stopped;
   }
 }
 
+void ScriptEngine::StopAll(bool forceStop) {
+  if (state_ == Running) {
+    for_each(::StopScript, this, forceStop);
+  }
+}
+
 void ScriptEngine::FlushCache(void) {
-  if (GetState() != Running) {
+  if (state_ != Running) {
     return;
   }
 
@@ -103,7 +101,7 @@ void ScriptEngine::FlushCache(void) {
 
 Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptType type, uint argc, JSAutoStructuredCloneBuffer** argv,
                                   bool) {
-  if (GetState() != Running) {
+  if (state_ != Running) {
     return NULL;
   }
 
@@ -129,7 +127,7 @@ Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptType type, uint arg
 }
 
 void ScriptEngine::RunCommand(const wchar_t* command) {
-  if (GetState() != Running) {
+  if (state_ != Running) {
     return;
   }
 
@@ -170,7 +168,7 @@ std::unique_lock<std::mutex> ScriptEngine::lock_script_list(const char*) {
 }
 
 unsigned int ScriptEngine::GetCount(bool active, bool unexecuted) {
-  if (GetState() != Running) {
+  if (state_ != Running) {
     return 0;
   }
 
@@ -186,20 +184,6 @@ unsigned int ScriptEngine::GetCount(bool active, bool unexecuted) {
 
   // assert(count >= 0);
   return count;
-}
-
-void ScriptEngine::StopAll(bool forceStop) {
-  if (GetState() == Running) {
-    for_each(::StopScript, this, forceStop);
-  }
-}
-
-void ScriptEngine::UpdateConsole() {
-  auto lock = lock_script_list("UpdateConsole");
-
-  if (scripts_.contains(L"console")) {
-    scripts_[L"console"]->UpdatePlayerGid();
-  }
 }
 
 int ScriptEngine::AddDelayedEvent(std::shared_ptr<TimeoutEvent> evt, int freq) {

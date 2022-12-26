@@ -12,7 +12,6 @@
 #include "d2bs/utils/Console.h"
 #include "d2bs/utils/Helpers.h"
 #include "d2bs/utils/Offset.h"
-#include "d2bs/utils/dde.h"
 
 #include <fcntl.h>
 #include <io.h>
@@ -65,7 +64,6 @@ bool Engine::startup(HMODULE mod) {
   DefineOffsets();
   InstallPatches();
   InstallConditional();
-  dde_.init();
 
   thread_handle_ = CreateThread(NULL, NULL, thread_entry, NULL, NULL, NULL);
   if (!thread_handle_) {
@@ -89,7 +87,6 @@ void Engine::shutdown(bool await_thread) {
 
   RemovePatches();
   Genhook::Destroy();
-  dde_.shutdown();
 
   KillTimer(D2GFX_GetHwnd(), Vars.uTimer);
 
@@ -126,7 +123,6 @@ void Engine::update() {
           script->UpdatePlayerGid();
           return true;
         });
-        script_engine_.UpdateConsole();
         Vars.bQuitting = false;
 
         on_game_enter();
@@ -237,7 +233,7 @@ DWORD __stdcall thread_entry(void*) {
     return FALSE;
   }
 
-  if (!engine->script_engine()->Startup()) {
+  if (!engine->script_engine()->init()) {
     Log(L"Failed to startup script engine");
     Print(L"\u00FFc2D2BS\u00FFc0 :: Script engine startup failed!");
     return false;
@@ -260,7 +256,7 @@ DWORD __stdcall thread_entry(void*) {
     Sleep(50);
   }
 
-  engine->script_engine()->Shutdown();
+  engine->script_engine()->shutdown();
 
   return NULL;
 }
@@ -277,17 +273,19 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         wchar_t* lpwData = AnsiToUnicode((const char*)pCopy->lpData);
         if (pCopy->dwData == 0x1337)  // 0x1337 = Execute Script
         {
-          while (!Vars.bActive || (sScriptEngine->GetState() != Running)) {
+          while (!Vars.bActive || (sScriptEngine->state() != Running)) {
             Sleep(100);
           }
           sScriptEngine->RunCommand(lpwData);
-        } else if (pCopy->dwData == 0x31337)  // 0x31337 = Set Profile
-          if (SwitchToProfile(lpwData))
+        } else if (pCopy->dwData == 0x31337) {  // 0x31337 = Set Profile
+          if (SwitchToProfile(lpwData)) {
             Print(L"\u00FFc2D2BS\u00FFc0 :: Switched to profile %s", lpwData);
-          else
+          } else {
             Print(L"\u00FFc2D2BS\u00FFc0 :: Profile %s not found", lpwData);
-        else
+          }
+        } else {
           FireCopyDataEvent(pCopy->dwData, lpwData);
+        }
         delete[] lpwData;
       }
 
