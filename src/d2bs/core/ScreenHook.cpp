@@ -1,7 +1,7 @@
 #include "d2bs/core/ScreenHook.h"
 
-#include "d2bs/engine.h"
 #include "d2bs/diablo/D2Ptrs.h"
+#include "d2bs/engine.h"
 #include "d2bs/script/api/JSScreenHook.h"
 #include "d2bs/utils/Helpers.h"
 
@@ -209,36 +209,32 @@ Genhook::~Genhook(void) {
 bool Genhook::Click(int button, POINT* loc) {
   if (!IsInRange(loc)) return false;
 
-  auto evt = std::make_shared<ScreenHookClickEvent>();
   if (owner && JSVAL_IS_FUNCTION(owner->context(), clicked)) {
-    evt->owner = owner;
-    evt->name = "ScreenHookClick";
-    evt->button = button;
-    evt->x = loc->x;
-    evt->y = loc->y;
+    FunctionList funcs;
+    AutoRoot* root = new AutoRoot(owner->context(), clicked);
+    funcs.push_back(root);
 
-    AutoRoot* root = new AutoRoot(evt->owner->context(), clicked);
-    evt->functions.push_back(root);
+    auto evt = std::make_shared<ScreenHookClickEvent>(owner, funcs, button, loc->x, loc->y);
     owner->FireEvent(evt);
     owner->request_interrupt();
     evt->wait();
 
     delete root;
+    return evt->block();
   }
-  return evt->block;
+
+  return false;
 }
 
 void Genhook::Hover(POINT* loc) {
   if (!IsInRange(loc)) return;
 
   if (owner && JSVAL_IS_FUNCTION(owner->context(), hovered)) {
-    auto evt = std::make_shared<MouseMoveEvent>();
-    evt->owner = owner;
-    evt->functions.push_back(new AutoRoot(owner->context(), hovered));
-    evt->name = "ScreenHookHover";
-    evt->x = loc->x;
-    evt->y = loc->y;
+    FunctionList funcs;
+    AutoRoot* root = new AutoRoot(owner->context(), clicked);
+    funcs.push_back(root);
 
+    auto evt = std::make_shared<ScreenHookHoverEvent>(owner, funcs, loc->x, loc->y);
     owner->FireEvent(evt);
   }
 }

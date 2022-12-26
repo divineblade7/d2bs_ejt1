@@ -82,10 +82,7 @@ JSAPI_FUNC(my_setTimeout) {
     Script* self = (Script*)JS_GetContextPrivate(cx);
     int freq = JSVAL_TO_INT(JS_ARGV(cx, vp)[1]);
     self->RegisterEvent("setTimeout", JS_ARGV(cx, vp)[0]);
-    auto evt = std::make_shared<TimeoutEvent>();
-    evt->owner = self;
-    evt->name = "setTimeout";
-    evt->val = new jsval(JS_ARGV(cx, vp)[0]);
+    auto evt = std::make_shared<TimeoutEvent>(self, "setTimeout", new jsval(JS_ARGV(cx, vp)[0]));
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(sEngine->script_engine()->AddDelayedEvent(evt, freq)));
   }
 
@@ -101,10 +98,7 @@ JSAPI_FUNC(my_setInterval) {
     Script* self = (Script*)JS_GetContextPrivate(cx);
     int freq = JSVAL_TO_INT(JS_ARGV(cx, vp)[1]);
     self->RegisterEvent("setInterval", JS_ARGV(cx, vp)[0]);
-    auto evt = std::make_shared<TimeoutEvent>();
-    evt->owner = self;
-    evt->name = "setInterval";
-    evt->val = new jsval(JS_ARGV(cx, vp)[0]);
+    auto evt = std::make_shared<TimeoutEvent>(self, "setInterval", new jsval(JS_ARGV(cx, vp)[0]));
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(sEngine->script_engine()->AddDelayedEvent(evt, freq)));
   }
 

@@ -237,12 +237,9 @@ void Script::RunCommand(const wchar_t* command) {
     Log(L"Console Aborted HELP!");
   }
 
-  std::shared_ptr<CommandEvent> evt = std::make_shared<CommandEvent>();
-  evt->owner = this;
-  evt->name = "Command";
-  evt->command = command;
+  std::shared_ptr<CommandEvent> evt = std::make_shared<CommandEvent>(this, command);
 
-  evt->owner->FireEvent(evt);
+  FireEvent(evt);
 }
 
 const wchar_t* Script::filename_short() {
@@ -389,8 +386,8 @@ void Script::ClearAllEvents() {
 }
 
 void Script::FireEvent(std::shared_ptr<Event> evt) {
-  if (evt->owner && evt->owner->is_running()) {
-    evt->owner->request_interrupt();
+  if (evt->owner() && evt->owner()->is_running()) {
+    evt->owner()->request_interrupt();
   }
 
   event_queue_.enqueue(std::move(evt));
@@ -434,7 +431,7 @@ DWORD WINAPI ScriptThread(void* data) {
 #endif
     script->run();
     if (Vars.bDisableCache) {
-      script->engine()->DisposeScript(script);
+      sScriptEngine->DisposeScript(script);
     }
   }
   return 0;

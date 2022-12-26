@@ -158,9 +158,7 @@ void ScriptEngine::DisposeScript(Script* script) {
     delete script;
   } else {
     // bad things happen if we delete from another thread
-    auto evt = std::make_shared<DisposeEvent>();
-    evt->owner = script;
-    evt->name = "DisposeMe";
+    auto evt = std::make_shared<DisposeEvent>(script);
     script->FireEvent(evt);
   }
 }
@@ -215,7 +213,7 @@ int ScriptEngine::AddDelayedEvent(std::shared_ptr<TimeoutEvent> evt, int freq) {
   // Copy the relative time into a LARGE_INTEGER.
   lStart.LowPart = (DWORD)(start & 0xFFFFFFFF);
   lStart.HighPart = (LONG)(start >> 32);
-  freq = (evt->name == "setInterval") ? freq : 0;
+  freq = (evt->name() == "setInterval") ? freq : 0;
   EnterCriticalSection(&Vars.cEventSection);
   DelayedExecList_.push_back(evt);
   Log(L"&evt could crash");
@@ -234,7 +232,7 @@ void ScriptEngine::RemoveDelayedEvent(int key) {
       CancelWaitableTimer((*it)->handle);
       CloseHandle((*it)->handle);
       std::shared_ptr<TimeoutEvent> evt = *it;
-      evt->owner->UnregisterEvent(evt->name.c_str(), *evt->val);
+      evt->owner()->UnregisterEvent(evt->name().c_str(), *evt->val);
       delete evt->val;
       it = DelayedExecList_.erase(it);
     } else {
@@ -246,5 +244,5 @@ void ScriptEngine::RemoveDelayedEvent(int key) {
 
 void CALLBACK EventTimerProc(LPVOID lpArg, DWORD, DWORD) {
   std::shared_ptr<Event>* evt = (std::shared_ptr<Event>*)lpArg;
-  (*evt)->owner->FireEvent(*evt);
+  (*evt)->owner()->FireEvent(*evt);
 }

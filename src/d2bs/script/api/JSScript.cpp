@@ -104,20 +104,19 @@ JSAPI_FUNC(script_resume) {
 JSAPI_FUNC(script_send) {
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
   Script* script = (Script*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &script_class, NULL);
-  auto evt = std::make_shared<BroadcastEvent>();
   if (!script || !script->is_running()) {
     return JS_TRUE;
   }
-
   auto lock = sEngine->script_engine()->lock_script_list("script.send");
-  evt->owner = script;
-  evt->name = "scriptmsg";
+
+  std::vector<std::shared_ptr<JSAutoStructuredCloneBuffer>> args;
 
   for (uint i = 0; i < argc; ++i) {
-    evt->args.push_back(std::make_shared<JSAutoStructuredCloneBuffer>());
-    evt->args.back()->write(cx, JS_ARGV(cx, vp)[i]);
+    args.push_back(std::make_shared<JSAutoStructuredCloneBuffer>());
+    args.back()->write(cx, JS_ARGV(cx, vp)[i]);
   }
 
+  auto evt = std::make_shared<BroadcastEvent>(script, args);
   script->FireEvent(evt);
 
   return JS_TRUE;

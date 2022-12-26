@@ -1191,20 +1191,24 @@ JSAPI_FUNC(item_getItemCost) {
 
   if (argc > 2 && JSVAL_IS_INT(JS_ARGV(cx, vp)[2])) nDifficulty = JSVAL_TO_INT(JS_ARGV(cx, vp)[2]);
 
-  switch (nMode) {
-    case 0:  // Buy
-    case 1:  // Sell
-      JS_SET_RVAL(cx, vp,
-                  INT_TO_JSVAL(D2COMMON_GetItemPrice(D2CLIENT_GetPlayerUnit(), pUnit, nDifficulty,
-                                                     *p_D2CLIENT_ItemPriceList, nNpcClassId, nMode)));
-      break;
-    case 2:  // Repair
-      JS_SET_RVAL(cx, vp,
-                  INT_TO_JSVAL(D2COMMON_GetItemPrice(D2CLIENT_GetPlayerUnit(), pUnit, nDifficulty,
-                                                     *p_D2CLIENT_ItemPriceList, nNpcClassId, 3)));
-      break;
-    default:
-      break;
+  __try {
+    switch (nMode) {
+      case 0:  // Buy
+      case 1:  // Sell
+        JS_SET_RVAL(cx, vp,
+                    INT_TO_JSVAL(D2COMMON_GetItemPrice(D2CLIENT_GetPlayerUnit(), pUnit, nDifficulty,
+                                                       *p_D2CLIENT_ItemPriceList, nNpcClassId, nMode)));
+        break;
+      case 2:  // Repair
+        JS_SET_RVAL(cx, vp,
+                    INT_TO_JSVAL(D2COMMON_GetItemPrice(D2CLIENT_GetPlayerUnit(), pUnit, nDifficulty,
+                                                       *p_D2CLIENT_ItemPriceList, nNpcClassId, 3)));
+        break;
+      default:
+        break;
+    }
+  } __except (EXCEPTION_EXECUTE_HANDLER) {
+    Log(L"Exception in getItemStat");
   }
 
   return JS_TRUE;

@@ -42,6 +42,7 @@ class Script {
 
   void run();
   void stop(bool force = false, bool reallyForce = false);
+
   void join();
   void pause();
   void resume();
@@ -75,10 +76,6 @@ class Script {
   }
 
   const wchar_t* filename_short();
-
-  ScriptEngine* engine() {
-    return engine_;
-  }
 
   inline JSContext* context() {
     return context_;

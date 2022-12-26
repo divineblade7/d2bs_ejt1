@@ -84,12 +84,14 @@ class ScriptEngine {
   JSRuntime* runtime_ = nullptr;
   JSContext* context_ = nullptr;
   EngineState state_ = Stopped;
-  ScriptMap scripts_{};
 
+  ScriptMap scripts_{};
+  std::mutex script_list_mutex_{};
+
+  // To be removed
+  // implement timer into TimeoutEvent that can be used to delay processing of event
   std::list<std::shared_ptr<TimeoutEvent>> DelayedExecList_;
   int delayedExecKey_;
-
-  std::mutex script_list_mutex_{};
 };
 
 //#define sScriptEngine ScriptEngine::instance()
