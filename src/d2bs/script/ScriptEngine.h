@@ -24,11 +24,6 @@ class ScriptEngine {
   ScriptEngine(const ScriptEngine&) = delete;
   ScriptEngine& operator=(const ScriptEngine&) = delete;
 
-  static ScriptEngine* instance() {
-    static ScriptEngine _instance;
-    return &_instance;
-  }
-
   bool init();
   void shutdown();
   void StopAll(bool forceStop = false);
