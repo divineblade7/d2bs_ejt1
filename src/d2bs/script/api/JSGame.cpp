@@ -1351,7 +1351,7 @@ JSAPI_FUNC(my_takeScreenshot) {
 JSAPI_FUNC(my_moveNPC) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  if (!Vars.bEnableUnsupported) {
+  if (!Vars.settings.bEnableUnsupported) {
     THROW_WARNING(cx, vp, "moveNPC requires EnableUnsupported = true in d2bs.ini");
   }
 

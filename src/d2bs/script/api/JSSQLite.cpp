@@ -90,7 +90,7 @@ JSAPI_FUNC(sqlite_ctor) {
       THROW_ERROR(cx, "Invalid characters in database name");
     }
 
-    path = (Vars.script_dir / path).make_preferred().wstring();
+    path = (Vars.settings.script_dir / path).make_preferred().wstring();
   }
 
   bool autoOpen = true;

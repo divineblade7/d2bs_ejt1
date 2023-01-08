@@ -39,6 +39,7 @@ endif()
 # Set D2BS sources
 set(D2BS_SRCS
   "${CMAKE_CURRENT_SOURCE_DIR}/src/d2bs/new_core/application.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/d2bs/new_core/settings.cpp"
 
   src/d2bs/core/ActMap.cpp
   src/d2bs/core/Control.cpp
@@ -48,7 +49,6 @@ set(D2BS_SRCS
   src/d2bs/core/Hash.cpp
   src/d2bs/core/LevelMap.cpp
   src/d2bs/core/MPQStats.cpp
-  src/d2bs/core/Profile.cpp
   src/d2bs/core/Room.cpp
   src/d2bs/core/ScreenHook.cpp
   src/d2bs/core/Unit.cpp

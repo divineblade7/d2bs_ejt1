@@ -1,6 +1,5 @@
 #include "d2bs/script/api/JSProfile.h"
 
-#include "d2bs/core/Profile.h"
 #include "d2bs/engine.h"
 #include "d2bs/utils/Helpers.h"
 
@@ -14,70 +13,72 @@
 //	Profile(ProfileType.tcpIpHost, charname, diff)
 //	Profile(ProfileType.tcpIpJoin, charname, ip)
 CLASS_CTOR(profile) {
-  Profile* prof;
-  ProfileType pt;
+  d2bs::Profile* prof;
+  d2bs::ProfileType pt;
   const wchar_t* str1;
   const wchar_t* str2;
   const wchar_t* str3;
   const wchar_t* str4;
 
   str1 = str2 = str3 = str4 = NULL;
-  pt = PROFILETYPE_INVALID;
+  pt = d2bs::PROFILETYPE_INVALID;
 
   try {
     // Profile()
     if (argc == 0) {
-      if (Vars.szProfile != NULL)
-        prof = new Profile();
+      if (Vars.settings.szProfile != NULL)
+        prof = Vars.settings.get_profile(Vars.settings.szProfile);
       else
         THROW_ERROR(cx, "No active profile!");
     }
     // Profile(name) - get the named profile
     else if (argc == 1 && JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
       str1 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
-      prof = new Profile(str1);
+      prof = Vars.settings.get_profile(str1);
     }
     // Profile(ProfileType.singlePlayer, charname, diff)
     else if (argc == 3 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0]) &&
-             JSVAL_TO_INT(JS_ARGV(cx, vp)[0]) == PROFILETYPE_SINGLEPLAYER) {
+             JSVAL_TO_INT(JS_ARGV(cx, vp)[0]) == d2bs::PROFILETYPE_SINGLEPLAYER) {
       // JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "isu", &pt, &i);  //removed s flag no longer supported
       str1 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[1]));
-      prof = new Profile(PROFILETYPE_SINGLEPLAYER, str1, (char)(JSVAL_TO_INT(JS_ARGV(cx, vp)[2])));
+      prof = Vars.settings.add_profile(d2bs::PROFILETYPE_SINGLEPLAYER, L"", L"", str1, L"",
+                                       (char)(JSVAL_TO_INT(JS_ARGV(cx, vp)[2])));
     }
     // Profile(ProfileType.battleNet, account, pass, charname, gateway)
     else if (argc == 5 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0]) &&
-             JSVAL_TO_INT(JS_ARGV(cx, vp)[0]) == PROFILETYPE_BATTLENET) {
+             JSVAL_TO_INT(JS_ARGV(cx, vp)[0]) == d2bs::PROFILETYPE_BATTLENET) {
       // JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "issss", &pt, &str1, &str2, &str3, &str4);
       str1 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[1]));
       str2 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[2]));
       str3 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[3]));
       str4 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[4]));
-      prof = new Profile(PROFILETYPE_BATTLENET, str1, str2, str3, str4);
+      prof = Vars.settings.add_profile(d2bs::PROFILETYPE_BATTLENET, str1, str2, str3, str4);
     }
     // Profile(ProfileType.openBattleNet, account, pass, charname, gateway)
     else if (argc == 5 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0]) &&
-             JSVAL_TO_INT(JS_ARGV(cx, vp)[0]) == PROFILETYPE_OPEN_BATTLENET) {
+             JSVAL_TO_INT(JS_ARGV(cx, vp)[0]) == d2bs::PROFILETYPE_OPEN_BATTLENET) {
       // JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "issss", &pt, &str1, &str2, &str3, &str4);
       str1 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[1]));
       str2 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[2]));
       str3 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[3]));
       str4 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[4]));
-      prof = new Profile(PROFILETYPE_OPEN_BATTLENET, str1, str2, str3, str4);
+      prof = Vars.settings.add_profile(d2bs::PROFILETYPE_OPEN_BATTLENET, str1, str2, str3, str4);
     }
     // Profile(ProfileType.tcpIpHost, charname, diff)
     else if (argc == 3 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0]) &&
-             JSVAL_TO_INT(JS_ARGV(cx, vp)[0]) == PROFILETYPE_TCPIP_HOST) {
+             JSVAL_TO_INT(JS_ARGV(cx, vp)[0]) == d2bs::PROFILETYPE_TCPIP_HOST) {
       // JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "isu", &pt, &str1, &i);
       str1 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[1]));
-      prof = new Profile(PROFILETYPE_TCPIP_HOST, str1, (char)(JSVAL_TO_INT(JS_ARGV(cx, vp)[2])));
+      prof = Vars.settings.add_profile(d2bs::PROFILETYPE_TCPIP_HOST, L"", L"", str1, L"",
+                                       (char)(JSVAL_TO_INT(JS_ARGV(cx, vp)[2])));
     }
     // Profile(ProfileType.tcpIpJoin, charname, ip)
     else if (argc == 3 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0]) &&
-             JSVAL_TO_INT(JS_ARGV(cx, vp)[0]) == PROFILETYPE_TCPIP_JOIN) {
+             JSVAL_TO_INT(JS_ARGV(cx, vp)[0]) == d2bs::PROFILETYPE_TCPIP_JOIN) {
       // JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "iss", &pt, &str1, &str2);
       str1 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[1]));
       str2 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[2]));
-      prof = new Profile(PROFILETYPE_TCPIP_JOIN, str1, str2);
+      prof = Vars.settings.add_profile(d2bs::PROFILETYPE_TCPIP_JOIN, L"", L"", str1, str2);
     } else
       THROW_ERROR(cx, "Invalid parameters.");
   } catch (char* ex) {
@@ -95,9 +96,9 @@ CLASS_CTOR(profile) {
 JSAPI_FUNC(profile_login) {
   JS_SET_RVAL(cx, vp, JSVAL_VOID);
   const char* error;
-  Profile* prof;
+  d2bs::Profile* prof;
 
-  prof = (Profile*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  prof = (d2bs::Profile*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
 
   if (prof->login(&error) != 0) THROW_ERROR(cx, error);
 
@@ -105,19 +106,19 @@ JSAPI_FUNC(profile_login) {
 }
 
 void profile_finalize(JSFreeOp*, JSObject* obj) {
-  Profile* prof;
+  // Profile* prof;
 
-  prof = (Profile*)JS_GetPrivate(obj);
+  // prof = (Profile*)JS_GetPrivate(obj);
 
-  if (prof != NULL) delete prof;
+  // if (prof != NULL) delete prof;
 
   JS_SetPrivate(obj, NULL);
 }
 
 JSAPI_PROP(profile_getProperty) {
-  Profile* prof;
+  d2bs::Profile* prof;
 
-  prof = (Profile*)JS_GetPrivate(cx, obj);
+  prof = (d2bs::Profile*)JS_GetPrivate(cx, obj);
   jsval ID;
   JS_IdToValue(cx, id, &ID);
 
@@ -141,10 +142,10 @@ JSAPI_PROP(profile_getProperty) {
       vp.setInt32(prof->diff);
       break;
     case PROFILE_MAXLOGINTIME:
-      vp.setInt32(prof->maxLoginTime);
+      vp.setInt32(Vars.settings.maxLoginTime);
       break;
     case PROFILE_MAXCHARSELTIME:
-      vp.setInt32(prof->maxCharTime);
+      vp.setInt32(Vars.settings.maxCharTime);
       break;
   }
 

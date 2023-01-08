@@ -2,7 +2,6 @@
 
 #include "d2bs/core/Control.h"
 #include "d2bs/core/Core.h"
-#include "d2bs/core/Profile.h"
 #include "d2bs/diablo/D2Ptrs.h"
 #include "d2bs/diablo/handlers/D2Handlers.h"
 #include "d2bs/engine.h"
@@ -75,42 +74,9 @@ void StringReplace(wchar_t* str, const wchar_t find, const wchar_t replace, size
   }
 }
 
-bool SwitchToProfile(const wchar_t* profile) {
-  if (Vars.bUseProfileScript != TRUE || !Profile::ProfileExists(profile)) {
-    return false;
-  }
-
-  wchar_t defaultStarter[_MAX_FNAME] = L"", defaultConsole[_MAX_FNAME] = L"", defaultGame[_MAX_FNAME] = L"",
-          scriptPath[_MAX_PATH] = L"";
-  auto path = (Vars.working_dir / "d2bs.ini").wstring();
-  auto file = path.c_str();
-
-  GetPrivateProfileStringW(profile, L"ScriptPath", L"scripts", scriptPath, _MAX_PATH, file);
-  GetPrivateProfileStringW(profile, L"DefaultConsoleScript", L"", defaultConsole, _MAX_FNAME, file);
-  GetPrivateProfileStringW(profile, L"DefaultGameScript", L"", defaultGame, _MAX_FNAME, file);
-  GetPrivateProfileStringW(profile, L"DefaultStarterScript", L"", defaultStarter, _MAX_FNAME, file);
-
-  wcscpy_s(Vars.szProfile, 256, profile);
-  Vars.script_dir = Vars.working_dir / scriptPath;
-
-  if (wcslen(defaultConsole) > 0) {
-    wcscpy_s(Vars.szConsole, _MAX_FNAME, defaultConsole);
-  }
-  if (wcslen(defaultGame) > 0) {
-    wcscpy_s(Vars.szDefault, _MAX_FNAME, defaultGame);
-  }
-  if (wcslen(defaultStarter) > 0) {
-    wcscpy_s(Vars.szStarter, _MAX_FNAME, defaultStarter);
-  }
-
-  Vars.bUseProfileScript = FALSE;
-  // Reload();
-  return true;
-}
-
 const wchar_t* GetStarterScriptName(void) {
-  return (ClientState() == ClientStateInGame ? Vars.szDefault
-          : ClientState() == ClientStateMenu ? Vars.szStarter
+  return (ClientState() == ClientStateInGame ? Vars.settings.szDefault
+          : ClientState() == ClientStateMenu ? Vars.settings.szStarter
                                              : NULL);
 }
 
@@ -127,7 +93,7 @@ bool ExecCommand(const wchar_t* command) {
 }
 
 bool StartScript(const wchar_t* scriptname, ScriptType type) {
-  auto path = (Vars.script_dir / scriptname).make_preferred().wstring();
+  auto path = (Vars.settings.script_dir / scriptname).make_preferred().wstring();
   Script* script = sScriptEngine->CompileFile(path.c_str(), type);
   return (script && script->BeginThread(ScriptThread));
 }
@@ -138,7 +104,7 @@ void Reload(void) {
   }
   sScriptEngine->StopAll();
 
-  if (Vars.bDisableCache != TRUE) {
+  if (Vars.settings.bDisableCache != TRUE) {
     Print(L"\u00FFc2D2BS\u00FFc0 :: Flushing the script cache");
   }
   sScriptEngine->FlushCache();
@@ -146,7 +112,7 @@ void Reload(void) {
   // wait for things to catch up
   Sleep(500);
 
-  if (!Vars.bUseProfileScript) {
+  if (!Vars.settings.bUseProfileScript) {
     const wchar_t* script = GetStarterScriptName();
     if (StartScript(script, GetStarterScriptState())) {
       Print(L"\u00FFc2D2BS\u00FFc0 :: Started %s", script);
@@ -179,7 +145,7 @@ bool ProcessCommand(const wchar_t* command, bool unprocessedIsCommand) {
     sScriptEngine->StopAll();
     result = true;
   } else if (_wcsicmp(argv, L"flush") == 0) {
-    if (Vars.bDisableCache != TRUE) {
+    if (Vars.settings.bDisableCache != TRUE) {
       Print(L"\u00FFc2D2BS\u00FFc0 :: Flushing the script cache");
     }
     sScriptEngine->FlushCache();
@@ -202,7 +168,7 @@ bool ProcessCommand(const wchar_t* command, bool unprocessedIsCommand) {
     Print(L"%d", value);
   } else if (_wcsicmp(argv, L"profile") == 0) {
     const wchar_t* profile = command + 8;
-    if (SwitchToProfile(profile))
+    if (Vars.settings.set_profile(profile))
       Print(L"ÿc2D2BSÿc0 :: Switched to profile %s", profile);
     else
       Print(L"ÿc2D2BSÿc0 :: Profile %s not found", profile);

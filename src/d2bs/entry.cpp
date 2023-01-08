@@ -16,7 +16,6 @@ DWORD WINAPI D2BS_MainThread(void* userdata) {
 
   Vars.working_dir = root_dir_;  // DEPRECATED
   Vars.log_dir = root_dir_ / "logs";  // DEPRECATED
-  Vars.script_dir = root_dir_ / "scripts";  // DEPRECATED
 
   // create log directory if it does not exist
   if (!std::filesystem::exists(Vars.log_dir)) {

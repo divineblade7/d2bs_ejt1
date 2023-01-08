@@ -6,7 +6,7 @@
 
 JSAPI_FUNC(sandbox_ctor) {
   sandbox* box = new sandbox;  // leaked?
-  box->runtime = JS_NewRuntime(Vars.dwMemUsage, JS_NO_HELPER_THREADS);
+  box->runtime = JS_NewRuntime(Vars.settings.dwMemUsage, JS_NO_HELPER_THREADS);
   box->context = JS_NewContext(box->runtime, 0x2000);
   if (!box->context) {
     delete box;
@@ -182,7 +182,7 @@ JSAPI_FUNC(sandbox_include) {
     sandbox* box = (sandbox*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &sandbox_class, NULL);
     const wchar_t* file = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
     if (file && wcslen(file) <= _MAX_FNAME && box) {
-      auto path = (Vars.script_dir / "libs" / file).make_preferred().wstring();
+      auto path = (Vars.settings.script_dir / "libs" / file).make_preferred().wstring();
       if (box->list.count(std::wstring(file)) == -1) {
         JSScript* tmp = JS_CompileFile(box->context, box->innerObj, path.c_str());
         if (tmp) {
@@ -207,7 +207,7 @@ JSAPI_FUNC(sandbox_isIncluded) {
   sandbox* box = (sandbox*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &sandbox_class, NULL);
   if (argc > 0 && JSVAL_IS_STRING(JS_ARGV(cx, vp)[0]) && box) {
     const wchar_t* file = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
-    auto path = (Vars.script_dir / "libs" / file).make_preferred().wstring();
+    auto path = (Vars.settings.script_dir / "libs" / file).make_preferred().wstring();
     JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(!!box->list.count(path)));
   } else
     THROW_ERROR(cx, "Invalid parameter, file expected");

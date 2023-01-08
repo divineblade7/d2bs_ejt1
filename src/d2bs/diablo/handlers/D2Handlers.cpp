@@ -95,7 +95,7 @@ void FlushPrint() {
     std::wstring temp;
     std::wstringstream ss(str);
 
-    if (Vars.bUseGamePrint && ClientState() == ClientStateInGame) {
+    if (Vars.settings.bUseGamePrint && ClientState() == ClientStateInGame) {
       while (getline(ss, temp)) {
         SplitLines(temp.c_str(), sConsole->MaxWidth() - 100, L' ', lines);
         sConsole->AddLine(temp);

@@ -30,7 +30,7 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
           }
           sScriptEngine->RunCommand(lpwData);
         } else if (pCopy->dwData == 0x31337) {  // 0x31337 = Set Profile
-          if (SwitchToProfile(lpwData)) {
+          if (Vars.settings.set_profile(lpwData)) {
             Print(L"\u00FFc2D2BS\u00FFc0 :: Switched to profile %s", lpwData);
           } else {
             Print(L"\u00FFc2D2BS\u00FFc0 :: Profile %s not found", lpwData);
@@ -200,7 +200,7 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 namespace d2bs {
 
 Application::Application() {
-  init_settings();
+  Vars.settings.load(Vars.working_dir / "d2bs.ini");
 
 #if 0
   char errlog[516] = "";
@@ -253,7 +253,7 @@ Application::Application() {
     throw std::exception("Failed to startup");
   }
 
-  if (ClientState() == ClientStateMenu && Vars.bStartAtMenu) {
+  if (ClientState() == ClientStateMenu && Vars.settings.bStartAtMenu) {
     clickControl(*p_D2WIN_FirstControl);
   }
 
@@ -300,7 +300,7 @@ void Application::run() {
     switch (ClientState()) {
       case ClientStateInGame: {
         if (!bInGame) {
-          Vars.dwGameTime = GetTickCount();
+          Vars.settings.dwGameTime = GetTickCount();
 
           // Is this Zzzz necessary? ~ ejt
           Sleep(500);
@@ -317,7 +317,8 @@ void Application::run() {
           bInGame = true;
         }
 
-        if ((Vars.dwMaxGameTime && Vars.dwGameTime && (GetTickCount() - Vars.dwGameTime) > Vars.dwMaxGameTime) ||
+        if ((Vars.settings.dwMaxGameTime && Vars.settings.dwGameTime &&
+             (GetTickCount() - Vars.settings.dwGameTime) > Vars.settings.dwMaxGameTime) ||
             (!D2COMMON_IsTownByLevelNo(GetPlayerArea()) &&
                  (Vars.nChickenHP && Vars.nChickenHP >= GetUnitHP(D2CLIENT_GetPlayerUnit())) ||
              (Vars.nChickenMP && Vars.nChickenMP >= GetUnitMP(D2CLIENT_GetPlayerUnit())))) {
@@ -327,7 +328,7 @@ void Application::run() {
       }
       case ClientStateMenu: {
         // i think this variable is to wait for a profile to start using SwitchToProfile? ~ ejt
-        while (Vars.bUseProfileScript) {
+        while (Vars.settings.bUseProfileScript) {
           Sleep(100);
         }
 
@@ -338,7 +339,7 @@ void Application::run() {
         }
 
         if (bInGame) {
-          Vars.dwGameTime = NULL;
+          Vars.settings.dwGameTime = NULL;
           bInGame = false;
         }
         break;
@@ -379,71 +380,13 @@ void Application::parse_commandline_args() {
       LoadMPQ(val.c_str());
     } else if (arg == "-profile") {
       const wchar_t* profile = AnsiToUnicode(val.c_str());
-      if (SwitchToProfile(profile))
+      if (Vars.settings.set_profile(profile))
         Print(L"\u00FFc2D2BS\u00FFc0 :: Switched to profile %s (-profile)", profile);
       else
         Print(L"\u00FFc2D2BS\u00FFc0 :: Profile %s not found (-profile)", profile);
       delete[] profile;  // ugh...
     }
   }
-}
-
-void Application::init_settings() {
-  wchar_t scriptPath[_MAX_PATH], hosts[256], debug[6], quitOnHostile[6], quitOnError[6], startAtMenu[6],
-      disableCache[6], memUsage[6], gamePrint[6], useProfilePath[6], logConsole[6], enableUnsupported[6],
-      forwardMessageBox[6], consoleFont[6];
-  int maxGameTime = 0;
-  int gameTimeout = 0;
-
-  auto path = (Vars.working_dir / "d2bs.ini").wstring();
-  auto fname = path.c_str();
-
-  GetPrivateProfileStringW(L"settings", L"ScriptPath", L"scripts", scriptPath, _MAX_PATH, fname);
-  GetPrivateProfileStringW(L"settings", L"DefaultConsoleScript", L"", Vars.szConsole, _MAX_FNAME, fname);
-  GetPrivateProfileStringW(L"settings", L"DefaultGameScript", L"default.dbj", Vars.szDefault, _MAX_FNAME, fname);
-  GetPrivateProfileStringW(L"settings", L"DefaultStarterScript", L"starter.dbj", Vars.szStarter, _MAX_FNAME, fname);
-  GetPrivateProfileStringW(L"settings", L"Hosts", L"", hosts, 256, fname);
-  maxGameTime = GetPrivateProfileIntW(L"settings", L"MaxGameTime", 0, fname);
-  GetPrivateProfileStringW(L"settings", L"Debug", L"false", debug, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"QuitOnHostile", L"false", quitOnHostile, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"QuitOnError", L"false", quitOnError, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"StartAtMenu", L"true", startAtMenu, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"DisableCache", L"true", disableCache, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"MemoryLimit", L"100", memUsage, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"UseGamePrint", L"false", gamePrint, 6, fname);
-  gameTimeout = GetPrivateProfileIntW(L"settings", L"GameReadyTimeout", 5, fname);
-  GetPrivateProfileStringW(L"settings", L"UseProfileScript", L"false", useProfilePath, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"LogConsoleOutput", L"false", logConsole, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"EnableUnsupported", L"false", enableUnsupported, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"ForwardMessageBox", L"false", forwardMessageBox, 6, fname);
-  GetPrivateProfileStringW(L"settings", L"ConsoleFont", L"0", consoleFont, 6, fname);
-
-  Vars.script_dir = Vars.working_dir / scriptPath;
-
-  char* szHosts = UnicodeToAnsi(hosts);
-  strcpy_s(Vars.szHosts, 256, szHosts);
-  delete[] szHosts;
-
-  Vars.dwGameTime = GetTickCount();
-  Vars.dwMaxGameTime = abs(maxGameTime * 1000);
-  Vars.dwGameTimeout = abs(gameTimeout * 1000);
-
-  Vars.bQuitOnHostile = StringToBool(quitOnHostile);
-  Vars.bQuitOnError = StringToBool(quitOnError);
-  Vars.bStartAtMenu = StringToBool(startAtMenu);
-  Vars.bDisableCache = StringToBool(disableCache);
-  Vars.bUseGamePrint = StringToBool(gamePrint);
-  Vars.bUseProfileScript = StringToBool(useProfilePath);
-  Vars.bLogConsole = StringToBool(logConsole);
-  Vars.bEnableUnsupported = StringToBool(enableUnsupported);
-  Vars.bForwardMessageBox = StringToBool(forwardMessageBox);
-  Vars.dwMemUsage = abs(_wtoi(memUsage));
-  Vars.dwConsoleFont = abs(_wtoi(consoleFont));
-  if (Vars.dwMemUsage < 1) {
-    Vars.dwMemUsage = 500;
-  }
-  Vars.dwMemUsage *= 1024 * 1024;
-  orig_wndproc_ = nullptr;
 }
 
 bool Application::init_hooks() {
@@ -462,7 +405,7 @@ bool Application::init_hooks() {
 }
 
 void Application::handle_enter_game() {
-  if (!Vars.bUseProfileScript) {
+  if (!Vars.settings.bUseProfileScript) {
     const wchar_t* starter = GetStarterScriptName();
     if (starter != NULL) {
       Print(L"\u00FFc2D2BS\u00FFc0 :: Starting %s", starter);

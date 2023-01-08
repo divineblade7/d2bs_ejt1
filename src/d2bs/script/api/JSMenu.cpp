@@ -1,6 +1,5 @@
 #include "d2bs/script/api/JSMenu.h"
 
-#include "d2bs/core/Profile.h"
 #include "d2bs/diablo/Constants.h"
 #include "d2bs/engine.h"
 #include "d2bs/script/api/JSControl.h"
@@ -10,29 +9,25 @@ JSAPI_FUNC(my_login) {
   JS_SET_RVAL(cx, vp, JSVAL_VOID);
   if (ClientState() != ClientStateMenu) return JS_TRUE;
 
-  const wchar_t* profile = NULL;
+  const wchar_t* name = NULL;
   const char* error;
 
   if (!JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
-    if (Vars.szProfile != NULL) {
-      profile = Vars.szProfile;
+    if (Vars.settings.szProfile != NULL) {
+      name = Vars.settings.szProfile;
     } else
       THROW_ERROR(cx, "Invalid profile specified!");
   } else {
-    profile = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
-    wcscpy_s(Vars.szProfile, 256, profile);
+    name = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+    wcscpy_s(Vars.settings.szProfile, 256, name);
   }
 
-  if (!profile) THROW_ERROR(cx, "Could not get profile!");
-  if (!Profile::ProfileExists(profile)) THROW_ERROR(cx, "Profile does not exist!");
+  if (!name) THROW_ERROR(cx, "Could not get profile!");
 
-  Profile* prof = new Profile(profile);
-  if (prof->login(&error) != 0) {
-    delete prof;
-    THROW_ERROR(cx, error);
-  }
+  d2bs::Profile* profile = Vars.settings.get_profile(name);
+  if (!profile) THROW_ERROR(cx, "Profile does not exist!");
 
-  delete prof;
+  profile->login(&error);
   return JS_TRUE;
 }
 
@@ -41,15 +36,12 @@ JSAPI_FUNC(my_selectChar) {
   if (argc != 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0]))
     THROW_ERROR(cx, "Invalid parameters specified to selectCharacter");
 
-  const wchar_t* profile = JS_GetStringCharsZ(cx, JS_ValueToString(cx, JS_ARGV(cx, vp)[0]));
+  const wchar_t* name = JS_GetStringCharsZ(cx, JS_ValueToString(cx, JS_ARGV(cx, vp)[0]));
 
-  if (!Profile::ProfileExists(profile)) THROW_ERROR(cx, "Invalid profile specified");
-  wchar_t charname[24];
-  auto path = (Vars.working_dir / "d2bs.ini").wstring();
-  auto file = path.c_str();
-  GetPrivateProfileStringW(profile, L"character", L"ERROR", charname, path.length(), file);
+  d2bs::Profile* profile = Vars.settings.get_profile(name);
+  if (!profile) THROW_ERROR(cx, "Invalid profile specified");
 
-  JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(OOG_SelectCharacter(charname)));
+  JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(OOG_SelectCharacter(profile->charname)));
 
   return JS_TRUE;
 }
@@ -123,7 +115,7 @@ JSAPI_FUNC(my_addProfile) {
 
   auto path = (Vars.working_dir / "d2bs.ini").wstring();
   auto file = path.c_str();
-  if (!Profile::ProfileExists(*args[0])) {
+  if (!Vars.settings.has_profile(*args[0])) {
     wchar_t settings[600] = L"";
     swprintf_s(settings, _countof(settings),
                L"mode=%s\tgateway=%s\tusername=%s\tpassword=%s\tcharacter=%s\tspdifficulty=%d\t", mode, gateway,

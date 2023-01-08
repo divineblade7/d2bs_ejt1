@@ -13,7 +13,6 @@ class Application {
 
  private:
   void parse_commandline_args();
-  void init_settings();
   bool init_hooks();
 
   void handle_enter_game();

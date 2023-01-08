@@ -17,7 +17,7 @@ bool SplitLines(const std::wstring& str, size_t maxWidth, const wchar_t delim, s
   if (str.length() < 1 || maxWidth < 40) return false;
 
   // base case
-  if (static_cast<size_t>(CalculateTextLen(str.c_str(), Vars.dwConsoleFont).x) < maxWidth) {
+  if (static_cast<size_t>(CalculateTextLen(str.c_str(), Vars.settings.dwConsoleFont).x) < maxWidth) {
     lst.push_back(tmp);
     return true;
   }
@@ -213,7 +213,7 @@ int UTF8Length(std::string str) {
 }
 
 int MeasureText(const std::wstring& str, int index) {
-  return CalculateTextLen(str.substr(0, index).c_str(), Vars.dwConsoleFont).x;
+  return CalculateTextLen(str.substr(0, index).c_str(), Vars.settings.dwConsoleFont).x;
 }
 
 int MaxLineFit(const std::wstring& str, int start_idx, int end_idx, int maxWidth) {

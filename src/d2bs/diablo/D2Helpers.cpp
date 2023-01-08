@@ -38,8 +38,9 @@ void LogNoFormat(const wchar_t* szString) {
   time(&tTime);
   localtime_s(&timestamp, &tTime);
   strftime(szTime, sizeof(szTime), "%Y%m%d", &timestamp);
-  swprintf_s(path, _countof(path), L"%s\\d2bs-%s-%S.log", Vars.log_dir.wstring().c_str(), Vars.szProfile, szTime);
-//#ifdef DEBUG
+  swprintf_s(path, _countof(path), L"%s\\d2bs-%s-%S.log", Vars.log_dir.wstring().c_str(), Vars.settings.szProfile,
+             szTime);
+  //#ifdef DEBUG
 //  FILE* log = stderr;
 //#else
   FILE* log = _wfsopen(path, L"a+", _SH_DENYNO);
@@ -114,7 +115,8 @@ bool WaitForGameReady(void) {
         return true;
     }
     Sleep(10);
-  } while ((Vars.dwGameTimeout == 0) || (Vars.dwGameTimeout > 0 && (GetTickCount() - start) < Vars.dwGameTimeout));
+  } while ((Vars.settings.dwGameTimeout == 0) ||
+           (Vars.settings.dwGameTimeout > 0 && (GetTickCount() - start) < Vars.settings.dwGameTimeout));
   return false;
 }
 
@@ -433,7 +435,7 @@ CellFile* LoadCellFile(const wchar_t* lpszPath, DWORD bMPQ) {
   // AutoDetect the Cell File
   if (bMPQ == 3) {
     // Check in our directory first
-    auto path = (Vars.script_dir / lpszPath).wstring();
+    auto path = (Vars.settings.script_dir / lpszPath).wstring();
     if (std::filesystem::exists(path)) {
       return LoadCellFile(path.c_str(), FALSE);
     } else {

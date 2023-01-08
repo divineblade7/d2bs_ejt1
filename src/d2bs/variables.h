@@ -1,6 +1,7 @@
 #pragma once
 
 #include "d2bs/diablo/D2Structs.h"  // CellFile
+#include "d2bs/new_core/settings.h" // Settings
 
 #include <Windows.h>   // CRITICAL_SECTION, DWORD, HANDLE, HHOOK, HMODULE, POINT, UINT_PTR, WNDPROC
 #include <filesystem>  // std::filesystem::path
@@ -22,50 +23,33 @@ struct Private {
 };
 
 struct Variables {
+  // Temporarily defining settings here to make it globally available
+  d2bs::Settings settings;
+
   int nChickenHP;
   int nChickenMP;
-  DWORD dwGameTime;
   BOOL bDontCatchNextMsg;
   BOOL bClickAction;
-  BOOL bUseGamePrint;
   BOOL bChangedAct;
   BOOL bGameLoopEntered;
   DWORD dwGameThreadId;
   DWORD dwLocale;
 
-  DWORD dwMaxGameTime;
-  DWORD dwGameTimeout;
   BOOL bTakeScreenshot;
-  BOOL bQuitOnError;
-  BOOL bQuitOnHostile;
-  BOOL bStartAtMenu;
   BOOL bActive;
   BOOL bBlockKeys;
   BOOL bBlockMouse;
-  BOOL bDisableCache;
-  BOOL bUseProfileScript;
-  BOOL bLogConsole;
-  BOOL bEnableUnsupported;
-  BOOL bForwardMessageBox;
   BOOL bUseRawCDKey = FALSE;
   BOOL bQuitting;
   BOOL bCacheFix;
   BOOL bMulti;
   BOOL bSleepy;
   BOOL bReduceFTJ;
-  int dwMemUsage;
-  int dwConsoleFont;
   HMODULE hModule;
   HWND hHandle;
 
   std::filesystem::path working_dir;
   std::filesystem::path log_dir;
-  std::filesystem::path script_dir;
-  wchar_t szProfile[256];
-  wchar_t szStarter[_MAX_FNAME];
-  wchar_t szConsole[_MAX_FNAME];
-  wchar_t szDefault[_MAX_FNAME];
-  char szHosts[256];
   char szClassic[30];
   char szLod[30];
   wchar_t szTitle[256];

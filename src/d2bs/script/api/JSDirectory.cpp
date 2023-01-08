@@ -45,7 +45,7 @@ JSAPI_FUNC(my_openDir) {
     return JS_FALSE;
   }
 
-  auto path = (Vars.script_dir / name).make_preferred().wstring();
+  auto path = (Vars.settings.script_dir / name).make_preferred().wstring();
 
   // TODO: Rewrite this shit
   if ((_wmkdir(path.c_str()) == -1) && (errno == ENOENT)) {
@@ -87,7 +87,7 @@ JSAPI_FUNC(dir_getFiles) {
 
   long hFile;
   wchar_t oldpath[_MAX_PATH];
-  auto path = (Vars.script_dir / d->name).make_preferred().wstring();
+  auto path = (Vars.settings.script_dir / d->name).make_preferred().wstring();
 
   if (!_wgetcwd(oldpath, _MAX_PATH)) {
     Log(L"Error getting current working directory. (%s, %s)", L"JSDirectory.cpp", L"dir_getFiles");
@@ -131,7 +131,7 @@ JSAPI_FUNC(dir_getFolders) {
 
   long hFile;
   wchar_t oldpath[_MAX_PATH];
-  auto path = (Vars.script_dir / d->name).make_preferred().wstring();
+  auto path = (Vars.settings.script_dir / d->name).make_preferred().wstring();
 
   if (!_wgetcwd(oldpath, _MAX_PATH)) {
     Log(L"Error getting current working directory. (%s, %s)", L"JSDirectory.cpp", L"dir_getFolders");
@@ -174,7 +174,7 @@ JSAPI_FUNC(dir_create) {
     return JS_FALSE;
   }
 
-  auto path = (Vars.script_dir / d->name / name).make_preferred().wstring();
+  auto path = (Vars.settings.script_dir / d->name / name).make_preferred().wstring();
   if (_wmkdir(path.c_str()) == -1 && (errno == ENOENT)) {
     JS_ReportError(cx, "Couldn't create directory %s, path %s not found", name, path.c_str());
     return JS_FALSE;
@@ -189,7 +189,7 @@ JSAPI_FUNC(dir_create) {
 JSAPI_FUNC(dir_delete) {
   DirData* d = (DirData*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
 
-  auto path = (Vars.script_dir / d->name).make_preferred().wstring();
+  auto path = (Vars.settings.script_dir / d->name).make_preferred().wstring();
 
   if (_wrmdir(path.c_str()) == -1) {
     // TODO: Make an optional param that specifies recursive delete

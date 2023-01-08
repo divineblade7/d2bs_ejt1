@@ -157,7 +157,7 @@ JSAPI_FUNC(my_load) {
   }
 
   const wchar_t* file = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
-  auto path = (Vars.script_dir / file).make_preferred().wstring();
+  auto path = (Vars.settings.script_dir / file).make_preferred().wstring();
 
   if (path.length() > (_MAX_FNAME + _MAX_PATH)) {
     JS_ReportError(cx, "File name too long!");
@@ -200,7 +200,7 @@ JSAPI_FUNC(my_include) {
   }
 
   const wchar_t* file = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
-  auto path = (Vars.script_dir / "libs" / file).make_preferred().wstring();
+  auto path = (Vars.settings.script_dir / "libs" / file).make_preferred().wstring();
   if (path.length() > (_MAX_FNAME + _MAX_PATH)) {
     JS_ReportError(cx, "File name too long!");
     return JS_FALSE;
@@ -260,7 +260,7 @@ JSAPI_FUNC(my_getThreadPriority) {
 
 JSAPI_FUNC(my_isIncluded) {
   const wchar_t* file = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
-  auto path = (Vars.script_dir / "libs" / file).make_preferred().wstring();
+  auto path = (Vars.settings.script_dir / "libs" / file).make_preferred().wstring();
 
   if (path.length() > (_MAX_FNAME + _MAX_PATH)) {
     JS_ReportError(cx, "File name too long");
@@ -509,7 +509,7 @@ JSAPI_FUNC(my_loadMpq) {
 JSAPI_FUNC(my_sendPacket) {
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
 
-  if (!Vars.bEnableUnsupported) {
+  if (!Vars.settings.bEnableUnsupported) {
     THROW_WARNING(cx, vp, "sendPacket requires EnableUnsupported = true in d2bs.ini");
   }
 
@@ -554,7 +554,7 @@ JSAPI_FUNC(my_sendPacket) {
 JSAPI_FUNC(my_getPacket) {
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
 
-  if (!Vars.bEnableUnsupported) {
+  if (!Vars.settings.bEnableUnsupported) {
     THROW_WARNING(cx, vp, "getPacket requires EnableUnsupported = true in d2bs.ini");
   }
 

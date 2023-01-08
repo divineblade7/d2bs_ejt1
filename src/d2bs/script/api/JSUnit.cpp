@@ -59,7 +59,7 @@ JSAPI_PROP(unit_getProperty) {
       // JS_NewNumberValue(cx, (jsdouble)GetCurrentProcessId(), vp);
       break;
     case ME_PROFILE:
-      vp.setString(JS_NewUCStringCopyZ(cx, Vars.szProfile));
+      vp.setString(JS_NewUCStringCopyZ(cx, Vars.settings.szProfile));
       break;
     case ME_GAMEREADY:
       vp.setBoolean(GameReady());
@@ -99,7 +99,7 @@ JSAPI_PROP(unit_getProperty) {
       vp.setString(JS_NewStringCopyZ(cx, pInfo->szGameServerIp));
       break;
     case ME_GAMESTARTTIME:
-      vp.setDouble((jsdouble)Vars.dwGameTime);
+      vp.setDouble((jsdouble)Vars.settings.dwGameTime);
       break;
     case ME_GAMETYPE:
       vp.setInt32(*p_D2CLIENT_ExpCharFlag);
@@ -121,7 +121,7 @@ JSAPI_PROP(unit_getProperty) {
         vp.setDouble((jsdouble)pData->ladderflag);
       break;
     case ME_QUITONHOSTILE:
-      vp.setBoolean(Vars.bQuitOnHostile);
+      vp.setBoolean(Vars.settings.bQuitOnHostile);
       break;
     case ME_REALM:
       vp.setString(JS_NewStringCopyZ(cx, pData->szRealmName));
@@ -150,10 +150,10 @@ JSAPI_PROP(unit_getProperty) {
       vp.setBoolean((ClientState() == ClientStateMenu ? false : true));
       break;
     case OOG_QUITONERROR:
-      vp.setBoolean(Vars.bQuitOnError);
+      vp.setBoolean(Vars.settings.bQuitOnError);
       break;
     case OOG_MAXGAMETIME:
-      vp.setInt32(Vars.dwMaxGameTime);
+      vp.setInt32(Vars.settings.dwMaxGameTime);
       break;
     case ME_MERCREVIVECOST:
       vp.setInt32((*p_D2CLIENT_MercReviveCost));
@@ -165,7 +165,7 @@ JSAPI_PROP(unit_getProperty) {
       vp.setBoolean(Vars.bBlockMouse);
       break;
     case ME_UNSUPPORTED:
-      vp.setBoolean(Vars.bEnableUnsupported);
+      vp.setBoolean(Vars.settings.bEnableUnsupported);
       break;
     case ME_CHARFLAGS:
       if (pData) vp.setInt32(pData->nCharFlags);
@@ -503,13 +503,13 @@ JSAPI_STRICT_PROP(unit_setProperty) {
       if (vp.isInt32()) Vars.nChickenMP = vp.toInt32();
       break;
     case ME_QUITONHOSTILE:
-      if (vp.isBoolean()) Vars.bQuitOnHostile = vp.toBoolean();
+      if (vp.isBoolean()) Vars.settings.bQuitOnHostile = vp.toBoolean();
       break;
     case OOG_QUITONERROR:
-      if (vp.isBoolean()) Vars.bQuitOnError = vp.toBoolean();
+      if (vp.isBoolean()) Vars.settings.bQuitOnError = vp.toBoolean();
       break;
     case OOG_MAXGAMETIME:
-      if (vp.isInt32()) Vars.dwMaxGameTime = vp.toInt32();
+      if (vp.isInt32()) Vars.settings.dwMaxGameTime = vp.toInt32();
       break;
     case ME_BLOCKKEYS:
       if (vp.isBoolean()) Vars.bBlockKeys = vp.toBoolean();

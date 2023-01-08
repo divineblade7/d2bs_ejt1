@@ -189,7 +189,7 @@ FILE* fileOpenRelScript(const wchar_t* filename, const wchar_t* mode, JSContext*
  * \return fullPath on success or NULL on failure.
  */
 std::wstring getPathRelScript(const wchar_t* filename) {
-  return (Vars.script_dir / filename).make_preferred().wstring();
+  return (Vars.settings.script_dir / filename).make_preferred().wstring();
 }
 
 /** Check that the full path of the script path is the prefix of the fullpath

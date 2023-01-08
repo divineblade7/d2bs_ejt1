@@ -35,8 +35,8 @@ bool ScriptEngine::init() {
     auto lock = lock_script_list("startup - enter");
 
     Script* console = nullptr;
-    if (wcslen(Vars.szConsole) > 0) {
-      auto path = (Vars.script_dir / Vars.szConsole).make_preferred().wstring();
+    if (wcslen(Vars.settings.szConsole) > 0) {
+      auto path = (Vars.settings.script_dir / Vars.settings.szConsole).make_preferred().wstring();
       console = new Script(this, path.c_str(), ScriptType::Command);
     } else {
       console = new Script(this, L"", ScriptType::Command);
@@ -81,7 +81,7 @@ void ScriptEngine::FlushCache(void) {
 
   static bool isFlushing = false;
 
-  if (isFlushing || Vars.bDisableCache) {
+  if (isFlushing || Vars.settings.bDisableCache) {
     return;
   }
 

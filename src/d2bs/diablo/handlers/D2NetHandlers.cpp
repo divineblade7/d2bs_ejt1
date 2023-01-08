@@ -103,7 +103,7 @@ DWORD EventMessagesHandler(BYTE* pPacket, [[maybe_unused]] DWORD dwSize) {
         if (player->dwUnitId == param1) strcpy_s(name1, 16, player->szName);
       switch (param2) {
         case 0x03:  // hostile
-          if (Vars.bQuitOnHostile) D2CLIENT_ExitGame();
+          if (Vars.settings.bQuitOnHostile) D2CLIENT_ExitGame();
           break;
       }
     } break;

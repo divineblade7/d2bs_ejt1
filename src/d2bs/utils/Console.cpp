@@ -155,7 +155,7 @@ void Console::AddLine(std::wstring line) {
   while (history.size() > 300)  // set history cap at 300
     history.pop_front();
 
-  if (Vars.bLogConsole) {
+  if (Vars.settings.bLogConsole) {
     LogNoFormat(line.c_str());
   }
 
@@ -182,7 +182,7 @@ void Console::Draw(void) {
     POINT size = GetScreenSize();
     int xsize = size.x;
     int ysize = size.y;
-    size = CalculateTextLen("@", Vars.dwConsoleFont);
+    size = CalculateTextLen("@", Vars.settings.dwConsoleFont);
     int charwidth = size.x;
     int charheight = std::max(long(12), size.y / 2 + 2);
     // the default console height is 30% of the screen size
@@ -197,7 +197,7 @@ void Console::Draw(void) {
       std::wstring cmdstr = cmd.str();
       if (cmdstr.length() > 0) {
         SplitLines(cmdstr, Console::MaxWidth(), L' ', cmdsplit);
-        cmdsize = CalculateTextLen(cmdsplit.back().c_str(), Vars.dwConsoleFont).x;
+        cmdsize = CalculateTextLen(cmdsplit.back().c_str(), Vars.settings.dwConsoleFont).x;
         cmdlines += cmdsplit.size() - 1;
       }
     }
@@ -211,17 +211,17 @@ void Console::Draw(void) {
       it++;
 
     for (int i = lineCount - (int)IsEnabled(); i > 0 && it != lines.rend(); i--, it++)
-      myDrawText(it->c_str(), charwidth, 4 + (i * charheight), 0, Vars.dwConsoleFont);
+      myDrawText(it->c_str(), charwidth, 4 + (i * charheight), 0, Vars.settings.dwConsoleFont);
 
     if (IsEnabled()) {
       if (cmdsplit.size() > 0) {
         int dy = _height + 3;
         for (std::list<std::wstring>::iterator it2 = cmdsplit.begin(); it2 != cmdsplit.end(); it2++, dy += charheight) {
-          myDrawText(it2->c_str(), charwidth, dy, 0, Vars.dwConsoleFont);
+          myDrawText(it2->c_str(), charwidth, dy, 0, Vars.settings.dwConsoleFont);
         }
       }
 
-      myDrawText(L">", 1, Console::height - 3, 0, Vars.dwConsoleFont);
+      myDrawText(L">", 1, Console::height - 3, 0, Vars.settings.dwConsoleFont);
       DWORD tick = GetTickCount();
       if ((tick - count) < 600) {
         int lx = cmdsize + charwidth, ly = Console::height - (charheight / 3);

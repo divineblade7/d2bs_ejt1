@@ -87,7 +87,7 @@ void Script::run() {
     }
 
     if (type_ == ScriptType::Command) {
-      if (wcslen(Vars.szConsole) > 0) {
+      if (wcslen(Vars.settings.szConsole) > 0) {
         script_ = JS_CompileFile(context_, globals_, filename_);
       } else {
         const char* cmd = "function main() {print('ÿc2D2BSÿc0 :: Started Console'); while (true){delay(10000)};}  ";
@@ -160,7 +160,7 @@ void Script::stop(bool force, bool reallyForce) {
   //  tell everyone else that the script is aborted FIRST
   state_ = ScriptState::Stopped;
   if (type_ != ScriptType::Command) {
-    const wchar_t* displayName = filename_.c_str() + Vars.script_dir.wstring().length() + 1;
+    const wchar_t* displayName = filename_.c_str() + Vars.settings.script_dir.wstring().length() + 1;
     Print(L"Script %s ended", displayName);
   }
 
@@ -246,7 +246,7 @@ const wchar_t* Script::filename_short() {
   if (wcscmp(filename_.c_str(), L"Command Line") == 0)
     return filename_.c_str();
   else
-    return (filename_.c_str() + Vars.script_dir.wstring().length() + 1);
+    return (filename_.c_str() + Vars.settings.script_dir.wstring().length() + 1);
 }
 
 int Script::GetExecutionCount() {
@@ -430,7 +430,7 @@ DWORD WINAPI ScriptThread(void* data) {
     SetThreadName(0xFFFFFFFF, script->filename_short());
 #endif
     script->run();
-    if (Vars.bDisableCache) {
+    if (Vars.settings.bDisableCache) {
       sScriptEngine->DisposeScript(script);
     }
   }
@@ -459,7 +459,7 @@ void reportError(JSContext*, const char* message, JSErrorReport* report) {
     delete[] filename;
   }
 
-  if (Vars.bQuitOnError && !JSREPORT_IS_WARNING(report->flags) && ClientState() == ClientStateInGame) {
+  if (Vars.settings.bQuitOnError && !JSREPORT_IS_WARNING(report->flags) && ClientState() == ClientStateInGame) {
     D2CLIENT_ExitGame();
   } else {
     sConsole->ShowBuffer();

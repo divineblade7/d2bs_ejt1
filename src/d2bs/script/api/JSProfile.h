@@ -1,6 +1,6 @@
 #pragma once
 
-#include "d2bs/core/Profile.h"
+#include "d2bs/new_core/settings.h"
 #include "d2bs/script/js32.h"
 
 #include <windows.h>
@@ -46,15 +46,14 @@ CLASS_CTOR(profileType);
 
 JSAPI_PROP(profileType_getProperty);
 
-static JSPropertySpec profileType_props[] = {
-    {"singlePlayer", PROFILETYPE_SINGLEPLAYER, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(profileType_getProperty),
-     JSOP_NULLWRAPPER},
-    {"battleNet", PROFILETYPE_BATTLENET, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(profileType_getProperty), JSOP_NULLWRAPPER},
-    {"openBattleNet", PROFILETYPE_OPEN_BATTLENET, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(profileType_getProperty),
-     JSOP_NULLWRAPPER},
-    {"tcpIpHost", PROFILETYPE_TCPIP_HOST, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(profileType_getProperty),
-     JSOP_NULLWRAPPER},
-    {"tcpIpJoin", PROFILETYPE_TCPIP_JOIN, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(profileType_getProperty),
-     JSOP_NULLWRAPPER},
-    {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
-
+static JSPropertySpec profileType_props[] = {{"singlePlayer", d2bs::PROFILETYPE_SINGLEPLAYER, JSPROP_PERMANENT_VAR,
+                                              JSOP_WRAPPER(profileType_getProperty), JSOP_NULLWRAPPER},
+                                             {"battleNet", d2bs::PROFILETYPE_BATTLENET, JSPROP_PERMANENT_VAR,
+                                              JSOP_WRAPPER(profileType_getProperty), JSOP_NULLWRAPPER},
+                                             {"openBattleNet", d2bs::PROFILETYPE_OPEN_BATTLENET, JSPROP_PERMANENT_VAR,
+                                              JSOP_WRAPPER(profileType_getProperty), JSOP_NULLWRAPPER},
+                                             {"tcpIpHost", d2bs::PROFILETYPE_TCPIP_HOST, JSPROP_PERMANENT_VAR,
+                                              JSOP_WRAPPER(profileType_getProperty), JSOP_NULLWRAPPER},
+                                             {"tcpIpJoin", d2bs::PROFILETYPE_TCPIP_JOIN, JSPROP_PERMANENT_VAR,
+                                              JSOP_WRAPPER(profileType_getProperty), JSOP_NULLWRAPPER},
+                                             {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
