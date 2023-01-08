@@ -1,7 +1,8 @@
-#include "d2bs/engine.h"
 #include "d2bs/core/Unit.h"
 #include "d2bs/diablo/D2Ptrs.h"
 #include "d2bs/diablo/handlers/D2Handlers.h"
+#include "d2bs/engine.h"
+#include "d2bs/utils/Console.h"
 #include "d2bs/utils/Helpers.h"
 
 #include <filesystem>
@@ -71,7 +72,27 @@ void __declspec(naked) GamePacketSent_Interception() {
 }
 
 void GameDraw_Intercept(void) {
-  sEngine->on_game_draw();
+  if (Vars.bActive && ClientState() == ClientStateInGame) {
+    FlushPrint();
+    Genhook::DrawAll(IG);
+    DrawLogo();
+    sConsole->Draw();
+  }
+
+  if (Vars.bTakeScreenshot) {
+    Vars.bTakeScreenshot = false;
+    D2WIN_TakeScreenshot();
+  }
+
+  if (Vars.SectionCount) {
+    if (Vars.bGameLoopEntered)
+      LeaveCriticalSection(&Vars.cGameLoopSection);
+    else
+      Vars.bGameLoopEntered = true;
+    Sleep(0);
+    EnterCriticalSection(&Vars.cGameLoopSection);
+  } else
+    Sleep(10);
 }
 
 void __declspec(naked) GameInput_Intercept() {
@@ -186,7 +207,18 @@ Skip:
 }
 
 void GameDrawOOG_Intercept(void) {
-  sEngine->on_menu_draw();
+  D2WIN_DrawSprites();
+  if (Vars.bActive && ClientState() == ClientStateMenu) {
+    FlushPrint();
+    Genhook::DrawAll(OOG);
+    DrawLogo();
+    sConsole->Draw();
+  }
+  if (Vars.bTakeScreenshot) {
+    Vars.bTakeScreenshot = false;
+    D2WIN_TakeScreenshot();
+  }
+  Sleep(10);
 }
 
 void __declspec(naked) CongratsScreen_Intercept(void) {

@@ -24,6 +24,11 @@ class ScriptEngine {
   ScriptEngine(const ScriptEngine&) = delete;
   ScriptEngine& operator=(const ScriptEngine&) = delete;
 
+  static ScriptEngine* __instance() {
+    static ScriptEngine instance;
+    return &instance;
+  }
+
   bool init();
   void shutdown();
   void StopAll(bool forceStop = false);
@@ -75,8 +80,7 @@ class ScriptEngine {
   int delayedExecKey_;
 };
 
-// #define sScriptEngine ScriptEngine::instance()
-inline ScriptEngine* sScriptEngine = nullptr;
+#define sScriptEngine ScriptEngine::__instance()
 
 struct EventHelper {
   char* evtName;

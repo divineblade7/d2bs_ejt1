@@ -49,9 +49,9 @@ JSAPI_PROP(script_getProperty) {
 
 JSAPI_FUNC(script_getNext) {
   Script* iterp = (Script*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &script_class, NULL);
-  auto lock = sEngine->script_engine()->lock_script_list("scrip.getNext");
+  auto lock = sScriptEngine->lock_script_list("scrip.getNext");
 
-  auto& scripts = sEngine->script_engine()->scripts();
+  auto& scripts = sScriptEngine->scripts();
   for (ScriptMap::iterator it = scripts.begin(); it != scripts.end(); it++) {
     if (it->second == iterp) {
       it++;
@@ -139,7 +139,7 @@ JSAPI_FUNC(my_getScript) {
     // loop over the Scripts in ScriptEngine and find the one with the right threadid
     DWORD tid = (DWORD)JSVAL_TO_INT(JS_ARGV(cx, vp)[0]);
     FindHelper args = {tid, NULL, NULL};
-    sEngine->script_engine()->for_each(FindScriptByTid, &args);
+    sScriptEngine->for_each(FindScriptByTid, &args);
     if (args.script != NULL)
       iterp = args.script;
     else
@@ -148,7 +148,7 @@ JSAPI_FUNC(my_getScript) {
     wchar_t* name = _wcsdup(JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0])));
     if (name) StringReplace(name, L'/', L'\\', wcslen(name));
     FindHelper args = {0, name, NULL};
-    sEngine->script_engine()->for_each(FindScriptByName, &args);
+    sScriptEngine->for_each(FindScriptByName, &args);
     free(name);
     if (args.script != NULL) {
       iterp = args.script;
@@ -156,9 +156,9 @@ JSAPI_FUNC(my_getScript) {
       return JS_TRUE;
     }
   } else {
-    auto lock = sEngine->script_engine()->lock_script_list("getScript");
-    if (!sEngine->script_engine()->scripts().empty()) {
-      iterp = sEngine->script_engine()->scripts().begin()->second;
+    auto lock = sScriptEngine->lock_script_list("getScript");
+    if (!sScriptEngine->scripts().empty()) {
+      iterp = sScriptEngine->scripts().begin()->second;
     }
 
     if (iterp == NULL) {
@@ -179,9 +179,9 @@ JSAPI_FUNC(my_getScripts) {
   JSObject* pReturnArray = JS_NewArrayObject(cx, 0, NULL);
   JS_BeginRequest(cx);
   JS_AddRoot(cx, &pReturnArray);
-  auto lock = sEngine->script_engine()->lock_script_list("getScripts");
+  auto lock = sScriptEngine->lock_script_list("getScripts");
 
-  auto& scripts = sEngine->script_engine()->scripts();
+  auto& scripts = sScriptEngine->scripts();
   for (const auto& [_, script] : scripts) {
     JSObject* res = BuildObject(cx, &script_class, script_methods, script_props, script);
     jsval a = OBJECT_TO_JSVAL(res);

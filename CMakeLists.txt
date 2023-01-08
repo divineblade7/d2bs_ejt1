@@ -38,6 +38,8 @@ endif()
 
 # Set D2BS sources
 set(D2BS_SRCS
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/d2bs/new_core/application.cpp"
+
   src/d2bs/core/ActMap.cpp
   src/d2bs/core/Control.cpp
   src/d2bs/core/Core.cpp
@@ -92,7 +94,6 @@ set(D2BS_SRCS
   src/d2bs/utils/sqlite3.c
   src/d2bs/utils/stringhash.cpp
 
-  src/d2bs/engine.cpp
   src/d2bs/entry.cpp)
 
 # Set debug only sources

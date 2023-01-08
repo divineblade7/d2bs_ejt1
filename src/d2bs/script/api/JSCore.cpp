@@ -82,7 +82,7 @@ JSAPI_FUNC(my_setTimeout) {
     int freq = JSVAL_TO_INT(JS_ARGV(cx, vp)[1]);
     self->RegisterEvent("setTimeout", JS_ARGV(cx, vp)[0]);
     auto evt = std::make_shared<TimeoutEvent>(self, "setTimeout", new jsval(JS_ARGV(cx, vp)[0]));
-    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(sEngine->script_engine()->AddDelayedEvent(evt, freq)));
+    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(sScriptEngine->AddDelayedEvent(evt, freq)));
   }
 
   return JS_TRUE;
@@ -98,7 +98,7 @@ JSAPI_FUNC(my_setInterval) {
     int freq = JSVAL_TO_INT(JS_ARGV(cx, vp)[1]);
     self->RegisterEvent("setInterval", JS_ARGV(cx, vp)[0]);
     auto evt = std::make_shared<TimeoutEvent>(self, "setInterval", new jsval(JS_ARGV(cx, vp)[0]));
-    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(sEngine->script_engine()->AddDelayedEvent(evt, freq)));
+    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(sScriptEngine->AddDelayedEvent(evt, freq)));
   }
 
   return JS_TRUE;
@@ -108,7 +108,7 @@ JSAPI_FUNC(my_clearInterval) {
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
   if (argc != 1 || !JSVAL_IS_NUMBER(JS_ARGV(cx, vp)[0])) JS_ReportError(cx, "invalid params passed to clearInterval");
 
-  sEngine->script_engine()->RemoveDelayedEvent(JSVAL_TO_INT(JS_ARGV(cx, vp)[0]));
+  sScriptEngine->RemoveDelayedEvent(JSVAL_TO_INT(JS_ARGV(cx, vp)[0]));
   return JS_TRUE;
 }
 
@@ -175,7 +175,7 @@ JSAPI_FUNC(my_load) {
     autoBuffer[i - 1]->write(cx, JS_ARGV(cx, vp)[i]);
   }
 
-  Script* newScript = sEngine->script_engine()->CompileFile(path.c_str(), type, argc - 1, autoBuffer);
+  Script* newScript = sScriptEngine->CompileFile(path.c_str(), type, argc - 1, autoBuffer);
 
   if (newScript) {
     newScript->BeginThread(ScriptThread);
@@ -219,7 +219,7 @@ JSAPI_FUNC(my_stop) {
     Script* script = (Script*)JS_GetContextPrivate(cx);
     if (script) script->stop();
   } else
-    sEngine->script_engine()->StopAll();
+    sScriptEngine->StopAll();
 
   return JS_FALSE;
 }
