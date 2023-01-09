@@ -129,7 +129,7 @@ void Console::ScrollUp(void) {
   }
 
   scrollIndex--;
-  Console::UpdateLines();
+  UpdateLines();
 }
 
 void Console::ScrollDown(void) {
@@ -140,14 +140,14 @@ void Console::ScrollDown(void) {
   }
 
   scrollIndex++;
-  Console::UpdateLines();
+  UpdateLines();
 }
 
 void Console::AddLine(std::wstring line) {
   std::lock_guard<std::mutex> lock(mutex_);
 
   std::list<std::wstring> buf;
-  SplitLines(line, Console::MaxWidth(), L' ', buf);
+  SplitLines(line, MaxWidth(), L' ', buf);
   for (std::list<std::wstring>::iterator it2 = buf.begin(); it2 != buf.end(); it2++) {
     history.push_back(*it2);
   }
@@ -160,7 +160,7 @@ void Console::AddLine(std::wstring line) {
   }
 
   scrollIndex = history.size() < lineCount ? 0 : history.size() - lineCount;
-  Console::UpdateLines();
+  UpdateLines();
 }
 
 void Console::UpdateLines(void) {
@@ -196,15 +196,15 @@ void Console::Draw(void) {
     if (IsEnabled()) {
       std::wstring cmdstr = cmd.str();
       if (cmdstr.length() > 0) {
-        SplitLines(cmdstr, Console::MaxWidth(), L' ', cmdsplit);
+        SplitLines(cmdstr, MaxWidth(), L' ', cmdsplit);
         cmdsize = CalculateTextLen(cmdsplit.back().c_str(), Vars.settings.dwConsoleFont).x;
         cmdlines += cmdsplit.size() - 1;
       }
     }
 
-    Console::height = _height + (cmdlines * charheight) + 6;
+    height = _height + (cmdlines * charheight) + 6;
     // draw the box large enough to hold the whole thing
-    D2GFX_DrawRectangle(0, 0, xsize, Console::height, 0xdf, 0);
+    D2GFX_DrawRectangle(0, 0, xsize, height, 0xdf, 0);
 
     std::deque<std::wstring>::reverse_iterator it = lines.rbegin();
     if (scrollIndex == 0 && lines.size() == lineCount && IsEnabled())  // handle index 0, top of console
@@ -221,10 +221,10 @@ void Console::Draw(void) {
         }
       }
 
-      myDrawText(L">", 1, Console::height - 3, 0, Vars.settings.dwConsoleFont);
+      myDrawText(L">", 1, height - 3, 0, Vars.settings.dwConsoleFont);
       DWORD tick = GetTickCount();
       if ((tick - count) < 600) {
-        int lx = cmdsize + charwidth, ly = Console::height - (charheight / 3);
+        int lx = cmdsize + charwidth, ly = height - (charheight / 3);
         D2GFX_DrawRectangle(lx, ly, lx + ((charwidth * 2) / 3), ly + 2, 0xFF, 0x07);
       } else if ((tick - count) > 1100) {
         count = tick;

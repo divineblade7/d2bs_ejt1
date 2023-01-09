@@ -5,6 +5,7 @@
 #include "d2bs/diablo/D2Ptrs.h"
 #include "d2bs/utils/CriticalSections.h"
 #include "d2bs/utils/Helpers.h"
+#include "d2bs/utils/Console.h"
 
 #include <algorithm>
 #include <list>
@@ -55,9 +56,7 @@ void Print(const wchar_t* szFormat, ...) {
   vswprintf_s(str, len + 1, szFormat, vaArgs);
   va_end(vaArgs);
 
-  EnterCriticalSection(&Vars.cPrintSection);
-  Vars.qPrintBuffer.push(std::wstring(str));
-  LeaveCriticalSection(&Vars.cPrintSection);
+  sConsole->queue().enqueue(str);
 
   delete[] str;
 }

@@ -218,7 +218,6 @@ Application::Application() {
 #endif
 
   InitializeCriticalSection(&Vars.cEventSection);
-  InitializeCriticalSection(&Vars.cPrintSection);
   InitializeCriticalSection(&Vars.cBoxHookSection);
   InitializeCriticalSection(&Vars.cFrameHookSection);
   InitializeCriticalSection(&Vars.cLineHookSection);
@@ -276,10 +275,6 @@ Application::~Application() {
 
   KillTimer(D2GFX_GetHwnd(), Vars.uTimer);
 
-  UnhookWindowsHookEx(Vars.hMouseHook);
-  UnhookWindowsHookEx(Vars.hKeybHook);
-
-  DeleteCriticalSection(&Vars.cPrintSection);
   DeleteCriticalSection(&Vars.cBoxHookSection);
   DeleteCriticalSection(&Vars.cFrameHookSection);
   DeleteCriticalSection(&Vars.cLineHookSection);

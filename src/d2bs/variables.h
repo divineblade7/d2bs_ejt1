@@ -54,17 +54,12 @@ struct Variables {
   char szLod[30];
   wchar_t szTitle[256];
 
-  HHOOK hMouseHook;
-  HHOOK hKeybHook;
-
   UINT_PTR uTimer;
   long SectionCount;
 
-  std::queue<std::wstring> qPrintBuffer;
   std::map<unsigned __int32, CellFile*> mCachedCellFiles;
   // std::list<Event*> EventList;
   CRITICAL_SECTION cEventSection;
-  CRITICAL_SECTION cPrintSection;
   CRITICAL_SECTION cTextHookSection;
   CRITICAL_SECTION cImageHookSection;
   CRITICAL_SECTION cBoxHookSection;

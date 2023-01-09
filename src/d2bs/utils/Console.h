@@ -1,5 +1,7 @@
 #pragma once
 
+#include "d2bs/utils/mpmc_queue.h"
+
 #include <deque>
 #include <mutex>
 #include <sstream>
@@ -56,6 +58,10 @@ class Console {
     return height;
   }
 
+  d2bs::mpmc_queue<std::wstring>& queue() {
+    return print_queue_;
+  }
+
  private:
   bool visible = false;
   bool enabled = false;
@@ -68,6 +74,8 @@ class Console {
   std::wstringstream cmd;
 
   std::mutex mutex_;
+
+  d2bs::mpmc_queue<std::wstring> print_queue_;
 };
 
 #define sConsole Console::instance()

@@ -75,21 +75,10 @@ DWORD __fastcall GamePacketSent(BYTE* pPacket, DWORD dwSize) {
   return !FireGamePacketSentEvent(pPacket, dwSize);
 }
 
+// TODO: Move into Console
 void FlushPrint() {
-  if (!TryEnterCriticalSection(&Vars.cPrintSection)) return;
-
-  if (Vars.qPrintBuffer.empty()) {
-    LeaveCriticalSection(&Vars.cPrintSection);
-    return;
-  }
-
-  std::queue<std::wstring> clean;
-  std::swap(Vars.qPrintBuffer, clean);
-  LeaveCriticalSection(&Vars.cPrintSection);
-
-  while (!clean.empty()) {
-    std::wstring str = clean.front();
-
+  std::wstring str;
+  while (sConsole->queue().dequeue_for(str, std::chrono::milliseconds(5))) {
     // Break into lines through \n.
     std::list<std::wstring> lines;
     std::wstring temp;
@@ -106,10 +95,10 @@ void FlushPrint() {
         D2CLIENT_PrintGameString((wchar_t*)it->c_str(), 0);
       }
     } else {
-      while (getline(ss, temp)) sConsole->AddLine(temp);
+      while (getline(ss, temp)) {
+        sConsole->AddLine(temp);
+      }
     }
-
-    clean.pop();
   }
 }
 

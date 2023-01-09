@@ -25,7 +25,9 @@ class mpmc_queue {
   bool dequeue_for(T& popped_item, std::chrono::milliseconds wait_duration) {
     {
       std::unique_lock<std::mutex> lock(queue_mutex_);
-      if (!push_cv_.wait_for(lock, wait_duration, [this] { return !queue_.empty(); })) return false;
+      if (!push_cv_.wait_for(lock, wait_duration, [this] { return !queue_.empty(); })) {
+        return false;
+      }
 
       popped_item = std::move(queue_.front());
       queue_.pop();
