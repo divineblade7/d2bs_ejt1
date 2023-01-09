@@ -7,7 +7,6 @@
 #include "d2bs/diablo/Constants.h"
 #include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/diablo/D2Skills.h"
-#include "d2bs/engine.h"
 #include "d2bs/script/api/JSArea.h"
 #include "d2bs/script/api/JSGlobalClasses.h"
 #include "d2bs/script/api/JSRoom.h"

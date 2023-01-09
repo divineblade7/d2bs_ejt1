@@ -1,8 +1,8 @@
 #include "d2bs/script/api/JSSandbox.h"
 
-#include "d2bs/engine.h"
 #include "d2bs/script/ScriptEngine.h"
 #include "d2bs/utils/Helpers.h"
+#include "d2bs/variables.h"
 
 JSAPI_FUNC(sandbox_ctor) {
   sandbox* box = new sandbox;  // leaked?

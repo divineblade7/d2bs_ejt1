@@ -42,6 +42,7 @@ typedef uint16_t uint16;
 void* JS_GetPrivate(JSContext* cx, JSObject* obj);
 void JS_SetPrivate(JSContext* cx, JSObject* obj, void* data);
 JSBool JSVAL_IS_OBJECT(jsval v);
+
 // IMPORTANT: Ordering is critical here! If your object has a
 // defined prototype, _THAT PROTOTYPE MUST BE LISTED ABOVE IT_
 struct JSClassSpec {

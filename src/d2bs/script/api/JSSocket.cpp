@@ -1,7 +1,7 @@
 #include "d2bs/script/api/JSSocket.h"
 
-#include "d2bs/engine.h"
 #include "d2bs/utils/Helpers.h"
+#include "d2bs/variables.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN

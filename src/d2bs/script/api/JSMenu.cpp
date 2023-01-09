@@ -1,9 +1,10 @@
 #include "d2bs/script/api/JSMenu.h"
 
 #include "d2bs/diablo/Constants.h"
-#include "d2bs/engine.h"
+#include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/script/api/JSControl.h"
 #include "d2bs/utils/Helpers.h"
+#include "d2bs/variables.h"
 
 JSAPI_FUNC(my_login) {
   JS_SET_RVAL(cx, vp, JSVAL_VOID);

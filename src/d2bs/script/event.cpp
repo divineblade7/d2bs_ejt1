@@ -1,8 +1,8 @@
 #include "d2bs/script/event.h"
 
 #include "d2bs/core/Core.h"
-#include "d2bs/engine.h"
 #include "d2bs/script/ScriptEngine.h"
+#include "d2bs/variables.h"
 
 void FireLifeEvent(DWORD dwLife) {
   sScriptEngine->for_each([&](Script* script) {

@@ -20,6 +20,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
+namespace d2bs {
+
 class CommandLine {
  public:
   CommandLine(std::string cmdline);
@@ -37,3 +39,5 @@ class CommandLine {
  private:
   std::map<std::string, std::string> args_;
 };
+
+}  // namespace d2bs

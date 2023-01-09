@@ -20,9 +20,10 @@
 
 #include "d2bs/script/api/JSDirectory.h"
 
-#include "d2bs/engine.h"
 #include "d2bs/core/File.h"
+#include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/utils/Helpers.h"
+#include "d2bs/variables.h"
 
 #include <cerrno>
 #include <direct.h>

@@ -2,12 +2,14 @@
 
 #include "d2bs/core/Core.h"
 #include "d2bs/core/File.h"
+#include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/diablo/D2Ptrs.h"
-#include "d2bs/engine.h"
+#include "d2bs/script/ScriptEngine.h"
 #include "d2bs/script/api/JSScript.h"
 #include "d2bs/script/event.h"
 #include "d2bs/utils/Console.h"
 #include "d2bs/utils/Helpers.h"
+#include "d2bs/variables.h"
 
 #include <ddeml.h>
 #include <io.h>

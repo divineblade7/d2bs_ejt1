@@ -2,12 +2,13 @@
 
 #include "d2bs/core/Control.h"
 #include "d2bs/core/Core.h"
+#include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/diablo/D2Ptrs.h"
 #include "d2bs/diablo/handlers/D2Handlers.h"
-#include "d2bs/engine.h"
 #include "d2bs/script/Script.h"
 #include "d2bs/script/ScriptEngine.h"
 #include "d2bs/utils/StackWalker.h"
+#include "d2bs/variables.h"
 
 #include <DbgHelp.h>
 #include <string.h>

@@ -5,11 +5,11 @@
 #include "d2bs/core/ScreenHook.h"
 #include "d2bs/core/Unit.h"
 #include "d2bs/diablo/Constants.h"
-#include "d2bs/engine.h"
 #include "d2bs/script/Script.h"
 #include "d2bs/script/ScriptEngine.h"
 #include "d2bs/script/event.h"
 #include "d2bs/utils/Helpers.h"
+#include "d2bs/variables.h"
 
 Variables Vars = {};
 

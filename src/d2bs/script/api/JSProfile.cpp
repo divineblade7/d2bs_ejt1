@@ -1,7 +1,7 @@
 #include "d2bs/script/api/JSProfile.h"
 
-#include "d2bs/engine.h"
 #include "d2bs/utils/Helpers.h"
+#include "d2bs/variables.h"
 
 // Profile() - get the active profile
 // Profile(name) - get the named profile

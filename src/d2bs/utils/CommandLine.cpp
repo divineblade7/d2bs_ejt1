@@ -16,6 +16,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "d2bs/utils/CommandLine.h"
 
+namespace d2bs {
+
 CommandLine::CommandLine(std::string cmdline) {
   // example input C:\Program Files (x86)\Diablo II\Game.exe -profile "test" -handle "4325261" -cachefix -multi
   // -title "some title" -w -ns -sleepy -ftj
@@ -94,3 +96,5 @@ std::vector<std::string> CommandLine::parse_args(std::string& cmdline) {
 
   return args;
 }
+
+}  // namespace d2bs

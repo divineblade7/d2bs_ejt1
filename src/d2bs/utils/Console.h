@@ -7,6 +7,8 @@
 #include <sstream>
 #include <string>
 
+namespace d2bs {
+
 class Console {
   Console() noexcept = default;
   ~Console() noexcept = default;
@@ -78,4 +80,6 @@ class Console {
   d2bs::mpmc_queue<std::wstring> print_queue_;
 };
 
-#define sConsole Console::instance()
+#define sConsole ::d2bs::Console::instance()
+
+}  // namespace d2bs

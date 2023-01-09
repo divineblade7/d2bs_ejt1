@@ -2,14 +2,15 @@
 
 #include "d2bs/core/Core.h"
 #include "d2bs/diablo/Constants.h"
+#include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/diablo/D2Ptrs.h"
-#include "d2bs/engine.h"
 #include "d2bs/script/api/JSGlobalClasses.h"
 #include "d2bs/script/api/JSGlobalFuncs.h"
 #include "d2bs/script/api/JSUnit.h"
 #include "d2bs/script/event.h"
 #include "d2bs/utils/Console.h"
 #include "d2bs/utils/Helpers.h"
+#include "d2bs/variables.h"
 
 #include <algorithm>
 #include <assert.h>

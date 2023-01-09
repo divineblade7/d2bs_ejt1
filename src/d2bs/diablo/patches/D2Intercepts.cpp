@@ -1,9 +1,11 @@
+#include "d2bs/core/ScreenHook.h"
 #include "d2bs/core/Unit.h"
+#include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/diablo/D2Ptrs.h"
 #include "d2bs/diablo/handlers/D2Handlers.h"
-#include "d2bs/engine.h"
 #include "d2bs/utils/Console.h"
 #include "d2bs/utils/Helpers.h"
+#include "d2bs/variables.h"
 
 #include <filesystem>
 

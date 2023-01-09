@@ -1,8 +1,11 @@
 #include "d2bs/utils/Console.h"
 
 #include "d2bs/core/Core.h"
-#include "d2bs/engine.h"
+#include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/utils/Helpers.h"
+#include "d2bs/variables.h"
+
+namespace d2bs {
 
 void Console::Toggle(void) {
   ToggleBuffer();
@@ -10,17 +13,13 @@ void Console::Toggle(void) {
 }
 
 void Console::TogglePrompt(void) {
-  if (!IsEnabled())
-    ShowPrompt();
-  else
-    HidePrompt();
+  std::lock_guard<std::mutex> lock(mutex_);
+  enabled = !enabled;
 }
 
 void Console::ToggleBuffer(void) {
-  if (!IsVisible())
-    ShowBuffer();
-  else
-    HideBuffer();
+  std::lock_guard<std::mutex> lock(mutex_);
+  visible = !visible;
 }
 
 void Console::Hide(void) {
@@ -34,14 +33,9 @@ void Console::HidePrompt(void) {
 }
 
 void Console::HideBuffer(void) {
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    visible = false;
-  }
-
-  if (IsEnabled()) {
-    HidePrompt();
-  }
+  std::lock_guard<std::mutex> lock(mutex_);
+  visible = false;
+  enabled = false;
 }
 
 void Console::Show(void) {
@@ -50,14 +44,9 @@ void Console::Show(void) {
 }
 
 void Console::ShowPrompt(void) {
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    enabled = true;
-  }
-
-  if (!IsVisible()) {
-    ShowBuffer();
-  }
+  std::lock_guard<std::mutex> lock(mutex_);
+  enabled = true;
+  visible = true;
 }
 
 void Console::ShowBuffer(void) {
@@ -232,3 +221,5 @@ void Console::Draw(void) {
     }
   }
 }
+
+}  // namespace d2bs

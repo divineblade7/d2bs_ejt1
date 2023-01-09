@@ -6,7 +6,6 @@
 #include "d2bs/core/Unit.h"
 #include "d2bs/diablo/Constants.h"
 #include "d2bs/diablo/handlers/D2NetHandlers.h"
-#include "d2bs/engine.h"
 #include "d2bs/script/Script.h"
 #include "d2bs/script/ScriptEngine.h"
 #include "d2bs/script/event.h"

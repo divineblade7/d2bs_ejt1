@@ -1,9 +1,9 @@
 #include "d2bs/core/ScreenHook.h"
 
 #include "d2bs/diablo/D2Ptrs.h"
-#include "d2bs/engine.h"
 #include "d2bs/script/api/JSScreenHook.h"
 #include "d2bs/utils/Helpers.h"
+#include "d2bs/variables.h"
 
 #include <format>
 #include <vector>

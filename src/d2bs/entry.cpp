@@ -1,5 +1,5 @@
-#include "d2bs/engine.h"
 #include "d2bs/new_core/application.h"
+#include "d2bs/variables.h"
 
 #include <Windows.h>
 

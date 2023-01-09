@@ -2,8 +2,8 @@
 
 #include "d2bs/core/File.h"
 #include "d2bs/core/Hash.h"
-#include "d2bs/engine.h"
 #include "d2bs/utils/Helpers.h"
+#include "d2bs/variables.h"
 
 JSAPI_FUNC(my_md5) {
   if (argc != 1) THROW_ERROR(cx, "Invalid arguments");

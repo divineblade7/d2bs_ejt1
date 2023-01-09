@@ -1,6 +1,5 @@
 #include "d2bs/script/api/JSScript.h"
 
-#include "d2bs/engine.h"
 #include "d2bs/script/Script.h"
 #include "d2bs/script/ScriptEngine.h"
 #include "d2bs/utils/Helpers.h"
