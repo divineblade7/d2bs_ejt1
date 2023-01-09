@@ -89,33 +89,37 @@ JSAPI_PROP(area_getProperty) {
 }
 
 JSAPI_FUNC(my_getArea) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   JS_SET_RVAL(cx, vp, JSVAL_VOID);
 
-  if (!WaitForGameReady()) THROW_ERROR(cx, "Get Area: Game not ready");
-
-  int32 nArea = GetPlayerArea();
-
-  if (argc == 1) {
-    if (JSVAL_IS_INT(JS_ARGV(cx, vp)[0])) {
-      JS_BeginRequest(cx);
-      JS_ValueToECMAInt32(cx, JS_ARGV(cx, vp)[0], &nArea);
-      JS_EndRequest(cx);
-    } else
-      THROW_ERROR(cx, "Invalid parameter passed to getArea!");
+  if (!WaitForGameReady()) {
+    THROW_ERROR(cx, "Get Area: Game not ready");
   }
 
-  if (nArea < 0) THROW_ERROR(cx, "Invalid parameter passed to getArea!");
+  int32 nArea = GetPlayerArea();
+  if (args.length() == 1) {
+    if (args[0].isInt32()) {
+      JSAutoRequest r(cx);
+      JS_ValueToECMAInt32(cx, JS_ARGV(cx, vp)[0], &nArea);
+    } else {
+      THROW_ERROR(cx, "Invalid parameter passed to getArea!");
+    }
+  }
+
+  if (nArea < 0) {
+    THROW_ERROR(cx, "Invalid parameter passed to getArea!");
+  }
 
   Level* pLevel = GetLevel(nArea);
 
   if (!pLevel) {
-    JS_SET_RVAL(cx, vp, JSVAL_FALSE);
+    args.rval().setBoolean(false);
     return JS_TRUE;
   }
 
   myArea* pArea = new myArea;
   if (!pArea) {
-    JS_SET_RVAL(cx, vp, JSVAL_FALSE);
+    args.rval().setBoolean(false);
     return JS_TRUE;
   }
 
@@ -128,7 +132,7 @@ JSAPI_FUNC(my_getArea) {
     pArea = NULL;
     THROW_ERROR(cx, "Failed to build area unit!");
   }
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(unit));
 
+  args.rval().setObjectOrNull(unit);
   return JS_TRUE;
 }
