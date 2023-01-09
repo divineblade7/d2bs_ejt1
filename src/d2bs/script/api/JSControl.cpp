@@ -16,7 +16,9 @@ void control_finalize(JSFreeOp*, JSObject* obj) {
 }
 
 JSAPI_PROP(control_getProperty) {
-  if (ClientState() != ClientStateMenu) return JS_FALSE;
+  if (ClientState() != ClientStateMenu) {
+    return JS_FALSE;
+  }
 
   ControlData* pData = ((ControlData*)JS_GetPrivate(cx, obj));
   if (!pData) return JS_FALSE;
@@ -146,10 +148,19 @@ JSAPI_STRICT_PROP(control_setProperty) {
 }
 
 JSAPI_FUNC(control_getNext) {
-  if (ClientState() != ClientStateMenu) return JS_TRUE;
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
-  ControlData* pData = ((ControlData*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp)));
-  if (!pData) return JS_TRUE;
+  if (ClientState() != ClientStateMenu) {
+    args.rval().setBoolean(false);
+    return JS_TRUE;
+  }
+
+  auto self = args.thisv();
+  ControlData* pData = ((ControlData*)JS_GetPrivate(cx, self.toObjectOrNull()));
+  if (!pData) {
+    args.rval().setBoolean(false);
+    return JS_TRUE;
+  }
 
   Control* pControl =
       findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
@@ -165,39 +176,44 @@ JSAPI_FUNC(control_getNext) {
     pData->dwY = pData->pControl->dwPosY;
     pData->dwSizeX = pData->pControl->dwSizeX;
     pData->dwSizeY = pData->pControl->dwSizeY;
-    JS_SetPrivate(cx, JS_THIS_OBJECT(cx, vp), pData);
-    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(JS_THIS_OBJECT(cx, vp)));
+
+    JS_SetPrivate(cx, self.toObjectOrNull(), pData);
+    args.rval().setObjectOrNull(self.toObjectOrNull());
   } else {
-    //		JSObject* obj = JS_THIS_OBJECT(cx, vp);
-    ////		JS_ClearScope(cx, obj);
-    //		if(JS_ValueToObject(cx, JSVAL_NULL, &obj) == JS_FALSE)  //leaks, prevents finilize
-    //			return JS_TRUE;
-    JS_SET_RVAL(cx, vp, JSVAL_FALSE);
+    args.rval().setBoolean(false);
   }
 
   return JS_TRUE;
 }
 
 JSAPI_FUNC(control_click) {
-  if (ClientState() != ClientStateMenu) return JS_TRUE;
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
-  ControlData* pData = ((ControlData*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp)));
-  if (!pData) return JS_TRUE;
+  if (ClientState() != ClientStateMenu) {
+    args.rval().setBoolean(false);
+    return JS_TRUE;
+  }
+
+  auto self = args.thisv();
+  ControlData* pData = ((ControlData*)JS_GetPrivate(cx, self.toObjectOrNull()));
+  if (!pData) {
+    args.rval().setBoolean(false);
+    return JS_TRUE;
+  }
 
   Control* pControl =
       findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
   if (!pControl) {
-    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(0));
+    args.rval().setBoolean(false);
     return JS_TRUE;
   }
 
   uint32 x = (uint32)-1, y = (uint32)-1;
 
-  if (argc > 1 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0]) && JSVAL_IS_INT(JS_ARGV(cx, vp)[1])) {
-    JS_BeginRequest(cx);
-    JS_ValueToECMAUint32(cx, JS_ARGV(cx, vp)[0], &x);
-    JS_ValueToECMAUint32(cx, JS_ARGV(cx, vp)[1], &y);
-    JS_EndRequest(cx);
+  if (args.length() > 1 && args[0].isInt32() && args[1].isInt32()) {
+    JSAutoRequest r(cx);
+    JS_ValueToECMAUint32(cx, args[0], &x);
+    JS_ValueToECMAUint32(cx, args[1], &y);
   }
 
   clickControl(pControl, x, y);
@@ -206,45 +222,59 @@ JSAPI_FUNC(control_click) {
 }
 
 JSAPI_FUNC(control_setText) {
-  if (ClientState() != ClientStateMenu) return JS_TRUE;
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
 
-  ControlData* pData = ((ControlData*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp)));
-  if (!pData) return JS_TRUE;
+  if (ClientState() != ClientStateMenu) {
+    return JS_TRUE;
+  }
+
+  auto self = args.thisv();
+  ControlData* pData = ((ControlData*)JS_GetPrivate(cx, self.toObjectOrNull()));
+  if (!pData) {
+    return JS_TRUE;
+  }
 
   Control* pControl =
       findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
   if (!pControl) {
-    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(0));
     return JS_TRUE;
   }
 
-  if (argc < 0 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) return JS_TRUE;
+  if (args.length() < 1 || !args[0].isString()) {
+    return JS_TRUE;
+  }
 
-  const wchar_t* szwText = JS_GetStringCharsZ(cx, JS_ValueToString(cx, JS_ARGV(cx, vp)[0]));
-  if (!szwText) return JS_TRUE;
+  const wchar_t* szwText = JS_GetStringCharsZ(cx, JS_ValueToString(cx, args[0]));
+  if (!szwText) {
+    return JS_TRUE;
+  }
 
   D2WIN_SetControlText(pControl, szwText);
   return JS_TRUE;
 }
 
 JSAPI_FUNC(control_getText) {
-  JS_SET_RVAL(cx, vp, JSVAL_VOID);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
+
   if (ClientState() != ClientStateMenu) return JS_TRUE;
 
-  ControlData* pData = ((ControlData*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp)));
+  auto self = args.thisv();
+  ControlData* pData = ((ControlData*)JS_GetPrivate(cx, self.toObjectOrNull()));
   if (!pData) return JS_TRUE;
 
   Control* pControl =
       findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
   if (!pControl) {
-    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(0));
+    args.rval().setBoolean(false);
     return JS_TRUE;
   }
 
   if (pControl->dwType != 4 || !pControl->pFirstText) return JS_TRUE;
-  JS_BeginRequest(cx);
+  JSAutoRequest r(cx);
   JSObject* pReturnArray = JS_NewArrayObject(cx, 0, NULL);
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(pReturnArray));
+  args.rval().setObjectOrNull(pReturnArray);
 
   int nArrayCount = 0;
 
@@ -270,22 +300,23 @@ JSAPI_FUNC(control_getText) {
 
     nArrayCount++;
   }
-  JS_EndRequest(cx);
 
   return JS_TRUE;
 }
 
 JSAPI_FUNC(my_getControl) {
-  JS_SET_RVAL(cx, vp, JSVAL_VOID);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
 
   if (ClientState() != ClientStateMenu) return JS_TRUE;
 
   int32 nType = -1, nX = -1, nY = -1, nXSize = -1, nYSize = -1;
-  int32* args[] = {&nType, &nX, &nY, &nXSize, &nYSize};
-  JS_BeginRequest(cx);
-  for (uint i = 0; i < argc; i++)
-    if (JSVAL_IS_INT(JS_ARGV(cx, vp)[i])) JS_ValueToECMAInt32(cx, JS_ARGV(cx, vp)[i], args[i]);
-  JS_EndRequest(cx);
+  int32* argv[] = {&nType, &nX, &nY, &nXSize, &nYSize};
+  {
+    JSAutoRequest r(cx);
+    for (uint i = 0; i < args.length(); i++)
+      if (args[i].isInt32()) JS_ValueToECMAInt32(cx, args[i], argv[i]);
+  }
 
   Control* pControl = findControl(nType, (const wchar_t*)NULL, -1, nX, nY, nXSize, nYSize);
   if (!pControl) return JS_TRUE;
@@ -301,19 +332,21 @@ JSAPI_FUNC(my_getControl) {
   JSObject* control = BuildObject(cx, &control_class, control_funcs, control_props, data);
   if (!control) THROW_ERROR(cx, "Failed to build control!");
 
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(control));
+  args.rval().setObjectOrNull(control);
   return JS_TRUE;
 }
+
 JSAPI_FUNC(my_getControls) {
-  JS_SET_RVAL(cx, vp, JSVAL_VOID);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
 
   if (ClientState() != ClientStateMenu) return JS_TRUE;
 
   DWORD dwArrayCount = NULL;
 
-  JSObject* pReturnArray = JS_NewArrayObject(cx, 0, NULL);
-  JS_BeginRequest(cx);
-  JS_AddRoot(cx, &pReturnArray);
+  JS::RootedObject pReturnArray(cx, JS_NewArrayObject(cx, 0, NULL));
+  JSAutoRequest r(cx);
+
   for (Control* pControl = *p_D2WIN_FirstControl; pControl; pControl = pControl->pNext) {
     ControlData* data = new ControlData;
     data->dwType = pControl->dwType;
@@ -328,8 +361,7 @@ JSAPI_FUNC(my_getControls) {
     JS_SetElement(cx, pReturnArray, dwArrayCount, &a);
     dwArrayCount++;
   }
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(pReturnArray));
-  JS_RemoveRoot(cx, &pReturnArray);
-  JS_EndRequest(cx);
+
+  args.rval().setObjectOrNull(pReturnArray.get());
   return JS_TRUE;
 }
