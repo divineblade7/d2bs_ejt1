@@ -22,6 +22,7 @@
 
 #include "d2bs/core/File.h"
 #include "d2bs/diablo/D2Helpers.h"
+#include "d2bs/new_util/localization.h"
 #include "d2bs/utils/Helpers.h"
 #include "d2bs/variables.h"
 
@@ -37,31 +38,31 @@
 EMPTY_CTOR(dir)
 
 JSAPI_FUNC(my_openDir) {
-  if (argc != 1) return JS_TRUE;
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
-  const wchar_t* name = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+  if (args.length() != 1 || !args[0].isString()) {
+    args.rval().setNull();
+    return JS_TRUE;
+  }
+
+  const wchar_t* name = JS_GetStringCharsZ(cx, args[0].toString());
 
   if (!isValidPath(name)) {
     Log(L"The following path was deemed invalid: %s. (%s, %s)", name, L"JSDirectory.cpp", L"my_openDir");
     return JS_FALSE;
   }
 
-  auto path = (Vars.settings.script_dir / name).make_preferred().wstring();
-
-  // TODO: Rewrite this shit
-  if ((_wmkdir(path.c_str()) == -1) && (errno == ENOENT)) {
-    char* n = UnicodeToAnsi(name);
-    char* p = UnicodeToAnsi(path.c_str());
-    JS_ReportError(cx, "Couldn't get directory %s, path '%s' not found", n, p);
-    delete[] n;
-    delete[] p;
+  auto path = (Vars.settings.script_dir / name).make_preferred();
+  if (!std::filesystem::exists(path) && !std::filesystem::create_directories(path)) {
+    auto n = d2bs::util::wide_to_utf8(name);
+    auto p = path.string();
+    JS_ReportError(cx, "Couldn't get directory %s, path '%s' not found", n.c_str(), p.c_str());
     return JS_FALSE;
-  } else {
-    DirData* d = new DirData(name);
-    JSObject* jsdir = BuildObject(cx, &folder_class, dir_methods, dir_props, d);
-    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(jsdir));
   }
 
+  DirData* d = new DirData(name);
+  JSObject* jsdir = BuildObject(cx, &folder_class, dir_methods, dir_props, d);
+  args.rval().setObjectOrNull(jsdir);
   return JS_TRUE;
 }
 
@@ -73,16 +74,20 @@ JSAPI_FUNC(my_openDir) {
 ////////////////////////////////////////////////////////////////////////////////
 
 JSAPI_FUNC(dir_getFiles) {
-  if (argc > 1) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (args.length() > 1) {
     return JS_FALSE;
   }
-  if (argc < 1) {
-    JS_ARGV(cx, vp)[0] = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, L"*.*"));
+
+  std::wstring search = L"*.*";
+  if (args.length() == 1 && args[0].isString()) {
+    search = JS_GetStringCharsZ(cx, args[0].toString());
   }
 
-  DirData* d = (DirData*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
-  const wchar_t* search = JS_GetStringCharsZ(cx, JS_ValueToString(cx, JS_ARGV(cx, vp)[0]));
-  if (!search) {
+  auto self = args.thisv();
+  DirData* d = (DirData*)JS_GetPrivate(cx, self.toObjectOrNull());
+  if (search.empty()) {
     THROW_ERROR(cx, "Failed to get search string");
   }
 
@@ -101,17 +106,17 @@ JSAPI_FUNC(dir_getFiles) {
 
   _wfinddata_t found;
   JSObject* jsarray = JS_NewArrayObject(cx, 0, NULL);
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(jsarray));
+  args.rval().setObjectOrNull(jsarray);
 
-  if ((hFile = _wfindfirst(search, &found)) != -1L) {
-    JS_BeginRequest(cx);
+  if ((hFile = _wfindfirst(search.c_str(), &found)) != -1L) {
+    JSAutoRequest r(cx);
+
     jsint element = 0;
     do {
       if ((found.attrib & _A_SUBDIR)) continue;
       jsval file = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, found.name));
       JS_SetElement(cx, jsarray, element++, &file);
     } while (_wfindnext(hFile, &found) == 0);
-    JS_EndRequest(cx);
   }
 
   if (_wchdir(oldpath) == -1) {
@@ -123,12 +128,20 @@ JSAPI_FUNC(dir_getFiles) {
 }
 
 JSAPI_FUNC(dir_getFolders) {
-  if (argc > 1) return JS_FALSE;
-  if (argc < 1) JS_ARGV(cx, vp)[0] = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, L"*.*"));
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
-  DirData* d = (DirData*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
-  const wchar_t* search = JS_GetStringCharsZ(cx, JS_ValueToString(cx, JS_ARGV(cx, vp)[0]));
-  if (!search) THROW_ERROR(cx, "Failed to get search string");
+  if (args.length() > 1) {
+    return JS_FALSE;
+  }
+
+  std::wstring search = L"*.*";
+  if (args.length() == 1 && args[0].isString()) {
+    search = JS_GetStringCharsZ(cx, args[0].toString());
+  }
+
+  auto self = args.thisv();
+  DirData* d = (DirData*)JS_GetPrivate(cx, self.toObjectOrNull());
+  if (search.empty()) THROW_ERROR(cx, "Failed to get search string");
 
   long hFile;
   wchar_t oldpath[_MAX_PATH];
@@ -145,17 +158,16 @@ JSAPI_FUNC(dir_getFolders) {
 
   _wfinddata_t found;
   JSObject* jsarray = JS_NewArrayObject(cx, 0, NULL);
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(jsarray));
+  args.rval().setObjectOrNull(jsarray);
 
-  if ((hFile = _wfindfirst(search, &found)) != -1L) {
+  if ((hFile = _wfindfirst(search.c_str(), &found)) != -1L) {
+    JSAutoRequest r(cx);
     jsint element = 0;
-    JS_BeginRequest(cx);
     do {
       if (!wcscmp(found.name, L"..") || !wcscmp(found.name, L".") || !(found.attrib & _A_SUBDIR)) continue;
       jsval file = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, found.name));
       JS_SetElement(cx, jsarray, element++, &file);
     } while (_wfindnext(hFile, &found) == 0);
-    JS_EndRequest(cx);
   }
 
   if (_wchdir(oldpath) == -1) {
@@ -167,28 +179,39 @@ JSAPI_FUNC(dir_getFolders) {
 }
 
 JSAPI_FUNC(dir_create) {
-  DirData* d = (DirData*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
-  if (!JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) THROW_ERROR(cx, "No path passed to dir.create()");
-  const wchar_t* name = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (args.length() != 1 || !args[0].isString()) {
+    args.rval().setNull();
+    return JS_TRUE;
+  }
+
+  const wchar_t* name = JS_GetStringCharsZ(cx, args[0].toString());
 
   if (!isValidPath(name)) {
     return JS_FALSE;
   }
 
+  auto self = args.thisv();
+  DirData* d = (DirData*)JS_GetPrivate(cx, self.toObjectOrNull());
   auto path = (Vars.settings.script_dir / d->name / name).make_preferred().wstring();
+
   if (_wmkdir(path.c_str()) == -1 && (errno == ENOENT)) {
     JS_ReportError(cx, "Couldn't create directory %s, path %s not found", name, path.c_str());
     return JS_FALSE;
   } else {
     d = new DirData(name);
     JSObject* jsdir = BuildObject(cx, &folder_class, dir_methods, dir_props, d);
-    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(jsdir));
+    args.rval().setObjectOrNull(jsdir);
   }
   return JS_TRUE;
 }
 
 JSAPI_FUNC(dir_delete) {
-  DirData* d = (DirData*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  auto self = args.thisv();
+  DirData* d = (DirData*)JS_GetPrivate(cx, self.toObjectOrNull());
 
   auto path = (Vars.settings.script_dir / d->name).make_preferred().wstring();
 
@@ -198,8 +221,8 @@ JSAPI_FUNC(dir_delete) {
       THROW_ERROR(cx, "Tried to delete directory, but it is not empty or is the current working directory");
     if (errno == ENOENT) THROW_ERROR(cx, "Path not found");
   }
-  JS_SET_RVAL(cx, vp, JSVAL_TRUE);
 
+  args.rval().setBoolean(true);
   return JS_TRUE;
 }
 
