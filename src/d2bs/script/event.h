@@ -7,6 +7,7 @@
 #include <map>
 #include <mutex>
 #include <thread>
+#include <vector>
 
 class Script;
 
@@ -23,7 +24,7 @@ class Event {
   /**
    * @brief Blocking function that waits for the event to be processed.
    * @todo: Add a way to wait for X milliseconds.
-  */
+   */
   void wait();
 
   Script* owner() {
@@ -41,7 +42,7 @@ class Event {
  protected:
   /**
    * @brief Notifies all threads waiting for this event that we are done processing.
-  */
+   */
   void notify_all();
 
  protected:

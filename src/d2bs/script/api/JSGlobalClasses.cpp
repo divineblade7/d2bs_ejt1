@@ -27,16 +27,6 @@ JSClass global_obj = {"global",
                       JS_ConvertStub,
                       NULL,
                       JSCLASS_NO_OPTIONAL_MEMBERS};
-// JSAPI_EMPTY_CTOR(global)
-
-// JSClass global_obj = { "global", JSCLASS_GLOBAL_FLAGS, JSCLASS_DEFAULT_WITH_CTOR(global) };
-
-// JSClass pipe_class = { "Pipe", JSCLASS_HAS_PRIVATE,
-//	JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-//				 JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, pipe_finalize, Pipe)};
-
-// JSClassSpec pipe_spec = JS_CS(&pipe_class, &stream_class, Pipe, 0, pipe_methods, pipe_props, pipe_static_methods,
-// nullptr);
 
 JSClass sqlite_db = {"SQLite", JSCLASS_HAS_PRIVATE,
                      JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, (JSPropertyOp)JS_PropertyStub,
@@ -136,28 +126,7 @@ JSClass dialogLine_class = {"DailogLine", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESE
                             JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
                                          JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL, NULL)};
 
-// JSExtendedClass unit_class_ex = {
-//	unit_class,
-//	unit_equal,
-//	NULL, NULL, NULL, NULL
-//};
-//
-// JSExtendedClass file_class_ex = {
-//	file_class,
-//	file_equality,
-//	NULL, NULL, NULL, NULL
-//};
-//
-// JSExtendedClass sqlite_db_ex = {
-//	sqlite_db,
-//	sqlite_equal,
-//	NULL, NULL, NULL, NULL
-//};
-// JSClassSpec pipe_spec = JS_CS(&pipe_class, &stream_class, Pipe, 0, pipe_methods, pipe_props, pipe_static_methods,
-// nullptr); JSClassSpec file_spec = JS_CS(&file_class, &stream_class, File, 0, file_methods, file_props,
-// file_static_methods, nullptr);
 JSClassSpec global_classes[] = {
-    // JS_CS(&event_class, nullptr, ::Event, 0, nullptr, nullptr, event_methods, nullptr),
     {&unit_class, 0, unit_ctor, 0, unit_methods, unit_props, NULL, NULL},
     {&presetunit_class, 0, presetunit_ctor, 0, NULL, presetunit_props, NULL, NULL},
     {&area_class, 0, area_ctor, 0, NULL, area_props, NULL, NULL},

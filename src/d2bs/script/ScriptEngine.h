@@ -82,12 +82,5 @@ class ScriptEngine {
 
 #define sScriptEngine ScriptEngine::__instance()
 
-struct EventHelper {
-  char* evtName;
-  AutoRoot** argv;
-  uint argc;
-  bool executed;
-};
-
 // gcCallback(JSContext* cx, JSGCStatus status);
 void CALLBACK EventTimerProc(LPVOID lpArg, DWORD dwTimerLowValue, DWORD dwTimerHighValue);

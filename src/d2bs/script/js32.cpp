@@ -1,10 +1,8 @@
 #include "d2bs/script/js32.h"
 
-#include "d2bs/core/File.h"
-#include "d2bs/diablo/D2Helpers.h"
-#include "d2bs/script/ScriptEngine.h"
-#include "d2bs/utils/Helpers.h"
-// #include <cstdarg>
+#include "d2bs/new_util/localization.h"
+
+#include <fstream>
 
 JSObject* BuildObject(JSContext* cx, JSClass* classp, JSFunctionSpec* funcs, JSPropertySpec* props, void* priv,
                       JSObject* proto, JSObject* parent) {
@@ -46,16 +44,15 @@ JSScript* JS_CompileFile(JSContext* cx, JSObject* globalObject, std::wstring fil
     str[2] = ' ';
   }
 
-  char* nFileName = UnicodeToAnsi(fileName.c_str());
+  std::string nFileName = d2bs::util::wide_to_utf8(fileName);
 
   JS::RootedObject obj(cx, globalObject);
   JS::CompileOptions opts(cx);
-  opts.setUTF8(true).setFileAndLine(nFileName, 1);
+  opts.setUTF8(true).setFileAndLine(nFileName.c_str(), 1);
   JSScript* rval = JS::Compile(cx, obj, opts, str.c_str(), str.size());
-  JS_AddNamedScriptRoot(cx, &rval, nFileName);
+  JS_AddNamedScriptRoot(cx, &rval, nFileName.c_str());
   JS_RemoveScriptRoot(cx, &rval);
   t.close();
-  delete[] nFileName;
 
   return rval;
 }
