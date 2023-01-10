@@ -30,23 +30,29 @@
 EMPTY_CTOR(filetools)
 
 JSAPI_FUNC(filetools_remove) {
-  if (argc < 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) THROW_ERROR(cx, "You must supply a file name");
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
-  const wchar_t* file = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+  if (args.length() < 1 || !args[0].isString()) THROW_ERROR(cx, "You must supply a file name");
+
+  const wchar_t* file = JS_GetStringCharsZ(cx, args[0].toString());
   auto path = getPathRelScript(file);
   if (path.empty()) {
     THROW_ERROR(cx, "Invalid file name");
   }
   std::filesystem::remove(path);
+
+  args.rval().setUndefined();
   return JS_TRUE;
 }
 
 JSAPI_FUNC(filetools_rename) {
-  if (argc < 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) THROW_ERROR(cx, "You must supply an original file name");
-  if (argc < 2 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[1])) THROW_ERROR(cx, "You must supply a new file name");
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
-  const wchar_t* orig = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
-  const wchar_t* newName = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[1]));
+  if (args.length() < 1 || !args[0].isString()) THROW_ERROR(cx, "You must supply an original file name");
+  if (args.length() < 2 || !args[1].isString()) THROW_ERROR(cx, "You must supply a new file name");
+
+  const wchar_t* orig = JS_GetStringCharsZ(cx, args[0].toString());
+  const wchar_t* newName = JS_GetStringCharsZ(cx, args[1].toString());
 
   auto porig = getPathRelScript(orig);
   if (getPathRelScript(orig).empty()) {
@@ -63,19 +69,21 @@ JSAPI_FUNC(filetools_rename) {
 }
 
 JSAPI_FUNC(filetools_copy) {
-  if (argc < 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (args.length() < 1 || !args[0].isString()) {
     THROW_ERROR(cx, "You must supply an original file name");
   }
-  if (argc < 2 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[1])) {
+  if (args.length() < 2 || !args[1].isString()) {
     THROW_ERROR(cx, "You must supply a new file name");
   }
 
-  const wchar_t* orig = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
-  const wchar_t* newName = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[1]));
+  const wchar_t* orig = JS_GetStringCharsZ(cx, args[0].toString());
+  const wchar_t* newName = JS_GetStringCharsZ(cx, args[1].toString());
   bool overwrite = false;
 
-  if (argc > 2 && JSVAL_IS_BOOLEAN(JS_ARGV(cx, vp)[2])) {
-    overwrite = !!JSVAL_TO_BOOLEAN(JS_ARGV(cx, vp)[2]);
+  if (args.length() > 2 && args[2].isBoolean()) {
+    overwrite = args[2].toBoolean();
   }
 
   auto pnewName = getPathRelScript(newName);
@@ -84,6 +92,7 @@ JSAPI_FUNC(filetools_copy) {
   }
 
   if (overwrite && _waccess(pnewName.c_str(), 0) == 0) {
+    args.rval().setUndefined();
     return JS_TRUE;
   }
 
@@ -119,26 +128,31 @@ JSAPI_FUNC(filetools_copy) {
   fflush(fptr2);
   fclose(fptr2);
   fclose(fptr1);
+
+  args.rval().setUndefined();
   return JS_TRUE;
 }
 
 JSAPI_FUNC(filetools_exists) {
-  if (argc < 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) THROW_ERROR(cx, "Invalid file name");
-  const wchar_t* file = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (args.length() < 1 || !args[0].isString()) THROW_ERROR(cx, "Invalid file name");
+  const wchar_t* file = JS_GetStringCharsZ(cx, args[0].toString());
 
   auto fullpath = getPathRelScript(file);
   if (getPathRelScript(file).empty()) {
     THROW_ERROR(cx, "Invalid file name");
   }
 
-  JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(!(_waccess(fullpath.c_str(), 0) != 0 && errno == ENOENT)));
-
+  args.rval().setBoolean(!(_waccess(fullpath.c_str(), 0) != 0 && errno == ENOENT));
   return JS_TRUE;
 }
 
 JSAPI_FUNC(filetools_readText) {
-  if (argc < 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) THROW_ERROR(cx, "You must supply a file name");
-  const wchar_t* fname = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (args.length() < 1 || !args[0].isString()) THROW_ERROR(cx, "You must supply a file name");
+  const wchar_t* fname = JS_GetStringCharsZ(cx, args[0].toString());
   FILE* fptr = fileOpenRelScript(fname, L"r", cx);
 
   // If fileOpenRelScript failed, it already reported the error
@@ -171,22 +185,21 @@ JSAPI_FUNC(filetools_readText) {
     offset = 3;
   }
 
-  // Convert to JSVAL cleanup and return
-  JS_BeginRequest(cx);
-  wchar_t* wcontents = AnsiToUnicode(contents + offset);
-  JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(JS_NewUCStringCopyN(cx, wcontents, wcslen(wcontents))));
-  JS_EndRequest(cx);
-  delete[] wcontents;
+  JSAutoRequest r(cx);
+  args.rval().setString(JS_NewStringCopyZ(cx, contents + offset));
+
   delete[] contents;
   return JS_TRUE;
 }
 
 JSAPI_FUNC(filetools_writeText) {
-  if (argc < 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) THROW_ERROR(cx, "You must supply a file name");
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (args.length() < 1 || !args[0].isString()) THROW_ERROR(cx, "You must supply a file name");
 
   EnterCriticalSection(&Vars.cFileSection);
 
-  const wchar_t* fname = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+  const wchar_t* fname = JS_GetStringCharsZ(cx, args[0].toString());
   FILE* fptr = fileOpenRelScript(fname, L"w", cx);
   bool result = true;
 
@@ -204,16 +217,18 @@ JSAPI_FUNC(filetools_writeText) {
 
   LeaveCriticalSection(&Vars.cFileSection);
 
-  JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(result));
+  args.rval().setBoolean(result);
   return JS_TRUE;
 }
 
 JSAPI_FUNC(filetools_appendText) {
-  if (argc < 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) THROW_ERROR(cx, "You must supply a file name");
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (args.length() < 1 || !args[0].isString()) THROW_ERROR(cx, "You must supply a file name");
 
   EnterCriticalSection(&Vars.cFileSection);
 
-  const wchar_t* fname = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+  const wchar_t* fname = JS_GetStringCharsZ(cx, args[0].toString());
   FILE* fptr = fileOpenRelScript(fname, L"a+", cx);
   bool result = true;
 
@@ -231,7 +246,6 @@ JSAPI_FUNC(filetools_appendText) {
 
   LeaveCriticalSection(&Vars.cFileSection);
 
-  JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(result));
-
+  args.rval().setBoolean(result);
   return JS_TRUE;
 }
