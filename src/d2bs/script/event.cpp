@@ -171,6 +171,7 @@ bool PacketEventCallback(Script* script, const char* name, BYTE* pPacket, DWORD 
     memcpy(bytes.data(), pPacket, dwSize);
     auto evt = std::make_shared<PacketEvent>(script, name, bytes);
 
+    script->FireEvent(evt);
     script->request_interrupt();
     evt->wait();
     return evt->block();
