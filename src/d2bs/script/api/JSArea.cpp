@@ -29,10 +29,10 @@ JSAPI_PROP(area_getProperty) {
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case AUNIT_EXITS: {
-      JS_BeginRequest(cx);
+      JSAutoRequest r(cx);
+      JS::RootedObject exitArray(cx);
       if (pArea->ExitArray == NULL) {
-        pArea->ExitArray = JS_NewArrayObject(cx, 0, NULL);
-        JS_AddRoot(cx, &pArea->ExitArray);
+        exitArray = JS_NewArrayObject(cx, 0, nullptr);
 
         ActMap* map = ActMap::GetMap(pLevel);
 
@@ -52,17 +52,16 @@ JSAPI_PROP(area_getProperty) {
           JSObject* pExit = BuildObject(cx, &exit_class, NULL, exit_props, exit);
           if (!pExit) {
             delete exit;
-            JS_EndRequest(cx);
             THROW_ERROR(cx, "Failed to create exit object!");
           }
           jsval a = OBJECT_TO_JSVAL(pExit);
-          JS_SetElement(cx, pArea->ExitArray, i, &a);
+          JS_SetElement(cx, exitArray, i, &a);
         }
+
+        pArea->ExitArray = exitArray;
       }
-      vp.set(OBJECT_TO_JSVAL(pArea->ExitArray));
-      if (pArea->ExitArray) JS_RemoveRoot(cx, &pArea->ExitArray);
+      vp.setObjectOrNull(exitArray);
     }
-      JS_EndRequest(cx);
       break;
     case AUNIT_NAME: {
       LevelTxt* pTxt = D2COMMON_GetLevelText(pArea->AreaId);

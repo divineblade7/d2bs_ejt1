@@ -175,9 +175,8 @@ JSAPI_FUNC(my_getScript) {
 JSAPI_FUNC(my_getScripts) {
   DWORD dwArrayCount = NULL;
 
-  JSObject* pReturnArray = JS_NewArrayObject(cx, 0, NULL);
+  JS::RootedObject pReturnArray(cx, JS_NewArrayObject(cx, 0, NULL));
   JS_BeginRequest(cx);
-  JS_AddRoot(cx, &pReturnArray);
   auto lock = sScriptEngine->lock_script_list("getScripts");
 
   auto& scripts = sScriptEngine->scripts();
@@ -189,7 +188,6 @@ JSAPI_FUNC(my_getScripts) {
   }
 
   JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(pReturnArray));
-  JS_RemoveRoot(cx, &pReturnArray);
   JS_EndRequest(cx);
   return JS_TRUE;
 }

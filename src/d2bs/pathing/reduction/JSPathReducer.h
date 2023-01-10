@@ -15,19 +15,13 @@ class JSPathReducer : public PathReducer {
  private:
   JSContext* cx;
   JSObject* obj;
-  jsval reject, reduce, mutate;
+  JS::RootedValue reject, reduce, mutate;
 
  public:
   JSPathReducer(ActMap*, JSContext* cx, JSObject*, jsval _reject, jsval _reduce, jsval _mutate)
-      : reject(_reject), reduce(_reduce), mutate(_mutate) {
-    JS_AddRoot(cx, &reject);
-    JS_AddRoot(cx, &reduce);
-    JS_AddRoot(cx, &mutate);
+      : reject(cx, _reject), reduce(cx, _reduce), mutate(cx, _mutate) {
   }
   ~JSPathReducer(void) {
-    JS_RemoveRoot(cx, &reject);
-    JS_RemoveRoot(cx, &reduce);
-    JS_RemoveRoot(cx, &mutate);
   }
 
   JSPathReducer(const JSPathReducer&) = delete;

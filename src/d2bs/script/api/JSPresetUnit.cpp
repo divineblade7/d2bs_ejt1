@@ -85,9 +85,8 @@ JSAPI_FUNC(my_getPresetUnits) {
   bool bAddedRoom = FALSE;
   DWORD dwArrayCount = NULL;
 
-  JSObject* pReturnArray = JS_NewArrayObject(cx, 0, NULL);
   JS_BeginRequest(cx);
-  JS_AddRoot(cx, &pReturnArray);
+  JS::RootedObject pReturnArray(cx, JS_NewArrayObject(cx, 0, NULL));
   for (Room2* pRoom = pLevel->pRoom2First; pRoom; pRoom = pRoom->pRoom2Next) {
     bAddedRoom = FALSE;
 
@@ -132,7 +131,6 @@ JSAPI_FUNC(my_getPresetUnits) {
   }
   JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(pReturnArray));
 
-  JS_RemoveRoot(cx, &pReturnArray);
   JS_EndRequest(cx);
   return JS_TRUE;
 }

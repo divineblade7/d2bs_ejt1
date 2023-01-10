@@ -167,10 +167,12 @@ Genhook::Genhook(Script* nowner, JSObject* nself, uint x, uint y, ushort nopacit
       alignment(nalign),
       opacity(nopacity),
       gameState(ngameState),
-      zorder(1) {
+      zorder(1),
+      hovered(nowner->context()),
+      clicked(nowner->context()) {
   // InitializeCriticalSection(&hookSection);
-  clicked = JSVAL_VOID;
-  hovered = JSVAL_VOID;
+  hovered = JS::UndefinedValue();
+  clicked = JS::UndefinedValue();
   self = nself;
   // JS_AddObjectRoot(owner->GetContext(),&self);
   // JS_AddRoot(&self);
@@ -209,7 +211,7 @@ Genhook::~Genhook(void) {
 bool Genhook::Click(int button, POINT* loc) {
   if (!IsInRange(loc)) return false;
 
-  if (owner && JSVAL_IS_FUNCTION(owner->context(), clicked)) {
+  if (owner && JSVAL_IS_FUNCTION(owner->context(), clicked.get())) {
     FunctionList funcs;
     AutoRoot* root = new AutoRoot(owner->context(), clicked);
     funcs.push_back(root);
@@ -269,14 +271,7 @@ void Genhook::SetHoverHandler(jsval handler) {
   if (!owner) return;
   if (JSVAL_IS_VOID(handler)) return;
   Lock();
-  if (!JSVAL_IS_VOID(hovered)) JS_RemoveRoot(owner->context(), &hovered);
   if (JSVAL_IS_FUNCTION(owner->context(), handler)) hovered = handler;
-  if (!JSVAL_IS_VOID(hovered)) {
-    if (JS_AddRoot(owner->context(), &hovered) == JS_FALSE) {
-      Unlock();
-      return;
-    }
-  }
   Unlock();
 }
 

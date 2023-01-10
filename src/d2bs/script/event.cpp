@@ -295,9 +295,8 @@ void PacketEvent::process() {
 
   JS_BeginRequest(cx);
 
-  JSObject* arr = JS_NewUint8Array(cx, size);
+  JS::RootedObject arr(cx,  JS_NewUint8Array(cx, size));
 
-  JS_AddRoot(cx, &arr);
   for (uint i = 0; i < size; i++) {
     jsval jsarr = UINT_TO_JSVAL(help[i]);
     JS_SetElement(cx, arr, i, &jsarr);
@@ -310,7 +309,6 @@ void PacketEvent::process() {
     block_ |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
   }
 
-  JS_RemoveRoot(cx, &arr);
   JS_EndRequest(cx);
 
   is_processed_ = true;

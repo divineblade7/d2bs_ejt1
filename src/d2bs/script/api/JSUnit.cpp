@@ -887,8 +887,7 @@ JSAPI_FUNC(unit_getStat) {
       }
       for (UINT i = 0; i < dwStats; i++) {
         JS_BeginRequest(cx);
-        JSObject* pArrayInsert = JS_NewArrayObject(cx, 0, NULL);
-        JS_AddRoot(cx, &pArrayInsert);
+        JS::RootedObject pArrayInsert(cx, JS_NewArrayObject(cx, 0, NULL));
 
         if (!pArrayInsert) continue;
 
@@ -903,7 +902,6 @@ JSAPI_FUNC(unit_getStat) {
         jsval aObj = OBJECT_TO_JSVAL(pArrayInsert);
 
         JS_SetElement(cx, pReturnArray, i, &aObj);
-        JS_RemoveRoot(cx, &pArrayInsert);
         JS_EndRequest(cx);
       }
     }
@@ -980,13 +978,11 @@ void InsertStatsNow(Stat* pStat, int nStat, JSContext* cx, JSObject* pArray) {
       if (!JS_IsArrayObject(cx, JSVAL_TO_OBJECT(index))) {
         // it's not an array, build one
         JS_BeginRequest(cx);
-        JSObject* arr = JS_NewArrayObject(cx, 0, NULL);
-        JS_AddRoot(cx, &arr);
+        JS::RootedObject arr(cx, JS_NewArrayObject(cx, 0, NULL));
         JS_SetElement(cx, arr, 0, &index);
         JS_SetElement(cx, arr, 1, &obj);
         jsval arr2 = OBJECT_TO_JSVAL(arr);
         JS_SetElement(cx, pArray, pStat[nStat].wStatIndex, &arr2);
-        JS_RemoveRoot(cx, &arr);
         JS_EndRequest(cx);
       } else {
         // it is an array, append the new value
@@ -1225,13 +1221,12 @@ JSAPI_FUNC(unit_getItems) {
 
   if (!pUnit || !pUnit->pInventory || !pUnit->pInventory->pFirstItem) return JS_TRUE;
   JS_BeginRequest(cx);
-  JSObject* pReturnArray = JS_NewArrayObject(cx, 0, NULL);
+  JS::RootedObject pReturnArray(cx, JS_NewArrayObject(cx, 0, NULL));
 
   if (!pReturnArray) {
     JS_EndRequest(cx);
     return JS_TRUE;
   }
-  JS_AddRoot(cx, &pReturnArray);
 
   DWORD dwArrayCount = 0;
 
@@ -1253,7 +1248,6 @@ JSAPI_FUNC(unit_getItems) {
     JSObject* jsunit = BuildObject(cx, &unit_class, unit_methods, unit_props, pmyUnit);
     if (!jsunit) {
       JS_EndRequest(cx);
-      JS_RemoveRoot(cx, &pReturnArray);
       THROW_ERROR(cx, "Failed to build item array");
     }
     jsval a = OBJECT_TO_JSVAL(jsunit);
@@ -1261,7 +1255,6 @@ JSAPI_FUNC(unit_getItems) {
   }
 
   JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(pReturnArray));
-  JS_RemoveRoot(cx, &pReturnArray);
   JS_EndRequest(cx);
   return JS_TRUE;
 }
@@ -1331,8 +1324,7 @@ JSAPI_FUNC(unit_getSkill) {
         JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(pReturnArray));
         int i = 0;
         for (Skill* pSkill = pUnit->pInfo->pFirstSkill; pSkill; pSkill = pSkill->pNextSkill) {
-          JSObject* pArrayInsert = JS_NewArrayObject(cx, 0, NULL);
-          JS_AddRoot(cx, &pArrayInsert);
+          JS::RootedObject pArrayInsert(cx, JS_NewArrayObject(cx, 0, NULL));
 
           if (!pArrayInsert) continue;
 
@@ -1347,7 +1339,6 @@ JSAPI_FUNC(unit_getSkill) {
           jsval aObj = OBJECT_TO_JSVAL(pArrayInsert);
 
           JS_SetElement(cx, pReturnArray, i, &aObj);
-          JS_RemoveRoot(cx, &pArrayInsert);
           JS_EndRequest(cx);
           i++;
         }

@@ -97,8 +97,7 @@ JSAPI_FUNC(room_getPresetUnits) {
                          D2CLIENT_GetPlayerUnit()->pPath->pRoom1);
   }
 
-  JSObject* pReturnArray = JS_NewArrayObject(cx, 0, NULL);
-  JS_AddRoot(cx, &pReturnArray);
+  JS::RootedObject pReturnArray(cx, JS_NewArrayObject(cx, 0, NULL));
   for (PresetUnit* pUnit = pRoom2->pPreset; pUnit; pUnit = pUnit->pPresetNext) {
     if ((pUnit->dwType == nType || nType == NULL) && (pUnit->dwTxtFileNo == nClass || nClass == NULL)) {
       myPresetUnit* mypUnit = new myPresetUnit;
@@ -129,7 +128,6 @@ JSAPI_FUNC(room_getPresetUnits) {
                             D2CLIENT_GetPlayerUnit()->pPath->pRoom1);
 
   JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(pReturnArray));
-  JS_RemoveRoot(cx, &pReturnArray);
   return JS_TRUE;
 }
 JSAPI_FUNC(room_getCollisionTypeArray) {
@@ -149,15 +147,13 @@ JSAPI_FUNC(room_getCollisionTypeArray) {
                          D2CLIENT_GetPlayerUnit()->pPath->pRoom1);
   }
 
-  JSObject* jsobjy = JS_NewUint16Array(cx, (pRoom2->dwSizeX * 5) * (pRoom2->dwSizeY * 5));
-  JS_AddRoot(cx, &jsobjy);
+  JS::RootedObject jsobjy(cx, JS_NewUint16Array(cx, (pRoom2->dwSizeX * 5) * (pRoom2->dwSizeY * 5)));
 
   if (!jsobjy) return JS_TRUE;
 
   if (pRoom2->pRoom1) pCol = pRoom2->pRoom1->Coll;
 
   if (!pCol) {
-    JS_RemoveRoot(cx, &jsobjy);
     if (bAdded)
       D2COMMON_RemoveRoomData(D2CLIENT_GetPlayerUnit()->pAct, pRoom2->pLevel->dwLevelNo, pRoom2->dwPosX, pRoom2->dwPosY,
                               D2CLIENT_GetPlayerUnit()->pPath->pRoom1);
@@ -185,7 +181,6 @@ JSAPI_FUNC(room_getCollisionTypeArray) {
         if (bAdded)
           D2COMMON_RemoveRoomData(D2CLIENT_GetPlayerUnit()->pAct, pRoom2->pLevel->dwLevelNo, pRoom2->dwPosX,
                                   pRoom2->dwPosY, D2CLIENT_GetPlayerUnit()->pPath->pRoom1);
-        JS_RemoveRoot(cx, &jsobjy);
         JS_EndRequest(cx);
         return JS_TRUE;
       }
@@ -201,7 +196,6 @@ JSAPI_FUNC(room_getCollisionTypeArray) {
                             D2CLIENT_GetPlayerUnit()->pPath->pRoom1);
 
   JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(jsobjy));
-  JS_RemoveRoot(cx, &jsobjy);
   JS_EndRequest(cx);
   return JS_TRUE;
 }
@@ -216,8 +210,7 @@ JSAPI_FUNC(room_getCollision) {
     return JS_TRUE;
   }
 
-  JSObject* jsobjy = JS_NewArrayObject(cx, NULL, NULL);
-  JS_AddRoot(cx, &jsobjy);
+  JS::RootedObject jsobjy (cx,  JS_NewArrayObject(cx, NULL, NULL));
   if (!jsobjy) return JS_TRUE;
 
   if (!pRoom2->pRoom1) {
@@ -229,7 +222,6 @@ JSAPI_FUNC(room_getCollision) {
   if (pRoom2->pRoom1) pCol = pRoom2->pRoom1->Coll;
 
   if (!pCol) {
-    JS_RemoveRoot(cx, &jsobjy);
     if (bAdded)
       D2COMMON_RemoveRoomData(D2CLIENT_GetPlayerUnit()->pAct, pRoom2->pLevel->dwLevelNo, pRoom2->dwPosX, pRoom2->dwPosY,
                               D2CLIENT_GetPlayerUnit()->pPath->pRoom1);
@@ -259,7 +251,6 @@ JSAPI_FUNC(room_getCollision) {
         if (bAdded)
           D2COMMON_RemoveRoomData(D2CLIENT_GetPlayerUnit()->pAct, pRoom2->pLevel->dwLevelNo, pRoom2->dwPosX,
                                   pRoom2->dwPosY, D2CLIENT_GetPlayerUnit()->pPath->pRoom1);
-        JS_RemoveRoot(cx, &jsobjy);
         JS_EndRequest(cx);
         return JS_TRUE;
       }
@@ -274,7 +265,6 @@ JSAPI_FUNC(room_getCollision) {
       if (bAdded)
         D2COMMON_RemoveRoomData(D2CLIENT_GetPlayerUnit()->pAct, pRoom2->pLevel->dwLevelNo, pRoom2->dwPosX,
                                 pRoom2->dwPosY, D2CLIENT_GetPlayerUnit()->pPath->pRoom1);
-      JS_RemoveRoot(cx, &jsobjy);
       JS_EndRequest(cx);
       return JS_TRUE;
     }
@@ -286,7 +276,6 @@ JSAPI_FUNC(room_getCollision) {
                             D2CLIENT_GetPlayerUnit()->pPath->pRoom1);
 
   JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(jsobjy));
-  JS_RemoveRoot(cx, &jsobjy);
   JS_EndRequest(cx);
   return JS_TRUE;
 }

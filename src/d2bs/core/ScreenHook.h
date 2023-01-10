@@ -42,7 +42,7 @@ class Genhook {
   Script* owner;
   ScreenhookState gameState;
   Align alignment;
-  jsval clicked, hovered;
+  JS::RootedValue clicked, hovered;
   JSObject* self;
   bool isAutomap, isVisible;
   ushort opacity, zorder;

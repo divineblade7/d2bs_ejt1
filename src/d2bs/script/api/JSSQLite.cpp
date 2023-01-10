@@ -34,10 +34,11 @@ struct SqliteDB {
 };
 
 struct DBStmt {
+  DBStmt(JSContext* cx) : current_row(cx) {}
   sqlite3_stmt* stmt;
   bool open, canGet;
   SqliteDB* assoc_db;
-  JSObject* current_row;
+  JS::RootedValue current_row;
 };
 
 void close_db_stmt(DBStmt* stmt);
@@ -186,12 +187,12 @@ JSAPI_FUNC(sqlite_query) {
     }
   }
 
-  DBStmt* dbstmt = new DBStmt;
+  DBStmt* dbstmt = new DBStmt(cx);
   dbstmt->stmt = stmt;
   dbstmt->open = true;
   dbstmt->canGet = false;
   dbstmt->assoc_db = dbobj;
-  dbstmt->current_row = NULL;
+  dbstmt->current_row = JS::NullValue();
   dbobj->stmts.insert(dbstmt);
 
   JSObject* row = BuildObject(cx, &sqlite_stmt, sqlite_stmt_methods, sqlite_stmt_props, dbstmt);
@@ -301,8 +302,8 @@ JSAPI_FUNC(sqlite_stmt_getobject) {
     JS_SET_RVAL(cx, vp, JSVAL_NULL);
     return JS_TRUE;
   }
-  if (stmtobj->current_row) {
-    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(stmtobj->current_row));
+  if (!stmtobj->current_row.isNullOrUndefined()) {
+    JS_SET_RVAL(cx, vp, stmtobj->current_row);
     return JS_TRUE;
   }
 
@@ -344,8 +345,7 @@ JSAPI_FUNC(sqlite_stmt_getobject) {
         break;
     }
   }
-  stmtobj->current_row = obj2;
-  if (JS_AddRoot(cx, &stmtobj->current_row) == JS_FALSE) return JS_TRUE;
+  stmtobj->current_row.setObjectOrNull(obj2);
   JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj2));
   return JS_TRUE;
 }
@@ -477,9 +477,8 @@ JSAPI_FUNC(sqlite_stmt_next) {
   if (SQLITE_ROW != res && SQLITE_DONE != res) THROW_ERROR(cx, sqlite3_errmsg(stmtobj->assoc_db->db));
 
   stmtobj->canGet = !!(SQLITE_ROW == res);
-  if (stmtobj->current_row) {
-    JS_RemoveRoot(cx, &stmtobj->current_row);
-    stmtobj->current_row = NULL;
+  if (!stmtobj->current_row.isNullOrUndefined()) {
+    stmtobj->current_row = JS::NullValue();
   }
   JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL((SQLITE_ROW == res)));
   return JS_TRUE;
@@ -516,7 +515,6 @@ JSAPI_FUNC(sqlite_stmt_reset) {
 JSAPI_FUNC(sqlite_stmt_close) {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
   DBStmt* stmtobj = (DBStmt*)JS_GetInstancePrivate(cx, obj, &sqlite_stmt, NULL);
-  if (stmtobj->current_row) JS_RemoveRoot(cx, &stmtobj->current_row);
   close_db_stmt(stmtobj);
   delete stmtobj;
 

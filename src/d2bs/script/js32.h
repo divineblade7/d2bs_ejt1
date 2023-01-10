@@ -54,8 +54,6 @@ JSObject* BuildObject(JSContext* cx, JSClass* classp = NULL, JSFunctionSpec* fun
                       void* priv = NULL, JSObject* proto = NULL, JSObject* parent = NULL);
 JSScript* JS_CompileFile(JSContext* cx, JSObject* globalObject, std::wstring fileName);
 
-#define JS_AddRoot(cx, vp) JS_AddObjectRoot(cx, (JSObject**)(vp))
-#define JS_RemoveRoot(cx, vp) JS_RemoveObjectRoot(cx, (JSObject**)(vp));
 #define JSVAL_IS_FUNCTION(cx, var) (!JSVAL_IS_PRIMITIVE(var) && JS_ObjectIsFunction(cx, JSVAL_TO_OBJECT(var)))
 
 #define JSPROP_PERMANENT_VAR (JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT)
