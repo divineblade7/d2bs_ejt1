@@ -13,6 +13,8 @@
 //	Profile(ProfileType.tcpIpHost, charname, diff)
 //	Profile(ProfileType.tcpIpJoin, charname, ip)
 CLASS_CTOR(profile) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
   d2bs::Profile* prof;
   d2bs::ProfileType pt;
   const wchar_t* str1;
@@ -25,59 +27,59 @@ CLASS_CTOR(profile) {
 
   try {
     // Profile()
-    if (argc == 0) {
+    if (args.length() == 0) {
       if (Vars.settings.szProfile != NULL)
         prof = Vars.settings.get_profile(Vars.settings.szProfile);
       else
         THROW_ERROR(cx, "No active profile!");
     }
     // Profile(name) - get the named profile
-    else if (argc == 1 && JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
-      str1 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+    else if (args.length() == 1 && args[0].isString()) {
+      str1 = JS_GetStringCharsZ(cx, args[0].toString());
       prof = Vars.settings.get_profile(str1);
     }
     // Profile(ProfileType.singlePlayer, charname, diff)
-    else if (argc == 3 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0]) &&
-             JSVAL_TO_INT(JS_ARGV(cx, vp)[0]) == d2bs::PROFILETYPE_SINGLEPLAYER) {
+    else if (args.length() == 3 && args[0].isInt32() &&
+             args[0].toInt32() == d2bs::PROFILETYPE_SINGLEPLAYER) {
       // JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "isu", &pt, &i);  //removed s flag no longer supported
-      str1 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[1]));
+      str1 = JS_GetStringCharsZ(cx, args[1].toString());
       prof = Vars.settings.add_profile(d2bs::PROFILETYPE_SINGLEPLAYER, L"", L"", str1, L"",
-                                       (char)(JSVAL_TO_INT(JS_ARGV(cx, vp)[2])));
+                                       (char)(args[2].toInt32()));
     }
     // Profile(ProfileType.battleNet, account, pass, charname, gateway)
-    else if (argc == 5 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0]) &&
-             JSVAL_TO_INT(JS_ARGV(cx, vp)[0]) == d2bs::PROFILETYPE_BATTLENET) {
+    else if (args.length() == 5 && args[0].isInt32() &&
+             args[0].toInt32() == d2bs::PROFILETYPE_BATTLENET) {
       // JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "issss", &pt, &str1, &str2, &str3, &str4);
-      str1 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[1]));
-      str2 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[2]));
-      str3 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[3]));
-      str4 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[4]));
+      str1 = JS_GetStringCharsZ(cx, args[1].toString());
+      str2 = JS_GetStringCharsZ(cx, args[2].toString());
+      str3 = JS_GetStringCharsZ(cx, args[3].toString());
+      str4 = JS_GetStringCharsZ(cx, args[4].toString());
       prof = Vars.settings.add_profile(d2bs::PROFILETYPE_BATTLENET, str1, str2, str3, str4);
     }
     // Profile(ProfileType.openBattleNet, account, pass, charname, gateway)
-    else if (argc == 5 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0]) &&
-             JSVAL_TO_INT(JS_ARGV(cx, vp)[0]) == d2bs::PROFILETYPE_OPEN_BATTLENET) {
+    else if (args.length() == 5 && args[0].isInt32() &&
+             args[0].toInt32() == d2bs::PROFILETYPE_OPEN_BATTLENET) {
       // JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "issss", &pt, &str1, &str2, &str3, &str4);
-      str1 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[1]));
-      str2 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[2]));
-      str3 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[3]));
-      str4 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[4]));
+      str1 = JS_GetStringCharsZ(cx, args[1].toString());
+      str2 = JS_GetStringCharsZ(cx, args[2].toString());
+      str3 = JS_GetStringCharsZ(cx, args[3].toString());
+      str4 = JS_GetStringCharsZ(cx, args[4].toString());
       prof = Vars.settings.add_profile(d2bs::PROFILETYPE_OPEN_BATTLENET, str1, str2, str3, str4);
     }
     // Profile(ProfileType.tcpIpHost, charname, diff)
-    else if (argc == 3 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0]) &&
-             JSVAL_TO_INT(JS_ARGV(cx, vp)[0]) == d2bs::PROFILETYPE_TCPIP_HOST) {
+    else if (args.length() == 3 && args[0].isInt32() &&
+             args[0].toInt32() == d2bs::PROFILETYPE_TCPIP_HOST) {
       // JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "isu", &pt, &str1, &i);
-      str1 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[1]));
+      str1 = JS_GetStringCharsZ(cx, args[1].toString());
       prof = Vars.settings.add_profile(d2bs::PROFILETYPE_TCPIP_HOST, L"", L"", str1, L"",
-                                       (char)(JSVAL_TO_INT(JS_ARGV(cx, vp)[2])));
+                                       (char)(args[2].toInt32()));
     }
     // Profile(ProfileType.tcpIpJoin, charname, ip)
-    else if (argc == 3 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0]) &&
-             JSVAL_TO_INT(JS_ARGV(cx, vp)[0]) == d2bs::PROFILETYPE_TCPIP_JOIN) {
+    else if (args.length() == 3 && args[0].isInt32() &&
+             args[0].toInt32() == d2bs::PROFILETYPE_TCPIP_JOIN) {
       // JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "iss", &pt, &str1, &str2);
-      str1 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[1]));
-      str2 = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[2]));
+      str1 = JS_GetStringCharsZ(cx, args[1].toString());
+      str2 = JS_GetStringCharsZ(cx, args[2].toString());
       prof = Vars.settings.add_profile(d2bs::PROFILETYPE_TCPIP_JOIN, L"", L"", str1, str2);
     } else
       THROW_ERROR(cx, "Invalid parameters.");
@@ -88,17 +90,20 @@ CLASS_CTOR(profile) {
   JSObject* obj = BuildObject(cx, &profile_class, profile_methods, profile_props);
   if (!obj) THROW_ERROR(cx, "Failed to create profile object");
   JS_SetPrivate(obj, prof);
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj));
 
+  args.rval().setObjectOrNull(obj);
   return JS_TRUE;
 }
 
 JSAPI_FUNC(profile_login) {
-  JS_SET_RVAL(cx, vp, JSVAL_VOID);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
+
   const char* error;
   d2bs::Profile* prof;
 
-  prof = (d2bs::Profile*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
+  auto self = args.thisv();
+  prof = (d2bs::Profile*)JS_GetPrivate(self.toObjectOrNull());
 
   if (prof->login(&error) != 0) THROW_ERROR(cx, error);
 
