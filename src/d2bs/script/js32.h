@@ -26,8 +26,6 @@ typedef uint16_t uint16;
 #define JS_AddValueRoot(cx, vp) JS_AddNamedValueRoot((cx), (vp), NAME(__LINE__, vp))
 #define JS_AddObjectRoot(cx, vp) JS_AddNamedObjectRoot((cx), (vp), NAME(__LINE__, vp))
 
-void* JS_GetPrivate(JSContext* cx, JSObject* obj);
-void JS_SetPrivate(JSContext* cx, JSObject* obj, void* data);
 JSBool JSVAL_IS_OBJECT(jsval v);
 
 // IMPORTANT: Ordering is critical here! If your object has a

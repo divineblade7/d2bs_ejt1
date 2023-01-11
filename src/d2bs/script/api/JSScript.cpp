@@ -58,7 +58,7 @@ JSAPI_FUNC(script_getNext) {
         break;
       }
       iterp = it->second;
-      JS_SetPrivate(cx, JS_THIS_OBJECT(cx, vp), iterp);
+      JS_SetPrivate(JS_THIS_OBJECT(cx, vp), iterp);
       JS_SET_RVAL(cx, vp, JSVAL_TRUE);
       return JS_TRUE;
     }

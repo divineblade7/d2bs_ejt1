@@ -18,7 +18,7 @@ void area_finalize(JSFreeOp*, JSObject* obj) {
 }
 
 JSAPI_PROP(area_getProperty) {
-  myArea* pArea = (myArea*)JS_GetPrivate(cx, obj);
+  myArea* pArea = (myArea*)JS_GetPrivate(obj);
   ;
   if (!pArea) return JS_FALSE;
 

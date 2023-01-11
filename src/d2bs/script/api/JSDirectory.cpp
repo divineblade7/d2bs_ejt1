@@ -86,7 +86,7 @@ JSAPI_FUNC(dir_getFiles) {
   }
 
   auto self = args.thisv();
-  DirData* d = (DirData*)JS_GetPrivate(cx, self.toObjectOrNull());
+  DirData* d = (DirData*)JS_GetPrivate(self.toObjectOrNull());
   if (search.empty()) {
     THROW_ERROR(cx, "Failed to get search string");
   }
@@ -140,7 +140,7 @@ JSAPI_FUNC(dir_getFolders) {
   }
 
   auto self = args.thisv();
-  DirData* d = (DirData*)JS_GetPrivate(cx, self.toObjectOrNull());
+  DirData* d = (DirData*)JS_GetPrivate(self.toObjectOrNull());
   if (search.empty()) THROW_ERROR(cx, "Failed to get search string");
 
   long hFile;
@@ -193,7 +193,7 @@ JSAPI_FUNC(dir_create) {
   }
 
   auto self = args.thisv();
-  DirData* d = (DirData*)JS_GetPrivate(cx, self.toObjectOrNull());
+  DirData* d = (DirData*)JS_GetPrivate(self.toObjectOrNull());
   auto path = (Vars.settings.script_dir / d->name / name).make_preferred().wstring();
 
   if (_wmkdir(path.c_str()) == -1 && (errno == ENOENT)) {
@@ -211,7 +211,7 @@ JSAPI_FUNC(dir_delete) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
   auto self = args.thisv();
-  DirData* d = (DirData*)JS_GetPrivate(cx, self.toObjectOrNull());
+  DirData* d = (DirData*)JS_GetPrivate(self.toObjectOrNull());
 
   auto path = (Vars.settings.script_dir / d->name).make_preferred().wstring();
 
@@ -227,7 +227,7 @@ JSAPI_FUNC(dir_delete) {
 }
 
 JSAPI_PROP(dir_getProperty) {
-  DirData* d = (DirData*)JS_GetPrivate(cx, obj);
+  DirData* d = (DirData*)JS_GetPrivate(obj);
 
   if (!d) return JS_FALSE;
 

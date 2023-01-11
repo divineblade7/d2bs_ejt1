@@ -12,7 +12,7 @@
 EMPTY_CTOR(room)
 
 JSAPI_PROP(room_getProperty) {
-  Room2* pRoom2 = (Room2*)JS_GetPrivate(cx, obj);
+  Room2* pRoom2 = (Room2*)JS_GetPrivate(obj);
 
   if (!pRoom2) return JS_TRUE;
   jsval ID;
@@ -54,7 +54,7 @@ JSAPI_PROP(room_getProperty) {
 }
 
 JSAPI_FUNC(room_getNext) {
-  Room2* pRoom2 = (Room2*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  Room2* pRoom2 = (Room2*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
   if (!pRoom2) {
     JS_SET_RVAL(cx, vp, JSVAL_FALSE);
     return JS_TRUE;
@@ -67,7 +67,7 @@ JSAPI_FUNC(room_getNext) {
     //		JS_ClearScope(cx, obj);
     if (JS_ValueToObject(cx, JSVAL_NULL, &obj)) JS_SET_RVAL(cx, vp, JSVAL_FALSE);
   } else {
-    JS_SetPrivate(cx, JS_THIS_OBJECT(cx, vp), pRoom2);
+    JS_SetPrivate(JS_THIS_OBJECT(cx, vp), pRoom2);
     JS_SET_RVAL(cx, vp, JSVAL_TRUE);
   }
 
@@ -75,7 +75,7 @@ JSAPI_FUNC(room_getNext) {
 }
 
 JSAPI_FUNC(room_getPresetUnits) {
-  Room2* pRoom2 = (Room2*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  Room2* pRoom2 = (Room2*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   DWORD nType = NULL;
   DWORD nClass = NULL;
@@ -131,7 +131,7 @@ JSAPI_FUNC(room_getPresetUnits) {
   return JS_TRUE;
 }
 JSAPI_FUNC(room_getCollisionTypeArray) {
-  Room2* pRoom2 = (Room2*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  Room2* pRoom2 = (Room2*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   bool bAdded = FALSE;
   CollMap* pCol = NULL;
@@ -200,7 +200,7 @@ JSAPI_FUNC(room_getCollisionTypeArray) {
   return JS_TRUE;
 }
 JSAPI_FUNC(room_getCollision) {
-  Room2* pRoom2 = (Room2*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  Room2* pRoom2 = (Room2*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   bool bAdded = FALSE;
   CollMap* pCol = NULL;
@@ -281,7 +281,7 @@ JSAPI_FUNC(room_getCollision) {
 }
 
 JSAPI_FUNC(room_getNearby) {
-  Room2* pRoom2 = (Room2*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  Room2* pRoom2 = (Room2*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
   JSObject* jsobj = JS_NewArrayObject(cx, NULL, NULL);
 
   if (!jsobj) return JS_TRUE;
@@ -306,7 +306,7 @@ JSAPI_FUNC(room_getNearby) {
 
 // Don't know whether it works or not
 JSAPI_FUNC(room_getStat) {
-  Room2* pRoom2 = (Room2*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  Room2* pRoom2 = (Room2*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
   if (argc < 1 || !JSVAL_IS_INT(JS_ARGV(cx, vp)[0])) return JS_TRUE;
@@ -372,7 +372,7 @@ JSAPI_FUNC(room_getStat) {
 
 JSAPI_FUNC(room_getFirst) {
   JS_SET_RVAL(cx, vp, JSVAL_VOID);
-  Room2* pRoom2 = (Room2*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  Room2* pRoom2 = (Room2*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
   if (!pRoom2 || !pRoom2->pLevel || !pRoom2->pLevel->pRoom2First) return JS_TRUE;
 
   JSObject* jsroom = BuildObject(cx, &room_class, room_methods, room_props, pRoom2->pLevel->pRoom2First);
@@ -384,10 +384,10 @@ JSAPI_FUNC(room_getFirst) {
 }
 
 JSAPI_FUNC(room_unitInRoom) {
-  Room2* pRoom2 = (Room2*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  Room2* pRoom2 = (Room2*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
   if (!pRoom2 || argc < 1 || !JSVAL_IS_OBJECT(JS_ARGV(cx, vp)[0])) return JS_TRUE;
 
-  myUnit* pmyUnit = (myUnit*)JS_GetPrivate(cx, JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[0]));
+  myUnit* pmyUnit = (myUnit*)JS_GetPrivate(JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[0]));
 
   if (!pmyUnit || (pmyUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) return JS_TRUE;
 
@@ -405,7 +405,7 @@ JSAPI_FUNC(room_unitInRoom) {
 }
 
 JSAPI_FUNC(room_reveal) {
-  Room2* pRoom2 = (Room2*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  Room2* pRoom2 = (Room2*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   BOOL bDrawPresets = false;
   if (argc == 1 && JSVAL_IS_BOOLEAN(JS_ARGV(cx, vp)[0])) bDrawPresets = !!JSVAL_TO_BOOLEAN(JS_ARGV(cx, vp)[0]);

@@ -177,7 +177,7 @@ JSAPI_PROP(unit_getProperty) {
   if (ClientState() != ClientStateInGame) return JS_TRUE;
   // JSObject* obj ;
   // JS_ValueToObject(cx,  JS_CALLEE(cx,vp),obj);
-  myUnit* lpUnit = (myUnit*)JS_GetPrivate(cx, obj);
+  myUnit* lpUnit = (myUnit*)JS_GetPrivate(obj);
   if (!lpUnit || (lpUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) return JS_TRUE;
 
   UnitAny* pUnit = D2CLIENT_FindUnit(lpUnit->dwUnitId, lpUnit->dwType);
@@ -600,7 +600,7 @@ JSAPI_FUNC(unit_getUnit) {
 
 JSAPI_FUNC(unit_getNext) {
   JS_SET_RVAL(cx, vp, JSVAL_VOID);
-  Private* unit = (Private*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  Private* unit = (Private*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   if (!unit) return JS_TRUE;
 
@@ -633,7 +633,7 @@ JSAPI_FUNC(unit_getNext) {
       JS_SET_RVAL(cx, vp, JSVAL_FALSE);
     } else {
       lpUnit->dwUnitId = pUnit->dwUnitId;
-      JS_SetPrivate(cx, JS_THIS_OBJECT(cx, vp), lpUnit);
+      JS_SetPrivate(JS_THIS_OBJECT(cx, vp), lpUnit);
       JS_SET_RVAL(cx, vp, JSVAL_TRUE);
     }
   } else if (unit->dwPrivateType == PRIVATE_ITEM) {
@@ -674,7 +674,7 @@ JSAPI_FUNC(unit_getNext) {
       JS_SET_RVAL(cx, vp, JSVAL_FALSE);
     } else {
       pmyUnit->dwUnitId = nextItem->dwUnitId;
-      JS_SetPrivate(cx, JS_THIS_OBJECT(cx, vp), pmyUnit);
+      JS_SetPrivate(JS_THIS_OBJECT(cx, vp), pmyUnit);
       JS_SET_RVAL(cx, vp, JSVAL_TRUE);
     }
   }
@@ -722,7 +722,7 @@ JSAPI_FUNC(unit_cancel) {
 }
 
 JSAPI_FUNC(unit_repair) {
-  myUnit* lpUnit = (myUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  myUnit* lpUnit = (myUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
   JS_SET_RVAL(cx, vp, JSVAL_FALSE);
 
   if (!lpUnit || (lpUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) return JS_TRUE;
@@ -745,7 +745,7 @@ JSAPI_FUNC(unit_repair) {
 }
 
 JSAPI_FUNC(unit_useMenu) {
-  myUnit* lpUnit = (myUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  myUnit* lpUnit = (myUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
   JS_SET_RVAL(cx, vp, JSVAL_FALSE);
 
   if (argc < 1 || !JSVAL_IS_INT(JS_ARGV(cx, vp)[0])) return JS_TRUE;
@@ -764,7 +764,7 @@ JSAPI_FUNC(unit_useMenu) {
 JSAPI_FUNC(unit_interact) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  myUnit* lpUnit = (myUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  myUnit* lpUnit = (myUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   JS_SET_RVAL(cx, vp, JSVAL_FALSE);
 
@@ -833,7 +833,7 @@ void InsertStatsNow(Stat* pStat, int nStat, JSContext* cx, JSObject* pArray);
 JSAPI_FUNC(unit_getStat) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  myUnit* lpUnit = (myUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  myUnit* lpUnit = (myUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   JS_SET_RVAL(cx, vp, JSVAL_FALSE);
 
@@ -1026,7 +1026,7 @@ void InsertStatsNow(Stat* pStat, int nStat, JSContext* cx, JSObject* pArray) {
 JSAPI_FUNC(unit_getState) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  myUnit* lpUnit = (myUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  myUnit* lpUnit = (myUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   JS_SET_RVAL(cx, vp, JSVAL_FALSE);
 
@@ -1055,7 +1055,7 @@ JSAPI_FUNC(unit_getState) {
 JSAPI_FUNC(item_getFlags) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  myUnit* lpUnit = (myUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  myUnit* lpUnit = (myUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   if (!lpUnit || (lpUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) return JS_TRUE;
 
@@ -1073,7 +1073,7 @@ JSAPI_FUNC(item_getFlag) {
 
   if (argc < 1 || !JSVAL_IS_INT(JS_ARGV(cx, vp)[0])) return JS_TRUE;
 
-  myUnit* lpUnit = (myUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  myUnit* lpUnit = (myUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   if (!lpUnit || (lpUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) return JS_TRUE;
 
@@ -1100,7 +1100,7 @@ JSAPI_FUNC(item_getFlag) {
 //	int buysell = 0;
 //	int NPCID = 148;
 //
-//	myUnit* lpUnit = (myUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+//	myUnit* lpUnit = (myUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 //
 //	if(!lpUnit || (lpUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT)
 //		return JS_TRUE;
@@ -1114,7 +1114,7 @@ JSAPI_FUNC(item_getFlag) {
 //	{
 //		if(JSVAL_IS_OBJECT(JS_ARGV(cx, vp)[0]))
 //		{
-//			myUnit* pmyNpc = (myUnit*)JS_GetPrivate(cx, JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[0]));
+//			myUnit* pmyNpc = (myUnit*)JS_GetPrivate(JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[0]));
 //
 //			if(!pmyNpc || (pmyNpc->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT)
 //				return JS_TRUE;
@@ -1150,7 +1150,7 @@ JSAPI_FUNC(item_getItemCost) {
 
   if (argc < 1 || !JSVAL_IS_INT(JS_ARGV(cx, vp)[0])) return JS_TRUE;
 
-  myUnit* lpUnit = (myUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  myUnit* lpUnit = (myUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   if (!lpUnit || (lpUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) return JS_TRUE;
 
@@ -1162,7 +1162,7 @@ JSAPI_FUNC(item_getItemCost) {
 
   if (argc > 1) {
     if (JSVAL_IS_OBJECT(JS_ARGV(cx, vp)[1])) {
-      myUnit* pmyNpc = (myUnit*)JS_GetPrivate(cx, JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[1]));
+      myUnit* pmyNpc = (myUnit*)JS_GetPrivate(JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[1]));
 
       if (!pmyNpc || (pmyNpc->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) return JS_TRUE;
 
@@ -1213,7 +1213,7 @@ JSAPI_FUNC(item_getItemCost) {
 JSAPI_FUNC(unit_getItems) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  myUnit* lpUnit = (myUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  myUnit* lpUnit = (myUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   if (!lpUnit || (lpUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) return JS_TRUE;
 
@@ -1268,7 +1268,7 @@ JSAPI_FUNC(unit_getSkill) {
   jsint nSkillId = NULL;
   jsint nExt = NULL;
 
-  myUnit* pmyUnit = (myUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  myUnit* pmyUnit = (myUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
   if (!pmyUnit) return JS_TRUE;
 
   UnitAny* pUnit = D2CLIENT_FindUnit(pmyUnit->dwUnitId, pmyUnit->dwType);
@@ -1377,7 +1377,7 @@ JSAPI_FUNC(item_shop) {
     return JS_TRUE;
   }
 
-  myUnit* lpItem = (myUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  myUnit* lpItem = (myUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   if (!lpItem || (lpItem->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) {
     return JS_TRUE;
@@ -1468,7 +1468,7 @@ JSAPI_FUNC(unit_getParent) {
   JS_SET_RVAL(cx, vp, JSVAL_VOID);
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  myUnit* lpUnit = (myUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  myUnit* lpUnit = (myUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   if (!lpUnit || (lpUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) return JS_TRUE;
 
@@ -1546,7 +1546,7 @@ JSAPI_FUNC(unit_getMerc) {
   JS_SET_RVAL(cx, vp, JSVAL_VOID);
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  myUnit* lpUnit = (myUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  myUnit* lpUnit = (myUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
 
   if (lpUnit && (lpUnit->_dwPrivateType & PRIVATE_UNIT) == PRIVATE_UNIT) {
@@ -1576,7 +1576,7 @@ JSAPI_FUNC(unit_getMercHP) {
   JSObject* test = JS_THIS_OBJECT(cx, vp);
   jsval* rest = 0;
   myUnit* lpUnit = (myUnit*)JS_GetInstancePrivate(cx, test, &unit_class, rest);
-  // myUnit* lpUnit = (myUnit*)JS_GetPrivate(cx, test);
+  // myUnit* lpUnit = (myUnit*)JS_GetPrivate(test);
 
   UnitAny* pUnit = lpUnit ? D2CLIENT_FindUnit(lpUnit->dwUnitId, lpUnit->dwType) : D2CLIENT_GetPlayerUnit();
 
@@ -1618,7 +1618,7 @@ JSAPI_FUNC(unit_setskill) {
   if (argc == 3 && JSVAL_IS_OBJECT(JS_ARGV(cx, vp)[2])) {
     JSObject* object = JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[2]);
     if (JS_InstanceOf(cx, object, &unit_class, JS_ARGV(cx, vp))) {
-      myUnit* unit = (myUnit*)JS_GetPrivate(cx, object);
+      myUnit* unit = (myUnit*)JS_GetPrivate(object);
       if (unit->dwType == UNIT_ITEM) itemId = unit->dwUnitId;
     }
   }
@@ -1632,7 +1632,7 @@ JSAPI_FUNC(my_overhead) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
   JS_SET_RVAL(cx, vp, JSVAL_FALSE);
-  myUnit* pmyUnit = (myUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  myUnit* pmyUnit = (myUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   if (!pmyUnit || (pmyUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) return JS_TRUE;
 
@@ -1674,7 +1674,7 @@ JSAPI_FUNC(unit_getItem) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
   JS_SET_RVAL(cx, vp, JSVAL_VOID);
 
-  myUnit* pmyUnit = (myUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  myUnit* pmyUnit = (myUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   if (!pmyUnit || (pmyUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) return JS_TRUE;
 
@@ -1732,7 +1732,7 @@ JSAPI_FUNC(unit_getItem) {
 JSAPI_FUNC(unit_move) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  myUnit* pmyUnit = (myUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  myUnit* pmyUnit = (myUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   if (!pmyUnit || (pmyUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) return JS_TRUE;
 
@@ -1766,7 +1766,7 @@ JSAPI_FUNC(unit_getEnchant) {
 
   if (argc < 1 || !JSVAL_IS_INT(JS_ARGV(cx, vp)[0])) return JS_TRUE;
 
-  myUnit* pmyUnit = (myUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  myUnit* pmyUnit = (myUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   if (!pmyUnit || (pmyUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) return JS_TRUE;
 
@@ -1806,7 +1806,7 @@ JSAPI_FUNC(unit_getMinionCount) {
 
   jsint nType = JSVAL_TO_INT(JS_ARGV(cx, vp)[0]);
 
-  myUnit* pmyUnit = (myUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  myUnit* pmyUnit = (myUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   if (!pmyUnit || (pmyUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) return JS_TRUE;
 

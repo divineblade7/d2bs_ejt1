@@ -17,7 +17,7 @@ void presetunit_finalize(JSFreeOp*, JSObject* obj) {
 }
 
 JSAPI_PROP(presetunit_getProperty) {
-  myPresetUnit* pUnit = (myPresetUnit*)JS_GetPrivate(cx, obj);
+  myPresetUnit* pUnit = (myPresetUnit*)JS_GetPrivate(obj);
 
   if (!pUnit) return JS_TRUE;
 

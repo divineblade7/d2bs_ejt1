@@ -10,7 +10,7 @@
 EMPTY_CTOR(party)
 
 JSAPI_PROP(party_getProperty) {
-  RosterUnit* pUnit = (RosterUnit*)JS_GetPrivate(cx, obj);
+  RosterUnit* pUnit = (RosterUnit*)JS_GetPrivate(obj);
 
   if (!pUnit) return JS_TRUE;
 
@@ -58,7 +58,7 @@ JSAPI_PROP(party_getProperty) {
 JSAPI_FUNC(party_getNext) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  RosterUnit* pUnit = (RosterUnit*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  RosterUnit* pUnit = (RosterUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   if (!pUnit) {
     JS_SET_RVAL(cx, vp, JSVAL_FALSE);
@@ -68,7 +68,7 @@ JSAPI_FUNC(party_getNext) {
   pUnit = pUnit->pNext;
 
   if (pUnit) {
-    JS_SetPrivate(cx, JS_THIS_OBJECT(cx, vp), pUnit);
+    JS_SetPrivate(JS_THIS_OBJECT(cx, vp), pUnit);
     JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(JS_THIS_OBJECT(cx, vp)));
   } else {
     // JSObject* obj = JS_THIS_OBJECT(cx, vp);
@@ -104,7 +104,7 @@ JSAPI_FUNC(my_getParty) {
       }
       JS_EndRequest(cx);
     } else if (JSVAL_IS_OBJECT(JS_ARGV(cx, vp)[0])) {
-      myUnit* lpUnit = (myUnit*)JS_GetPrivate(cx, JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[0]));
+      myUnit* lpUnit = (myUnit*)JS_GetPrivate(JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[0]));
 
       if (!lpUnit) return JS_TRUE;
 

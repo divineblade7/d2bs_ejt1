@@ -8,7 +8,7 @@ void exit_finalize(JSFreeOp*, JSObject* obj) {
 }
 
 JSAPI_PROP(exit_getProperty) {
-  myExit* pExit = (myExit*)JS_GetPrivate(cx, obj);
+  myExit* pExit = (myExit*)JS_GetPrivate(obj);
 
   vp.set(JSVAL_VOID);
 

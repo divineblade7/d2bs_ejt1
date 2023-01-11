@@ -286,7 +286,7 @@ void sqlite_finalize(JSFreeOp*, JSObject* obj) {
 //	if(!obj2 || JS_GET_CLASS(cx, obj2) != JS_GET_CLASS(cx, obj))
 //		return JS_TRUE;
 //
-//	SqliteDB* dbobj2 = (SqliteDB*)JS_GetPrivate(cx, obj2);
+//	SqliteDB* dbobj2 = (SqliteDB*)JS_GetPrivate(obj2);
 //	if(dbobj2->db != dbobj->db)
 //		return JS_TRUE;
 //
@@ -518,7 +518,7 @@ JSAPI_FUNC(sqlite_stmt_close) {
   close_db_stmt(stmtobj);
   delete stmtobj;
 
-  JS_SetPrivate(cx, obj, NULL);
+  JS_SetPrivate(obj, NULL);
   JS_SET_RVAL(cx, vp, JSVAL_TRUE);
   //	JS_ClearScope(cx, obj);
   if (JS_ValueToObject(cx, JSVAL_NULL, &obj) == JS_FALSE) return JS_TRUE;

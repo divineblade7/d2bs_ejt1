@@ -17,13 +17,13 @@ void hook_finalize(JSFreeOp*, JSObject* obj) {
 JSAPI_FUNC(hook_remove) {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
   Genhook::EnterGlobalSection();
-  Genhook* hook = (Genhook*)JS_GetPrivate(cx, obj);
+  Genhook* hook = (Genhook*)JS_GetPrivate(obj);
   if (hook) {
     // hook->SetIsVisible(false);
     delete hook;
   }
 
-  JS_SetPrivate(cx, obj, NULL);
+  JS_SetPrivate(obj, NULL);
   // JS_ClearScope(cx, obj);
   JS_ValueToObject(cx, JSVAL_VOID, &obj);
   Genhook::LeaveGlobalSection();
@@ -58,7 +58,7 @@ JSAPI_FUNC(frame_ctor) {
 
   if (!pFrameHook) THROW_ERROR(cx, "Failed to create framehook");
 
-  JS_SetPrivate(cx, hook, pFrameHook);
+  JS_SetPrivate(hook, pFrameHook);
   pFrameHook->SetClickHandler(click);
   pFrameHook->SetHoverHandler(hover);
 
@@ -68,7 +68,7 @@ JSAPI_FUNC(frame_ctor) {
 }
 
 JSAPI_PROP(frame_getProperty) {
-  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(cx, obj);
+  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
   if (!pFramehook) return JS_TRUE;
 
   jsval ID;
@@ -106,7 +106,7 @@ JSAPI_PROP(frame_getProperty) {
 }
 
 JSAPI_STRICT_PROP(frame_setProperty) {
-  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(cx, obj);
+  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
   if (!pFramehook) return JS_TRUE;
 
   jsval ID;
@@ -174,7 +174,7 @@ JSAPI_FUNC(box_ctor) {
 
   if (!pBoxHook) THROW_ERROR(cx, "Unable to initalize a box class.");
 
-  JS_SetPrivate(cx, hook, pBoxHook);
+  JS_SetPrivate(hook, pBoxHook);
   pBoxHook->SetClickHandler(click);
   pBoxHook->SetHoverHandler(hover);
 
@@ -183,7 +183,7 @@ JSAPI_FUNC(box_ctor) {
   return JS_TRUE;
 }
 JSAPI_PROP(box_getProperty) {
-  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(cx, obj);
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
   if (!pBoxHook) return JS_TRUE;
 
   jsval ID;
@@ -227,7 +227,7 @@ JSAPI_PROP(box_getProperty) {
 }
 
 JSAPI_STRICT_PROP(box_setProperty) {
-  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(cx, obj);
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
   if (!pBoxHook) return JS_TRUE;
 
   jsval ID;
@@ -298,7 +298,7 @@ JSAPI_FUNC(line_ctor) {
 
   if (!pLineHook) THROW_ERROR(cx, "Unable to initalize a line class.");
 
-  JS_SetPrivate(cx, hook, pLineHook);
+  JS_SetPrivate(hook, pLineHook);
   pLineHook->SetClickHandler(click);
   pLineHook->SetHoverHandler(hover);
 
@@ -308,7 +308,7 @@ JSAPI_FUNC(line_ctor) {
 }
 
 JSAPI_PROP(line_getProperty) {
-  LineHook* pLineHook = (LineHook*)JS_GetPrivate(cx, obj);
+  LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
   if (!pLineHook) return JS_TRUE;
 
   jsval ID;
@@ -346,7 +346,7 @@ JSAPI_PROP(line_getProperty) {
 }
 
 JSAPI_STRICT_PROP(line_setProperty) {
-  LineHook* pLineHook = (LineHook*)JS_GetPrivate(cx, obj);
+  LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
   if (!pLineHook) return JS_TRUE;
 
   jsval ID;
@@ -416,7 +416,7 @@ JSAPI_FUNC(text_ctor) {
 
   if (!pTextHook) THROW_ERROR(cx, "Failed to create texthook");
 
-  JS_SetPrivate(cx, hook, pTextHook);
+  JS_SetPrivate(hook, pTextHook);
   pTextHook->SetClickHandler(click);
   pTextHook->SetHoverHandler(hover);
 
@@ -426,7 +426,7 @@ JSAPI_FUNC(text_ctor) {
 }
 
 JSAPI_PROP(text_getProperty) {
-  TextHook* pTextHook = (TextHook*)JS_GetPrivate(cx, obj);
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
   if (!pTextHook) return JS_TRUE;
 
   jsval ID;
@@ -467,7 +467,7 @@ JSAPI_PROP(text_getProperty) {
 }
 
 JSAPI_STRICT_PROP(text_setProperty) {
-  TextHook* pTextHook = (TextHook*)JS_GetPrivate(cx, obj);
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
   if (!pTextHook) return JS_TRUE;
 
   jsval ID;
@@ -549,7 +549,7 @@ JSAPI_FUNC(image_ctor) {
 
   if (!pImageHook) THROW_ERROR(cx, "Failed to create ImageHook");
 
-  JS_SetPrivate(cx, hook, pImageHook);
+  JS_SetPrivate(hook, pImageHook);
   pImageHook->SetClickHandler(click);
   pImageHook->SetHoverHandler(hover);
 
@@ -559,7 +559,7 @@ JSAPI_FUNC(image_ctor) {
 }
 
 JSAPI_PROP(image_getProperty) {
-  ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(cx, obj);
+  ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
   if (!pImageHook) return JS_TRUE;
 
   jsval ID;
@@ -594,7 +594,7 @@ JSAPI_PROP(image_getProperty) {
 }
 
 JSAPI_STRICT_PROP(image_setProperty) {
-  ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(cx, obj);
+  ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
   if (!pImageHook) return JS_TRUE;
 
   jsval ID;

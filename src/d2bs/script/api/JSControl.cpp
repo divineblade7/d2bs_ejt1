@@ -20,7 +20,7 @@ JSAPI_PROP(control_getProperty) {
     return JS_FALSE;
   }
 
-  ControlData* pData = ((ControlData*)JS_GetPrivate(cx, obj));
+  ControlData* pData = ((ControlData*)JS_GetPrivate(obj));
   if (!pData) return JS_FALSE;
 
   Control* ctrl =
@@ -96,7 +96,7 @@ JSAPI_PROP(control_getProperty) {
 JSAPI_STRICT_PROP(control_setProperty) {
   if (ClientState() != ClientStateMenu) return JS_FALSE;
 
-  ControlData* pData = ((ControlData*)JS_GetPrivate(cx, obj));  // JS_THIS_OBJECT(cx, &vp.get())));
+  ControlData* pData = ((ControlData*)JS_GetPrivate(obj));  // JS_THIS_OBJECT(cx, &vp.get())));
   if (!pData) return JS_FALSE;
 
   Control* ctrl =
@@ -156,7 +156,7 @@ JSAPI_FUNC(control_getNext) {
   }
 
   auto self = args.thisv();
-  ControlData* pData = ((ControlData*)JS_GetPrivate(cx, self.toObjectOrNull()));
+  ControlData* pData = ((ControlData*)JS_GetPrivate(self.toObjectOrNull()));
   if (!pData) {
     args.rval().setBoolean(false);
     return JS_TRUE;
@@ -177,7 +177,7 @@ JSAPI_FUNC(control_getNext) {
     pData->dwSizeX = pData->pControl->dwSizeX;
     pData->dwSizeY = pData->pControl->dwSizeY;
 
-    JS_SetPrivate(cx, self.toObjectOrNull(), pData);
+    JS_SetPrivate(self.toObjectOrNull(), pData);
     args.rval().setObjectOrNull(self.toObjectOrNull());
   } else {
     args.rval().setBoolean(false);
@@ -195,7 +195,7 @@ JSAPI_FUNC(control_click) {
   }
 
   auto self = args.thisv();
-  ControlData* pData = ((ControlData*)JS_GetPrivate(cx, self.toObjectOrNull()));
+  ControlData* pData = ((ControlData*)JS_GetPrivate(self.toObjectOrNull()));
   if (!pData) {
     args.rval().setBoolean(false);
     return JS_TRUE;
@@ -230,7 +230,7 @@ JSAPI_FUNC(control_setText) {
   }
 
   auto self = args.thisv();
-  ControlData* pData = ((ControlData*)JS_GetPrivate(cx, self.toObjectOrNull()));
+  ControlData* pData = ((ControlData*)JS_GetPrivate(self.toObjectOrNull()));
   if (!pData) {
     return JS_TRUE;
   }
@@ -261,7 +261,7 @@ JSAPI_FUNC(control_getText) {
   if (ClientState() != ClientStateMenu) return JS_TRUE;
 
   auto self = args.thisv();
-  ControlData* pData = ((ControlData*)JS_GetPrivate(cx, self.toObjectOrNull()));
+  ControlData* pData = ((ControlData*)JS_GetPrivate(self.toObjectOrNull()));
   if (!pData) return JS_TRUE;
 
   Control* pControl =

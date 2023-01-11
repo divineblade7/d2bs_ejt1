@@ -34,7 +34,7 @@ JSAPI_FUNC(sandbox_ctor) {
     delete box;
     return JS_TRUE;
   }
-  JS_SetPrivate(cx, res, box);
+  JS_SetPrivate(res, box);
   JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(res));
 
   return JS_TRUE;

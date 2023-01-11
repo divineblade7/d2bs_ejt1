@@ -87,7 +87,7 @@ CLASS_CTOR(profile) {
 
   JSObject* obj = BuildObject(cx, &profile_class, profile_methods, profile_props);
   if (!obj) THROW_ERROR(cx, "Failed to create profile object");
-  JS_SetPrivate(cx, obj, prof);
+  JS_SetPrivate(obj, prof);
   JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj));
 
   return JS_TRUE;
@@ -98,7 +98,7 @@ JSAPI_FUNC(profile_login) {
   const char* error;
   d2bs::Profile* prof;
 
-  prof = (d2bs::Profile*)JS_GetPrivate(cx, JS_THIS_OBJECT(cx, vp));
+  prof = (d2bs::Profile*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
 
   if (prof->login(&error) != 0) THROW_ERROR(cx, error);
 
@@ -118,7 +118,7 @@ void profile_finalize(JSFreeOp*, JSObject* obj) {
 JSAPI_PROP(profile_getProperty) {
   d2bs::Profile* prof;
 
-  prof = (d2bs::Profile*)JS_GetPrivate(cx, obj);
+  prof = (d2bs::Profile*)JS_GetPrivate(obj);
   jsval ID;
   JS_IdToValue(cx, id, &ID);
 

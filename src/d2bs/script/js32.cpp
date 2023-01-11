@@ -4,6 +4,10 @@
 
 #include <fstream>
 
+JSBool JSVAL_IS_OBJECT(jsval v) {
+  return JSVAL_IS_PRIMITIVE(v) == JS_FALSE;
+}
+
 JSObject* BuildObject(JSContext* cx, JSClass* classp, JSFunctionSpec* funcs, JSPropertySpec* props, void* priv,
                       JSObject* proto, JSObject* parent) {
   JS_BeginRequest(cx);
@@ -17,7 +21,7 @@ JSObject* BuildObject(JSContext* cx, JSClass* classp, JSFunctionSpec* funcs, JSP
     // return NULL;
     if (obj && funcs && !JS_DefineFunctions(cx, obj, funcs)) obj = NULL;
     if (obj && props && !JS_DefineProperties(cx, obj, props)) obj = NULL;
-    if (obj && priv) JS_SetPrivate(cx, obj, priv);
+    if (obj && priv) JS_SetPrivate(obj, priv);
     JS_RemoveObjectRoot(cx, &obj);
   }
   JS_EndRequest(cx);
@@ -55,16 +59,4 @@ JSScript* JS_CompileFile(JSContext* cx, JSObject* globalObject, std::wstring fil
   t.close();
 
   return rval;
-}
-
-JSBool JSVAL_IS_OBJECT(jsval v) {
-  return JSVAL_IS_PRIMITIVE(v) == JS_FALSE;
-}
-
-void* JS_GetPrivate(JSContext*, JSObject* obj) {
-  return JS_GetPrivate(obj);
-}
-
-void JS_SetPrivate(JSContext*, JSObject* obj, void* data) {
-  return JS_SetPrivate(obj, data);
 }

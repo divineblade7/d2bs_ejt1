@@ -85,7 +85,7 @@ void Script::run() {
     jsval meVal = JSVAL_VOID;
     if (JS_GetProperty(context_, globals_, "me", &meVal) != JS_FALSE) {
       JSObject* meObject = JSVAL_TO_OBJECT(meVal);
-      me_ = (myUnit*)JS_GetPrivate(context_, meObject);
+      me_ = (myUnit*)JS_GetPrivate(meObject);
     }
 
     if (type_ == ScriptType::Command) {

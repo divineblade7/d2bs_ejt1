@@ -24,14 +24,14 @@ JSAPI_FUNC(my_copyUnit) {
   args.rval().setUndefined();
 
   if (args.length() >= 1 && args[0].isObject() && !args[0].isNull()) {
-    Private* myPrivate = (Private*)JS_GetPrivate(cx, args[0].toObjectOrNull());
+    Private* myPrivate = (Private*)JS_GetPrivate(args[0].toObjectOrNull());
 
     if (!myPrivate) {
       return JS_TRUE;
     }
 
     if (myPrivate->dwPrivateType == PRIVATE_UNIT) {
-      myUnit* lpOldUnit = (myUnit*)JS_GetPrivate(cx, args[0].toObjectOrNull());
+      myUnit* lpOldUnit = (myUnit*)JS_GetPrivate(args[0].toObjectOrNull());
       myUnit* lpUnit = new myUnit;
 
       if (lpUnit) {
@@ -46,7 +46,7 @@ JSAPI_FUNC(my_copyUnit) {
         args.rval().setObjectOrNull(jsunit);
       }
     } else if (myPrivate->dwPrivateType == PRIVATE_ITEM) {
-      invUnit* lpOldUnit = (invUnit*)JS_GetPrivate(cx, args[0].toObjectOrNull());
+      invUnit* lpOldUnit = (invUnit*)JS_GetPrivate(args[0].toObjectOrNull());
       invUnit* lpUnit = new invUnit;
 
       if (lpUnit) {
@@ -89,7 +89,7 @@ JSAPI_FUNC(my_clickMap) {
 
   if (args.length() == 3 && args[0].isInt32() && (args[1].isInt32() || args[1].isBoolean()) && args[2].isObject() &&
       !args[2].isNull()) {
-    myUnit* mypUnit = (myUnit*)JS_GetPrivate(cx, args[2].toObjectOrNull());
+    myUnit* mypUnit = (myUnit*)JS_GetPrivate(args[2].toObjectOrNull());
 
     if (!mypUnit || (mypUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) {
       return JS_TRUE;
@@ -208,8 +208,8 @@ JSAPI_FUNC(my_getDialogLines) {
       // handler() or clickDialog() needs the private handler val stored somewhere
       JS_SetReservedSlot(line, 0, PRIVATE_TO_JSVAL(&pTdi->dialogLines[i]));
       // these privates dident work dident have private slots
-      // JS_SetPrivate(cx, JS_GetFunctionObject(jsf_handler), &pTdi->dialogLines[i]);
-      // JS_SetPrivate(cx, line,  &pTdi->dialogLines[i]);
+      // JS_SetPrivate(JS_GetFunctionObject(jsf_handler), &pTdi->dialogLines[i]);
+      // JS_SetPrivate(line,  &pTdi->dialogLines[i]);
       js_line = JS::ObjectOrNullValue(line);
       JS_SetElement(cx, pReturnArray, i, &js_line);
     }
@@ -406,7 +406,7 @@ JSAPI_FUNC(my_clickItem) {
 
   args.rval().setUndefined();
   if (args.length() == 1 && args[0].isObject()) {
-    pmyUnit = (myUnit*)JS_GetPrivate(cx, args[0].toObjectOrNull());
+    pmyUnit = (myUnit*)JS_GetPrivate(args[0].toObjectOrNull());
 
     if (!pmyUnit || (pmyUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) {
       return JS_TRUE;
@@ -454,7 +454,7 @@ JSAPI_FUNC(my_clickItem) {
     }
     return JS_TRUE;
   } else if (args.length() == 2 && args[0].isInt32() && args[1].isObject()) {
-    pmyUnit = (myUnit*)JS_GetPrivate(cx, args[1].toObjectOrNull());
+    pmyUnit = (myUnit*)JS_GetPrivate(args[1].toObjectOrNull());
 
     if (!pmyUnit || (pmyUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) {
       return JS_TRUE;
@@ -750,7 +750,7 @@ JSAPI_FUNC(my_getDistance) {
     }
   } else if (args.length() == 3) {
     if (args[0].isObject() && args[1].isInt32() && args[2].isInt32()) {
-      myUnit* pUnit1 = (myUnit*)JS_GetPrivate(cx, args[0].toObjectOrNull());
+      myUnit* pUnit1 = (myUnit*)JS_GetPrivate(args[0].toObjectOrNull());
 
       if (!pUnit1 || (pUnit1->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) return JS_TRUE;
 
@@ -763,7 +763,7 @@ JSAPI_FUNC(my_getDistance) {
       JS_ValueToECMAInt32(cx, args[1], &nX2);
       JS_ValueToECMAInt32(cx, args[2], &nY2);
     } else if (args[0].isInt32() && args[1].isInt32() && args[2].isObject()) {
-      myUnit* pUnit1 = (myUnit*)JS_GetPrivate(cx, args[2].toObjectOrNull());
+      myUnit* pUnit1 = (myUnit*)JS_GetPrivate(args[2].toObjectOrNull());
 
       if (!pUnit1 || (pUnit1->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) return JS_TRUE;
 
@@ -814,8 +814,8 @@ JSAPI_FUNC(my_checkCollision) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
   if (args.length() == 3 && args[0].isObject() && args[1].isObject() && args[2].isInt32()) {
-    myUnit* pUnitA = (myUnit*)JS_GetPrivate(cx, args[0].toObjectOrNull());
-    myUnit* pUnitB = (myUnit*)JS_GetPrivate(cx, args[1].toObjectOrNull());
+    myUnit* pUnitA = (myUnit*)JS_GetPrivate(args[0].toObjectOrNull());
+    myUnit* pUnitB = (myUnit*)JS_GetPrivate(args[1].toObjectOrNull());
     jsint nBitMask = args[2].toInt32();
 
     if (!pUnitA || (pUnitA->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT || !pUnitB ||
@@ -1063,7 +1063,7 @@ JSAPI_FUNC(my_clickParty) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
   UnitAny* myUnit = D2CLIENT_GetPlayerUnit();
-  RosterUnit* pUnit = (RosterUnit*)JS_GetPrivate(cx, args[0].toObjectOrNull());
+  RosterUnit* pUnit = (RosterUnit*)JS_GetPrivate(args[0].toObjectOrNull());
   RosterUnit* mypUnit = *p_D2CLIENT_PlayerUnitList;
 
   if (!pUnit || !mypUnit) return JS_TRUE;
@@ -1403,7 +1403,7 @@ JSAPI_FUNC(my_moveNPC) {
   if (args.length() < 2) THROW_ERROR(cx, "Not enough parameters were passed to moveNPC!");
 
   args.rval().setBoolean(false);
-  myUnit* pNpc = (myUnit*)JS_GetPrivate(cx, args[0].toObjectOrNull());
+  myUnit* pNpc = (myUnit*)JS_GetPrivate(args[0].toObjectOrNull());
 
   if (!pNpc || pNpc->dwType != 1) THROW_ERROR(cx, "Invalid NPC passed to moveNPC!");
 
