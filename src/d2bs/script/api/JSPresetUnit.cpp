@@ -58,7 +58,7 @@ JSAPI_FUNC(my_getPresetUnits) {
   }
 
   if (args.length() < 1) {
-    JS_SET_RVAL(cx, vp, JSVAL_FALSE);
+    args.rval().setBoolean(false);
     return JS_TRUE;
   }
 
@@ -85,7 +85,7 @@ JSAPI_FUNC(my_getPresetUnits) {
   bool bAddedRoom = FALSE;
   DWORD dwArrayCount = NULL;
 
-  JS_BeginRequest(cx);
+  JSAutoRequest r(cx);
   JS::RootedObject pReturnArray(cx, JS_NewArrayObject(cx, 0, NULL));
   for (Room2* pRoom = pLevel->pRoom2First; pRoom; pRoom = pRoom->pRoom2Next) {
     bAddedRoom = FALSE;
@@ -112,11 +112,10 @@ JSAPI_FUNC(my_getPresetUnits) {
         JSObject* unit = BuildObject(cx, &presetunit_class, NULL, presetunit_props, mypUnit);
         if (!unit) {
           delete mypUnit;
-          JS_EndRequest(cx);
           THROW_ERROR(cx, "Failed to build object?");
         }
 
-        jsval a = OBJECT_TO_JSVAL(unit);
+        jsval a = JS::ObjectOrNullValue(unit);
         JS_SetElement(cx, pReturnArray, dwArrayCount, &a);
 
         dwArrayCount++;
@@ -129,24 +128,26 @@ JSAPI_FUNC(my_getPresetUnits) {
       bAddedRoom = FALSE;
     }
   }
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(pReturnArray));
 
-  JS_EndRequest(cx);
+  args.rval().setObjectOrNull(pReturnArray);
   return JS_TRUE;
 }
 
 JSAPI_FUNC(my_getPresetUnit) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  if (argc < 1) {
-    JS_SET_RVAL(cx, vp, JSVAL_FALSE);
+  if (args.length() < 1) {
+    args.rval().setBoolean(false);
     return JS_TRUE;
   }
 
   uint32 levelId;
-  JS_BeginRequest(cx);
-  JS_ValueToECMAUint32(cx, JS_ARGV(cx, vp)[0], &levelId);
-  JS_EndRequest(cx);
+  {
+    JSAutoRequest r(cx);
+    JS_ValueToECMAUint32(cx, args[0], &levelId);
+  }
   Level* pLevel = GetLevel(levelId);
 
   if (!pLevel) THROW_ERROR(cx, "getPresetUnits failed, couldn't access the level!");
@@ -154,8 +155,8 @@ JSAPI_FUNC(my_getPresetUnit) {
   DWORD nClassId = NULL;
   DWORD nType = NULL;
 
-  if (argc >= 2) nType = JSVAL_TO_INT(JS_ARGV(cx, vp)[1]);
-  if (argc >= 3) nClassId = JSVAL_TO_INT(JS_ARGV(cx, vp)[2]);
+  if (args.length() >= 2) nType = args[1].toInt32();
+  if (args.length() >= 3) nClassId = args[2].toInt32();
 
   CriticalRoom cRoom;
 
@@ -189,7 +190,7 @@ JSAPI_FUNC(my_getPresetUnit) {
           delete mypUnit;
           THROW_ERROR(cx, "Failed to create presetunit object");
         }
-        JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj));
+        args.rval().setObjectOrNull(obj);
         return JS_TRUE;
       }
     }
@@ -200,6 +201,7 @@ JSAPI_FUNC(my_getPresetUnit) {
       bAddedRoom = FALSE;
     }
   }
-  JS_SET_RVAL(cx, vp, JSVAL_FALSE);
+
+  args.rval().setBoolean(false);
   return JS_TRUE;
 }
