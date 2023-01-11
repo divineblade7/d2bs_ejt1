@@ -81,10 +81,10 @@ JSAPI_FUNC(my_clickMap) {
 
   {
     JSAutoRequest r(cx);
-    if (args[0].isInt32()) nClickType = static_cast<uint16_t>(args[0].toInt32());
-    if (args[1].isInt32() || args[1].isBoolean()) JS_ValueToUint16(cx, args[1], &nShift);
-    if (args[2].isInt32()) nX = static_cast<uint16_t>(args[2].toInt32());
-    if (args[3].isInt32()) nY = static_cast<uint16_t>(args[3].toInt32());
+    if (args.get(0).isInt32()) nClickType = static_cast<uint16_t>(args[0].toInt32());
+    if (args.get(1).isInt32() || args[1].isBoolean()) JS_ValueToUint16(cx, args[1], &nShift);
+    if (args.get(2).isInt32()) nX = static_cast<uint16_t>(args[2].toInt32());
+    if (args.get(3).isInt32()) nY = static_cast<uint16_t>(args[3].toInt32());
   }
 
   if (args.length() == 3 && args[0].isInt32() && (args[1].isInt32() || args[1].isBoolean()) && args[2].isObject() &&
