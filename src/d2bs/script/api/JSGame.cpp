@@ -405,7 +405,7 @@ JSAPI_FUNC(my_clickItem) {
   *p_D2CLIENT_CursorHoverY = 0xFFFFFFFF;
 
   args.rval().setUndefined();
-  if (args.length() == 1 && args[0].isObject()) {
+  if (args.length() == 1 && args[0].isObjectOrNull()) {
     pmyUnit = (myUnit*)JS_GetPrivate(args[0].toObjectOrNull());
 
     if (!pmyUnit || (pmyUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) {
@@ -427,8 +427,8 @@ JSAPI_FUNC(my_clickItem) {
     click(D2CLIENT_GetPlayerUnit(), D2CLIENT_GetPlayerUnit()->pInventory, pUnit->pItemData->BodyLocation);
     return JS_TRUE;
   } else if (args.length() == 2 && args[0].isInt32() && args[1].isInt32()) {
-    jsint nClickType = args[0].isInt32();
-    jsint nBodyLoc = args[1].isInt32();
+    jsint nClickType = args[0].toInt32();
+    jsint nBodyLoc = args[1].toInt32();
 
     if (nClickType == NULL) {
       clickequip* click = (clickequip*)*(DWORD*)(D2CLIENT_BodyClickTable + (4 * nBodyLoc));
@@ -447,7 +447,6 @@ JSAPI_FUNC(my_clickItem) {
 
         if (pMerc) {
           D2CLIENT_MercItemAction(0x61, nBodyLoc);
-          JS_SET_RVAL(cx, vp, JSVAL_TRUE);
           args.rval().setBoolean(true);
         }
       }
@@ -485,7 +484,6 @@ JSAPI_FUNC(my_clickItem) {
       if (pMerc)
         if (pUnit->pItemData && pUnit->pItemData->pOwner)
           if (pUnit->pItemData->pOwner->dwUnitId == pMerc->dwUnitId) {
-            JS_SET_RVAL(cx, vp, JSVAL_TRUE);
             args.rval().setBoolean(true);
             D2CLIENT_MercItemAction(0x61, pUnit->pItemData->BodyLocation);
           }
