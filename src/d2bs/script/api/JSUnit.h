@@ -48,7 +48,7 @@ struct myUnit {
   DWORD dwClassId;
   DWORD dwType;
   DWORD dwMode;
-  char szName[128];
+  char szName[128]{};
 };
 
 struct invUnit {
@@ -57,7 +57,7 @@ struct invUnit {
   DWORD dwClassId;
   DWORD dwType;
   DWORD dwMode;
-  char szName[128];
+  char szName[128]{};
   DWORD dwOwnerId;
   DWORD dwOwnerType;
 };
