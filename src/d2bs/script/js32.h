@@ -21,6 +21,7 @@ typedef int32_t jsint;
 typedef uint32_t jsuint;
 typedef uint16_t uint16;
 
+// Deprecate, removed in ESR45+
 #define NUM(x) #x
 #define NAME(line, v) (__FILE__ ":" NUM(line) " -> " #v)
 #define JS_AddValueRoot(cx, vp) JS_AddNamedValueRoot((cx), (vp), NAME(__LINE__, vp))
@@ -58,7 +59,7 @@ JSScript* JS_CompileFile(JSContext* cx, JSObject* globalObject, std::wstring fil
 #define JSPROP_STATIC_VAR (JSPROP_ENUMERATE | JSPROP_PERMANENT)
 #define JSPROP_STATIC JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY
 
-#define CLASS_CTOR(name) JSBool name##_ctor(JSContext* cx, uint argc, jsval* vp)
+#define FUNCTION_FLAGS JSFUN_STUB_GSOPS
 
 #define THROW_ERROR(cx, msg) \
   {                          \
@@ -73,13 +74,13 @@ JSScript* JS_CompileFile(JSContext* cx, JSObject* globalObject, std::wstring fil
     return JS_TRUE;                   \
   }
 
-#define JSAPI_FUNC(name) \
-  JSBool name##([[maybe_unused]] JSContext * cx, [[maybe_unused]] uint argc, [[maybe_unused]] jsval * vp)
-
-#define FUNCTION_FLAGS JSFUN_STUB_GSOPS
+#define CLASS_CTOR(name) JSBool name##_ctor(JSContext* cx, uint argc, jsval* vp)
 
 #define EMPTY_CTOR(name) \
   JSBool name##_ctor(JSContext* cx, uint, jsval*) { THROW_ERROR(cx, "Invalid Operation"); }
+
+#define JSAPI_FUNC(name) \
+  JSBool name##([[maybe_unused]] JSContext * cx, [[maybe_unused]] uint argc, [[maybe_unused]] jsval * vp)
 
 #define JSAPI_PROP(name)                                                                                              \
   JSBool name##([[maybe_unused]] JSContext * cx, [[maybe_unused]] JSHandleObject obj, [[maybe_unused]] JSHandleId id, \

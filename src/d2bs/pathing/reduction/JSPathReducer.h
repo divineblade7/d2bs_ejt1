@@ -75,12 +75,12 @@ class JSPathReducer : public PathReducer {
     return 0;
   }
   void MutatePoint(Point& pt, bool) {
-    jsval rval = JSVAL_FALSE;
+    JS::Value rval = JS::BooleanValue(false);
     jsval argv[] = {INT_TO_JSVAL(pt.first), INT_TO_JSVAL(pt.second)};
     JS_CallFunctionValue(cx, obj, mutate, 2, argv, &rval);
-    if (JSVAL_IS_OBJECT(rval)) {
-      JS_GetElement(cx, JSVAL_TO_OBJECT(rval), 0, &argv[0]);
-      JS_GetElement(cx, JSVAL_TO_OBJECT(rval), 1, &argv[1]);
+    if (rval.isObject()) {
+      JS_GetElement(cx, rval.toObjectOrNull(), 0, &argv[0]);
+      JS_GetElement(cx, rval.toObjectOrNull(), 1, &argv[1]);
       pt.first = JSVAL_TO_INT(argv[0]);
       pt.second = JSVAL_TO_INT(argv[1]);
     }
