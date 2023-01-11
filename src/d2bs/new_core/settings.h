@@ -23,18 +23,18 @@ class Profile {
   ProfileType type;
   union {
     wchar_t ip[16];
-    wchar_t username[48];
+    wchar_t username[48]{};
   };
-  wchar_t password[256];
-  wchar_t gateway[256];
-  wchar_t charname[24];
-  wchar_t diff;
+  wchar_t password[256]{};
+  wchar_t gateway[256]{};
+  wchar_t charname[24]{};
+  wchar_t diff = '\0';
 
   std::filesystem::path script_dir;
-  wchar_t szProfile[256];
-  wchar_t szStarter[_MAX_FNAME];
-  wchar_t szConsole[_MAX_FNAME];
-  wchar_t szDefault[_MAX_FNAME];
+  wchar_t szProfile[256]{};
+  wchar_t szStarter[_MAX_FNAME]{};
+  wchar_t szConsole[_MAX_FNAME]{};
+  wchar_t szDefault[_MAX_FNAME]{};
 
   DWORD login(const char** error);
 };
@@ -53,13 +53,13 @@ class Settings {
   unsigned int maxLoginTime;
   unsigned int maxCharTime;
 
-  wchar_t szProfile[256];
-  wchar_t szStarter[_MAX_FNAME];
-  wchar_t szConsole[_MAX_FNAME];
-  wchar_t szDefault[_MAX_FNAME];
+  wchar_t szProfile[256]{};
+  wchar_t szStarter[_MAX_FNAME]{};
+  wchar_t szConsole[_MAX_FNAME]{};
+  wchar_t szDefault[_MAX_FNAME]{};
 
   std::filesystem::path script_dir;
-  char szHosts[256];
+  char szHosts[256]{};
   DWORD dwGameTime;
   DWORD dwMaxGameTime;
   DWORD dwGameTimeout;
