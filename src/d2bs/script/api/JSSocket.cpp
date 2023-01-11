@@ -63,17 +63,19 @@ JSAPI_STRICT_PROP(socket_setProperty) {
 }
 
 JSAPI_FUNC(socket_open) {
-  if (argc < 2) {
-    JS_SET_RVAL(cx, vp, JSVAL_FALSE);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (args.length() < 2) {
+    args.rval().setBoolean(false);
     return JS_TRUE;
   }
   char* hostName = NULL;
   int32 port = 0;
-  if (JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) hostName = JS_EncodeStringToUTF8(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+  if (args[0].isString()) hostName = JS_EncodeStringToUTF8(cx, args[0].toString());
 
   if (!strstr(Vars.settings.szHosts, hostName)) THROW_ERROR(cx, "Invalid hostname specified");
 
-  if (JS_ValueToInt32(cx, JS_ARGV(cx, vp)[1], &port) == JS_FALSE) THROW_ERROR(cx, "Could not convert parameter 2");
+  if (JS_ValueToInt32(cx, args[1], &port) == JS_FALSE) THROW_ERROR(cx, "Could not convert parameter 2");
 
   WSADATA wsaData;
 
@@ -111,12 +113,16 @@ JSAPI_FUNC(socket_open) {
     WSACleanup();
     THROW_ERROR(cx, "Failed to define the socket object");
   }
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(res));
+
+  args.rval().setObjectOrNull(res);
   return JS_TRUE;
 }
 
 JSAPI_FUNC(socket_close) {
-  SocketData* sData = (SocketData*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &socket_class, NULL);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  auto self = args.thisv().toObjectOrNull();
+  SocketData* sData = (SocketData*)JS_GetInstancePrivate(cx, self, &socket_class, NULL);
 
   closesocket(sData->socket);
   WSACleanup();
@@ -125,10 +131,13 @@ JSAPI_FUNC(socket_close) {
 }
 
 JSAPI_FUNC(socket_send) {
-  SocketData* sData = (SocketData*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &socket_class, NULL);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  auto self = args.thisv().toObjectOrNull();
+  SocketData* sData = (SocketData*)JS_GetInstancePrivate(cx, self, &socket_class, NULL);
   char* msg = NULL;
 
-  if (JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) msg = JS_EncodeStringToUTF8(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+  if (args.get(0).isString()) msg = JS_EncodeStringToUTF8(cx, args[0].toString());
 
   send(sData->socket, msg, strlen(msg), 0);
 
@@ -136,7 +145,10 @@ JSAPI_FUNC(socket_send) {
 }
 
 JSAPI_FUNC(socket_read) {
-  SocketData* sData = (SocketData*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &socket_class, NULL);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  auto self = args.thisv().toObjectOrNull();
+  SocketData* sData = (SocketData*)JS_GetInstancePrivate(cx, self, &socket_class, NULL);
 
   char buffer[10000] = {0};
   std::string returnVal;
@@ -151,9 +163,7 @@ JSAPI_FUNC(socket_read) {
 
   } while (iResult > 10000);
 
-  wchar_t* wret = AnsiToUnicode(returnVal.c_str());
-  JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(JS_InternUCString(cx, wret)));
-  delete[] wret;
+  args.rval().setString(JS_InternString(cx, returnVal.c_str()));
   return JS_TRUE;
 }
 

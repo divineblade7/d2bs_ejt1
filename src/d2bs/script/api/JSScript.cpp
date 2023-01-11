@@ -47,7 +47,10 @@ JSAPI_PROP(script_getProperty) {
 }
 
 JSAPI_FUNC(script_getNext) {
-  Script* iterp = (Script*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &script_class, NULL);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  auto self = args.thisv().toObjectOrNull();
+  Script* iterp = (Script*)JS_GetInstancePrivate(cx, self, &script_class, NULL);
   auto lock = sScriptEngine->lock_script_list("scrip.getNext");
 
   auto& scripts = sScriptEngine->scripts();
@@ -58,99 +61,118 @@ JSAPI_FUNC(script_getNext) {
         break;
       }
       iterp = it->second;
-      JS_SetPrivate(JS_THIS_OBJECT(cx, vp), iterp);
+      JS_SetPrivate(self, iterp);
       JS_SET_RVAL(cx, vp, JSVAL_TRUE);
+      args.rval().setBoolean(true);
       return JS_TRUE;
     }
   }
 
-  JS_SET_RVAL(cx, vp, JSVAL_VOID);
+  args.rval().setUndefined();
   return JS_TRUE;
 }
 
 JSAPI_FUNC(script_stop) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
   JS_SET_RVAL(cx, vp, JSVAL_NULL);
-  Script* script = (Script*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &script_class, NULL);
+  auto self = args.thisv().toObjectOrNull();
+  Script* script = (Script*)JS_GetInstancePrivate(cx, self, &script_class, NULL);
   if (script->is_running()) {
     script->stop();
   }
 
+  args.rval().setNull();
   return JS_TRUE;
 }
 
 JSAPI_FUNC(script_pause) {
-  JS_SET_RVAL(cx, vp, JSVAL_NULL);
-  Script* script = (Script*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &script_class, NULL);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  auto self = args.thisv().toObjectOrNull();
+  Script* script = (Script*)JS_GetInstancePrivate(cx, self, &script_class, NULL);
 
   if (script->is_running()) {
     script->pause();
   }
 
+  args.rval().setNull();
   return JS_TRUE;
 }
 
 JSAPI_FUNC(script_resume) {
-  JS_SET_RVAL(cx, vp, JSVAL_NULL);
-  Script* script = (Script*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &script_class, NULL);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  auto self = args.thisv().toObjectOrNull();
+  Script* script = (Script*)JS_GetInstancePrivate(cx, self, &script_class, NULL);
 
   if (script->is_paused()) {
     script->resume();
   }
 
+  args.rval().setNull();
   return JS_TRUE;
 }
 
 JSAPI_FUNC(script_send) {
-  JS_SET_RVAL(cx, vp, JSVAL_NULL);
-  Script* script = (Script*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &script_class, NULL);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  args.rval().setNull();
+
+  auto self = args.thisv().toObjectOrNull();
+  Script* script = (Script*)JS_GetInstancePrivate(cx, self, &script_class, NULL);
   if (!script || !script->is_running()) {
     return JS_TRUE;
   }
 
-  std::vector<std::shared_ptr<JSAutoStructuredCloneBuffer>> args;
+  std::vector<std::shared_ptr<JSAutoStructuredCloneBuffer>> argv;
 
   for (uint i = 0; i < argc; ++i) {
-    args.push_back(std::make_shared<JSAutoStructuredCloneBuffer>());
-    args.back()->write(cx, JS_ARGV(cx, vp)[i]);
+    argv.push_back(std::make_shared<JSAutoStructuredCloneBuffer>());
+    argv.back()->write(cx, args[i]);
   }
 
-  auto evt = std::make_shared<BroadcastEvent>(script, args);
+  auto evt = std::make_shared<BroadcastEvent>(script, argv);
   script->FireEvent(evt);
 
   return JS_TRUE;
 }
 
 JSAPI_FUNC(script_join) {
-  JS_SET_RVAL(cx, vp, JSVAL_NULL);
-  Script* script = (Script*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &script_class, NULL);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  auto self = args.thisv().toObjectOrNull();
+  Script* script = (Script*)JS_GetInstancePrivate(cx, self, &script_class, NULL);
 
   script->join();
 
+  args.rval().setNull();
   return JS_TRUE;
 }
 
 JSAPI_FUNC(my_getScript) {
-  JS_SET_RVAL(cx, vp, JSVAL_NULL);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  args.rval().setNull();
+
   Script* iterp = NULL;
-  if (argc == 1 && JSVAL_IS_BOOLEAN(JS_ARGV(cx, vp)[0]) && JSVAL_TO_BOOLEAN(JS_ARGV(cx, vp)[0]) == JS_TRUE) {
+  if (args.length() == 1 && args[0].isBoolean() && args[0].toBoolean() == JS_TRUE) {
     iterp = (Script*)JS_GetContextPrivate(cx);
-  } else if (argc == 1 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0])) {
+  } else if (args.length() == 1 && args[0].isInt32()) {
     // loop over the Scripts in ScriptEngine and find the one with the right threadid
-    DWORD tid = (DWORD)JSVAL_TO_INT(JS_ARGV(cx, vp)[0]);
-    FindHelper args = {tid, NULL, NULL};
-    sScriptEngine->for_each(FindScriptByTid, &args);
-    if (args.script != NULL)
-      iterp = args.script;
+    DWORD tid = (DWORD)args[0].toInt32();
+    FindHelper argv = {tid, NULL, NULL};
+    sScriptEngine->for_each(FindScriptByTid, &argv);
+    if (argv.script != NULL)
+      iterp = argv.script;
     else
       return JS_TRUE;
-  } else if (argc == 1 && JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
-    wchar_t* name = _wcsdup(JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0])));
+  } else if (args.length() == 1 && args[0].isString()) {
+    wchar_t* name = _wcsdup(JS_GetStringCharsZ(cx, args[0].toString()));
     if (name) StringReplace(name, L'/', L'\\', wcslen(name));
-    FindHelper args = {0, name, NULL};
-    sScriptEngine->for_each(FindScriptByName, &args);
+    FindHelper argv = {0, name, NULL};
+    sScriptEngine->for_each(FindScriptByName, &argv);
     free(name);
-    if (args.script != NULL) {
-      iterp = args.script;
+    if (argv.script != NULL) {
+      iterp = argv.script;
     } else {
       return JS_TRUE;
     }
@@ -168,29 +190,32 @@ JSAPI_FUNC(my_getScript) {
   JSObject* res = BuildObject(cx, &script_class, script_methods, script_props, iterp);
 
   if (!res) THROW_ERROR(cx, "Failed to build the script object");
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(res));
-
+  
+  args.rval().setObjectOrNull(res);
   return JS_TRUE;
 }
+
 JSAPI_FUNC(my_getScripts) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
   DWORD dwArrayCount = NULL;
 
   JS::RootedObject pReturnArray(cx, JS_NewArrayObject(cx, 0, NULL));
-  JS_BeginRequest(cx);
+  JSAutoRequest r(cx);
   auto lock = sScriptEngine->lock_script_list("getScripts");
 
   auto& scripts = sScriptEngine->scripts();
   for (const auto& [_, script] : scripts) {
     JSObject* res = BuildObject(cx, &script_class, script_methods, script_props, script);
-    jsval a = OBJECT_TO_JSVAL(res);
+    jsval a = JS::ObjectOrNullValue(res);
     JS_SetElement(cx, pReturnArray, dwArrayCount, &a);
     dwArrayCount++;
   }
 
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(pReturnArray));
-  JS_EndRequest(cx);
+  args.rval().setObjectOrNull(pReturnArray);
   return JS_TRUE;
 }
+
 bool __fastcall FindScriptByName(Script* script, FindHelper* helper) {
   const wchar_t* fname = script->filename_short();
   if (_wcsicmp(fname, helper->name) == 0) {

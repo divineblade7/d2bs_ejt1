@@ -15,17 +15,19 @@ void hook_finalize(JSFreeOp*, JSObject* obj) {
 }
 
 JSAPI_FUNC(hook_remove) {
-  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  auto self = args.thisv().toObjectOrNull();
   Genhook::EnterGlobalSection();
-  Genhook* hook = (Genhook*)JS_GetPrivate(obj);
+  Genhook* hook = (Genhook*)JS_GetPrivate(self);
   if (hook) {
     // hook->SetIsVisible(false);
     delete hook;
   }
 
-  JS_SetPrivate(obj, NULL);
+  JS_SetPrivate(self, NULL);
   // JS_ClearScope(cx, obj);
-  JS_ValueToObject(cx, JSVAL_VOID, &obj);
+  JS_ValueToObject(cx, JS::UndefinedValue(), &self);
   Genhook::LeaveGlobalSection();
 
   return JS_TRUE;
@@ -34,6 +36,8 @@ JSAPI_FUNC(hook_remove) {
 // Function to create a frame which gets called on a "new Frame ()"
 // Parameters: x, y, xsize, ysize, alignment, automap, onClick, onHover
 JSAPI_FUNC(frame_ctor) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
   Script* script = (Script*)JS_GetContextPrivate(cx);
 
   uint x = 0, y = 0, x2 = 0, y2 = 0;
@@ -41,14 +45,14 @@ JSAPI_FUNC(frame_ctor) {
   bool automap = false;
   jsval click = JSVAL_VOID, hover = JSVAL_VOID;
 
-  if (argc > 0 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0])) x = JSVAL_TO_INT(JS_ARGV(cx, vp)[0]);
-  if (argc > 1 && JSVAL_IS_INT(JS_ARGV(cx, vp)[1])) y = JSVAL_TO_INT(JS_ARGV(cx, vp)[1]);
-  if (argc > 2 && JSVAL_IS_INT(JS_ARGV(cx, vp)[2])) x2 = JSVAL_TO_INT(JS_ARGV(cx, vp)[2]);
-  if (argc > 3 && JSVAL_IS_INT(JS_ARGV(cx, vp)[3])) y2 = JSVAL_TO_INT(JS_ARGV(cx, vp)[3]);
-  if (argc > 4 && JSVAL_IS_INT(JS_ARGV(cx, vp)[4])) align = (Align)JSVAL_TO_INT(JS_ARGV(cx, vp)[4]);
-  if (argc > 5 && JSVAL_IS_BOOLEAN(JS_ARGV(cx, vp)[5])) automap = !!JSVAL_TO_BOOLEAN(JS_ARGV(cx, vp)[5]);
-  if (argc > 6 && JSVAL_IS_FUNCTION(cx, JS_ARGV(cx, vp)[6])) click = JS_ARGV(cx, vp)[6];
-  if (argc > 7 && JSVAL_IS_FUNCTION(cx, JS_ARGV(cx, vp)[7])) hover = JS_ARGV(cx, vp)[7];
+  if (args.get(0).isInt32()) x = args[0].toInt32();
+  if (args.get(1).isInt32()) y = args[1].toInt32();
+  if (args.get(2).isInt32()) x2 = args[2].toInt32();
+  if (args.get(3).isInt32()) y2 = args[3].toInt32();
+  if (args.get(4).isInt32()) align = (Align)args[4].toInt32();
+  if (args.get(5).isBoolean()) automap = args[5].toBoolean();
+  if (JSVAL_IS_FUNCTION(cx, args.get(6))) click = args[6];
+  if (JSVAL_IS_FUNCTION(cx, args.get(7))) hover = args[7];
 
   JSObject* hook = BuildObject(cx, &frame_class, frame_methods, frame_props);
   if (!hook) THROW_ERROR(cx, "Failed to create frame object");
@@ -62,7 +66,7 @@ JSAPI_FUNC(frame_ctor) {
   pFrameHook->SetClickHandler(click);
   pFrameHook->SetHoverHandler(hover);
 
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(hook));
+  args.rval().setObjectOrNull(hook);
 
   return JS_TRUE;
 }
@@ -147,6 +151,8 @@ JSAPI_STRICT_PROP(frame_setProperty) {
 
 // Parameters: x, y, xsize, ysize, color, opacity, alignment, automap, onClick, onHover
 JSAPI_FUNC(box_ctor) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
   Script* script = (Script*)JS_GetContextPrivate(cx);
 
   ScreenhookState state = (script->type() == ScriptType::OutOfGame) ? OOG : IG;
@@ -156,16 +162,16 @@ JSAPI_FUNC(box_ctor) {
   bool automap = false;
   jsval click = JSVAL_VOID, hover = JSVAL_VOID;
 
-  if (argc > 0 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0])) x = JSVAL_TO_INT(JS_ARGV(cx, vp)[0]);
-  if (argc > 1 && JSVAL_IS_INT(JS_ARGV(cx, vp)[1])) y = JSVAL_TO_INT(JS_ARGV(cx, vp)[1]);
-  if (argc > 2 && JSVAL_IS_INT(JS_ARGV(cx, vp)[2])) x2 = JSVAL_TO_INT(JS_ARGV(cx, vp)[2]);
-  if (argc > 3 && JSVAL_IS_INT(JS_ARGV(cx, vp)[3])) y2 = JSVAL_TO_INT(JS_ARGV(cx, vp)[3]);
-  if (argc > 4 && JSVAL_IS_INT(JS_ARGV(cx, vp)[4])) color = (ushort)JSVAL_TO_INT(JS_ARGV(cx, vp)[4]);
-  if (argc > 5 && JSVAL_IS_INT(JS_ARGV(cx, vp)[5])) opacity = (ushort)JSVAL_TO_INT(JS_ARGV(cx, vp)[5]);
-  if (argc > 6 && JSVAL_IS_INT(JS_ARGV(cx, vp)[6])) align = (Align)JSVAL_TO_INT(JS_ARGV(cx, vp)[6]);
-  if (argc > 7 && JSVAL_IS_BOOLEAN(JS_ARGV(cx, vp)[7])) automap = !!JSVAL_TO_BOOLEAN(JS_ARGV(cx, vp)[7]);
-  if (argc > 8 && JSVAL_IS_FUNCTION(cx, JS_ARGV(cx, vp)[8])) click = JS_ARGV(cx, vp)[8];
-  if (argc > 9 && JSVAL_IS_FUNCTION(cx, JS_ARGV(cx, vp)[9])) hover = JS_ARGV(cx, vp)[9];
+  if (args.get(0).isInt32()) x = args[0].toInt32();
+  if (args.get(1).isInt32()) y = args[1].toInt32();
+  if (args.get(2).isInt32()) x2 = args[2].toInt32();
+  if (args.get(3).isInt32()) y2 = args[3].toInt32();
+  if (args.get(4).isInt32()) color = (ushort)args[4].toInt32();
+  if (args.get(5).isInt32()) opacity = (ushort)args[5].toInt32();
+  if (args.get(6).isInt32()) align = (Align)args[6].toInt32();
+  if (args.get(7).isBoolean()) automap = args[7].toBoolean();
+  if (JSVAL_IS_FUNCTION(cx, args.get(8))) click = args[8];
+  if (JSVAL_IS_FUNCTION(cx, args.get(9))) hover = args[9];
 
   JSObject* hook = BuildObject(cx, &box_class, box_methods, box_props);
   if (!hook) THROW_ERROR(cx, "Failed to create box object");
@@ -178,7 +184,7 @@ JSAPI_FUNC(box_ctor) {
   pBoxHook->SetClickHandler(click);
   pBoxHook->SetHoverHandler(hover);
 
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(hook));
+  args.rval().setObjectOrNull(hook);
 
   return JS_TRUE;
 }
@@ -274,6 +280,8 @@ JSAPI_STRICT_PROP(box_setProperty) {
 
 // Parameters: x, y, x2, y2, color, automap, click, hover
 JSAPI_FUNC(line_ctor) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
   Script* script = (Script*)JS_GetContextPrivate(cx);
 
   ScreenhookState state = (script->type() == ScriptType::OutOfGame) ? OOG : IG;
@@ -282,14 +290,14 @@ JSAPI_FUNC(line_ctor) {
   bool automap = false;
   jsval click = JSVAL_VOID, hover = JSVAL_VOID;
 
-  if (argc > 0 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0])) x = JSVAL_TO_INT(JS_ARGV(cx, vp)[0]);
-  if (argc > 1 && JSVAL_IS_INT(JS_ARGV(cx, vp)[1])) y = JSVAL_TO_INT(JS_ARGV(cx, vp)[1]);
-  if (argc > 2 && JSVAL_IS_INT(JS_ARGV(cx, vp)[2])) x2 = JSVAL_TO_INT(JS_ARGV(cx, vp)[2]);
-  if (argc > 3 && JSVAL_IS_INT(JS_ARGV(cx, vp)[3])) y2 = JSVAL_TO_INT(JS_ARGV(cx, vp)[3]);
-  if (argc > 4 && JSVAL_IS_INT(JS_ARGV(cx, vp)[4])) color = (ushort)JSVAL_TO_INT(JS_ARGV(cx, vp)[4]);
-  if (argc > 5 && JSVAL_IS_BOOLEAN(JS_ARGV(cx, vp)[5])) automap = !!JSVAL_TO_BOOLEAN(JS_ARGV(cx, vp)[5]);
-  if (argc > 6 && JSVAL_IS_FUNCTION(cx, JS_ARGV(cx, vp)[6])) click = JS_ARGV(cx, vp)[6];
-  if (argc > 7 && JSVAL_IS_FUNCTION(cx, JS_ARGV(cx, vp)[7])) hover = JS_ARGV(cx, vp)[7];
+  if (args.get(0).isInt32()) x = args[0].toInt32();
+  if (args.get(1).isInt32()) y = args[1].toInt32();
+  if (args.get(2).isInt32()) x2 = args[2].toInt32();
+  if (args.get(3).isInt32()) y2 = args[3].toInt32();
+  if (args.get(4).isInt32()) color = (ushort)args[4].toInt32();
+  if (args.get(5).isBoolean()) automap = args[5].toBoolean();
+  if (JSVAL_IS_FUNCTION(cx, args.get(6))) click = args[6];
+  if (JSVAL_IS_FUNCTION(cx, args.get(7))) hover = args[7];
 
   JSObject* hook = BuildObject(cx, &line_class, line_methods, line_props);
   if (!hook) THROW_ERROR(cx, "Failed to create line object");
@@ -302,7 +310,7 @@ JSAPI_FUNC(line_ctor) {
   pLineHook->SetClickHandler(click);
   pLineHook->SetHoverHandler(hover);
 
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(hook));
+  args.rval().setObjectOrNull(hook);
 
   return JS_TRUE;
 }
@@ -387,6 +395,8 @@ JSAPI_STRICT_PROP(line_setProperty) {
 
 // Parameters: text, x, y, color, font, align, automap, onHover, onText
 JSAPI_FUNC(text_ctor) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
   Script* script = (Script*)JS_GetContextPrivate(cx);
 
   ScreenhookState state = (script->type() == ScriptType::OutOfGame) ? OOG : IG;
@@ -397,17 +407,16 @@ JSAPI_FUNC(text_ctor) {
   jsval click = JSVAL_VOID, hover = JSVAL_VOID;
   const wchar_t* szText = L"";
 
-  if (argc > 0 && JSVAL_IS_STRING(JS_ARGV(cx, vp)[0]))
-    szText = JS_GetStringCharsZ(cx, JS_ValueToString(cx, JS_ARGV(cx, vp)[0]));
+  if (args.get(0).isString()) szText = JS_GetStringCharsZ(cx, args[0].toString());
   if (!szText) return JS_TRUE;
-  if (argc > 1 && JSVAL_IS_INT(JS_ARGV(cx, vp)[1])) x = JSVAL_TO_INT(JS_ARGV(cx, vp)[1]);
-  if (argc > 2 && JSVAL_IS_INT(JS_ARGV(cx, vp)[2])) y = JSVAL_TO_INT(JS_ARGV(cx, vp)[2]);
-  if (argc > 3 && JSVAL_IS_INT(JS_ARGV(cx, vp)[3])) color = (ushort)JSVAL_TO_INT(JS_ARGV(cx, vp)[3]);
-  if (argc > 4 && JSVAL_IS_INT(JS_ARGV(cx, vp)[4])) font = (ushort)JSVAL_TO_INT(JS_ARGV(cx, vp)[4]);
-  if (argc > 5 && JSVAL_IS_INT(JS_ARGV(cx, vp)[5])) align = (Align)JSVAL_TO_INT(JS_ARGV(cx, vp)[5]);
-  if (argc > 6 && JSVAL_IS_BOOLEAN(JS_ARGV(cx, vp)[6])) automap = !!JSVAL_TO_BOOLEAN(JS_ARGV(cx, vp)[6]);
-  if (argc > 7 && JSVAL_IS_FUNCTION(cx, JS_ARGV(cx, vp)[7])) click = JS_ARGV(cx, vp)[7];
-  if (argc > 8 && JSVAL_IS_FUNCTION(cx, JS_ARGV(cx, vp)[8])) hover = JS_ARGV(cx, vp)[8];
+  if (args.get(1).isInt32()) x = args[1].toInt32();
+  if (args.get(2).isInt32()) y = args[2].toInt32();
+  if (args.get(3).isInt32()) color = (ushort)args[3].toInt32();
+  if (args.get(4).isInt32()) font = (ushort)args[4].toInt32();
+  if (args.get(5).isInt32()) align = (Align)args[5].toInt32();
+  if (args.get(6).isBoolean()) automap = args[6].toBoolean();
+  if (JSVAL_IS_FUNCTION(cx, args.get(7))) click = args[7];
+  if (JSVAL_IS_FUNCTION(cx, args.get(8))) hover = args[8];
 
   JSObject* hook = BuildObject(cx, &text_class, text_methods, text_props);
   if (!hook) THROW_ERROR(cx, "Failed to create text object");
@@ -420,7 +429,7 @@ JSAPI_FUNC(text_ctor) {
   pTextHook->SetClickHandler(click);
   pTextHook->SetHoverHandler(hover);
 
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(hook));
+  args.rval().setObjectOrNull(hook);
 
   return JS_TRUE;
 }
@@ -515,6 +524,8 @@ JSAPI_STRICT_PROP(text_setProperty) {
 
 // Parameters: image, x, y, color, align, automap, onHover, onimage
 JSAPI_FUNC(image_ctor) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
   Script* script = (Script*)JS_GetContextPrivate(cx);
 
   ScreenhookState state = (script->type() == ScriptType::OutOfGame) ? OOG : IG;
@@ -526,16 +537,15 @@ JSAPI_FUNC(image_ctor) {
   const wchar_t* szText = L"";
   wchar_t path[_MAX_FNAME + _MAX_PATH];
 
-  if (argc > 0 && JSVAL_IS_STRING(JS_ARGV(cx, vp)[0]))
-    szText = JS_GetStringCharsZ(cx, JS_ValueToString(cx, JS_ARGV(cx, vp)[0]));
+  if (args.get(0).isString()) szText = JS_GetStringCharsZ(cx, args[0].toString());
   if (!szText) return JS_TRUE;
-  if (argc > 1 && JSVAL_IS_INT(JS_ARGV(cx, vp)[1])) x = JSVAL_TO_INT(JS_ARGV(cx, vp)[1]);
-  if (argc > 2 && JSVAL_IS_INT(JS_ARGV(cx, vp)[2])) y = JSVAL_TO_INT(JS_ARGV(cx, vp)[2]);
-  if (argc > 3 && JSVAL_IS_INT(JS_ARGV(cx, vp)[3])) color = (ushort)JSVAL_TO_INT(JS_ARGV(cx, vp)[3]);
-  if (argc > 4 && JSVAL_IS_INT(JS_ARGV(cx, vp)[4])) align = (Align)JSVAL_TO_INT(JS_ARGV(cx, vp)[4]);
-  if (argc > 5 && JSVAL_IS_BOOLEAN(JS_ARGV(cx, vp)[5])) automap = !!JSVAL_TO_BOOLEAN(JS_ARGV(cx, vp)[5]);
-  if (argc > 6 && JSVAL_IS_FUNCTION(cx, JS_ARGV(cx, vp)[6])) click = JS_ARGV(cx, vp)[6];
-  if (argc > 7 && JSVAL_IS_FUNCTION(cx, JS_ARGV(cx, vp)[7])) hover = JS_ARGV(cx, vp)[7];
+  if (args.get(1).isInt32()) x = args[1].toInt32();
+  if (args.get(2).isInt32()) y = args[2].toInt32();
+  if (args.get(3).isInt32()) color = (ushort)args[3].toInt32();
+  if (args.get(4).isInt32()) align = (Align)args[4].toInt32();
+  if (args.get(5).isBoolean()) automap = args[5].toBoolean();
+  if (JSVAL_IS_FUNCTION(cx, args.get(6))) click = args[6];
+  if (JSVAL_IS_FUNCTION(cx, args.get(7))) hover = args[7];
 
   if (isValidPath(path))
     swprintf_s(path, _countof(path), L"%s", szText);
@@ -553,7 +563,7 @@ JSAPI_FUNC(image_ctor) {
   pImageHook->SetClickHandler(click);
   pImageHook->SetHoverHandler(hover);
 
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(hook));
+  args.rval().setObjectOrNull(hook);
 
   return JS_TRUE;
 }
@@ -633,45 +643,46 @@ JSAPI_STRICT_PROP(image_setProperty) {
 }
 
 JSAPI_FUNC(screenToAutomap) {
-  if (argc == 1) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (args.length() == 1) {
     // the arg must be an object with an x and a y that we can convert
-    if (JSVAL_IS_OBJECT(JS_ARGV(cx, vp)[0])) {
+    if (args[0].isObject()) {
       // get the params
-      JSObject* arg = JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[0]);
+      JSObject* arg = args[0].toObjectOrNull();
       jsval x, y;
       if (JS_GetProperty(cx, arg, "x", &x) == JS_FALSE || JS_GetProperty(cx, arg, "y", &y) == JS_FALSE)
         THROW_ERROR(cx, "Failed to get x and/or y values");
-      if (!JSVAL_IS_INT(x) || !JSVAL_IS_INT(y))
-        THROW_ERROR(cx, "Input has an x or y, but they aren't the correct type!");
+      if (!x.isInt32() || !y.isInt32()) THROW_ERROR(cx, "Input has an x or y, but they aren't the correct type!");
       int32 ix, iy;
       if (JS_ValueToInt32(cx, x, &ix) == JS_FALSE || JS_ValueToInt32(cx, y, &iy))
         THROW_ERROR(cx, "Failed to convert x and/or y values");
       // convert the values
       POINT result = ScreenToAutomap(ix, iy);
-      x = INT_TO_JSVAL(result.x);
-      y = INT_TO_JSVAL(result.y);
+      x = JS::Int32Value(result.x);
+      y = JS::Int32Value(result.y);
       JSObject* res = JS_NewObject(cx, NULL, NULL, NULL);
       jsval* argv = JS_ARGV(cx, vp);
       if (JS_SetProperty(cx, res, "x", &argv[0]) == JS_FALSE || JS_SetProperty(cx, res, "y", &argv[1]) == JS_FALSE)
         THROW_ERROR(cx, "Failed to set x and/or y values");
-      JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(res));
+      args.rval().setObjectOrNull(res);
     } else
       THROW_ERROR(cx, "Invalid object specified to screenToAutomap");
-  } else if (argc == 2) {
+  } else if (args.length() == 2) {
     // the args must be ints
-    if (JSVAL_IS_INT(JS_ARGV(cx, vp)[0]) && JSVAL_IS_INT(JS_ARGV(cx, vp)[1])) {
+    if (args[0].isInt32() && args[1].isInt32()) {
       int32 ix, iy;
-      jsval* argv = JS_ARGV(cx, vp);
+      jsval* argv = args.array();
       if (JS_ValueToInt32(cx, argv[0], &ix) == JS_FALSE || JS_ValueToInt32(cx, argv[1], &iy) == JS_FALSE)
         THROW_ERROR(cx, "Failed to convert x and/or y values");
       // convert the values
       POINT result = ScreenToAutomap(ix, iy);
-      argv[0] = INT_TO_JSVAL(result.x);
-      argv[1] = INT_TO_JSVAL(result.y);
+      argv[0] = JS::Int32Value(result.x);
+      argv[1] = JS::Int32Value(result.y);
       JSObject* res = JS_NewObject(cx, NULL, NULL, NULL);
       if (JS_SetProperty(cx, res, "x", &argv[0]) == JS_FALSE || JS_SetProperty(cx, res, "y", &argv[1]) == JS_FALSE)
         THROW_ERROR(cx, "Failed to set x and/or y values");
-      JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(res));
+      args.rval().setObjectOrNull(res);
     } else
       THROW_ERROR(cx, "screenToAutomap expects two arguments to be two integers");
   } else
@@ -680,57 +691,50 @@ JSAPI_FUNC(screenToAutomap) {
 }
 
 JSAPI_FUNC(automapToScreen) {
-  jsval* argv = JS_ARGV(cx, vp);
-  if (argc == 1) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (args.length() == 1) {
     // the arg must be an object with an x and a y that we can convert
-    if (JSVAL_IS_OBJECT(argv[0])) {
+    if (args[0].isObject()) {
       // get the params
-      JSObject* arg = JSVAL_TO_OBJECT(argv[0]);
+      JSObject* arg = args[0].toObjectOrNull();
       jsval x, y;
       if (JS_GetProperty(cx, arg, "x", &x) == JS_FALSE || JS_GetProperty(cx, arg, "y", &y) == JS_FALSE)
         THROW_ERROR(cx, "Failed to get x and/or y values");
-      if (!JSVAL_IS_INT(x) || !JSVAL_IS_INT(y))
-        THROW_ERROR(cx, "Input has an x or y, but they aren't the correct type!");
+      if (!x.isInt32() || !y.isInt32()) THROW_ERROR(cx, "Input has an x or y, but they aren't the correct type!");
       int32 ix, iy;
-      JS_BeginRequest(cx);
+      JSAutoRequest r(cx);
       if (JS_ValueToInt32(cx, x, &ix) == JS_FALSE || JS_ValueToInt32(cx, y, &iy)) {
-        JS_EndRequest(cx);
         THROW_ERROR(cx, "Failed to convert x and/or y values");
       }
-      JS_EndRequest(cx);
       // convert the values
       POINT result = {ix, iy};
       AutomapToScreen(&result);
-      x = INT_TO_JSVAL(ix);
-      y = INT_TO_JSVAL(iy);
-      JS_BeginRequest(cx);
+      x = JS::Int32Value(ix);
+      y = JS::Int32Value(iy);
       if (JS_SetProperty(cx, arg, "x", &x) == JS_FALSE || JS_SetProperty(cx, arg, "y", &y) == JS_FALSE) {
-        JS_EndRequest(cx);
         THROW_ERROR(cx, "Failed to set x and/or y values");
       }
-      JS_EndRequest(cx);
-      JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(arg));
+      args.rval().setObjectOrNull(arg);
     } else
       THROW_ERROR(cx, "Invalid object specified to automapToScreen");
-  } else if (argc == 2) {
+  } else if (args.length() == 2) {
     // the args must be ints
-    if (JSVAL_IS_INT(argv[0]) && JSVAL_IS_INT(argv[1])) {
+    if (args[0].isInt32() && args[1].isInt32()) {
       int32 ix, iy;
-      JS_BeginRequest(cx);
-      if (JS_ValueToInt32(cx, argv[0], &ix) == JS_FALSE || JS_ValueToInt32(cx, argv[1], &iy) == JS_FALSE) {
-        JS_EndRequest(cx);
+      JSAutoRequest r(cx);
+      if (JS_ValueToInt32(cx, args[0], &ix) == JS_FALSE || JS_ValueToInt32(cx, args[1], &iy) == JS_FALSE) {
         THROW_ERROR(cx, "Failed to convert x and/or y values");
       }
-      JS_EndRequest(cx);
       // convert the values
       POINT result = {ix, iy};
       AutomapToScreen(&result);
-      argv[0] = INT_TO_JSVAL(result.x);
-      argv[1] = INT_TO_JSVAL(result.y);
+      args[0].setInt32(result.x);
+      args[1].setInt32(result.y);
       JSObject* res = JS_NewObject(cx, NULL, NULL, NULL);
-      if (JS_SetProperty(cx, res, "x", &argv[0]) == JS_FALSE || JS_SetProperty(cx, res, "y", &argv[1]) == JS_FALSE)
+      if (JS_SetProperty(cx, res, "x", &args[0]) == JS_FALSE || JS_SetProperty(cx, res, "y", &args[1]) == JS_FALSE)
         THROW_ERROR(cx, "Failed to set x and/or y values");
-      JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(res));
+      args.rval().setObjectOrNull(res);
     } else
       THROW_ERROR(cx, "automapToScreen expects two arguments to be two integers");
   } else

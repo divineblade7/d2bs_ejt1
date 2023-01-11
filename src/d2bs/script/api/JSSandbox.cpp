@@ -156,24 +156,33 @@ void sandbox_finalize(JSFreeOp*, JSObject* obj) {
 }
 
 JSAPI_FUNC(sandbox_eval) {
-  if (argc > 0 && JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
-    sandbox* box = (sandbox*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &sandbox_class, NULL);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (args.length() > 0 && args[0].isString()) {
+    auto self = args.thisv().toObjectOrNull();
+    sandbox* box = (sandbox*)JS_GetInstancePrivate(cx, self, &sandbox_class, NULL);
     if (!box) THROW_ERROR(cx, "Invalid execution object!");
-    char* code = JS_EncodeStringToUTF8(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+    char* code = JS_EncodeStringToUTF8(cx, args[0].toString());
     jsval result;
     if (JS_BufferIsCompilableUnit(box->context, box->innerObj, code, strlen(code)) &&
-        JS_EvaluateScript(box->context, box->innerObj, code, strlen(code), "sandbox", 0, &result))
-      JS_SET_RVAL(cx, vp, result);
-  } else
+        JS_EvaluateScript(box->context, box->innerObj, code, strlen(code), "sandbox", 0, &result)) {
+      args.rval().set(result);
+    }
+  } else {
     THROW_ERROR(cx, "Invalid parameter, string expected");
+  }
+
   return JS_TRUE;
 }
 
 JSAPI_FUNC(sandbox_include) {
-  JS_SET_RVAL(cx, vp, JSVAL_FALSE);
-  if (argc > 0 && JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
-    sandbox* box = (sandbox*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &sandbox_class, NULL);
-    const wchar_t* file = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  args.rval().setBoolean(false);
+
+  if (args.length() > 0 && args[0].isString()) {
+    auto self = args.thisv().toObjectOrNull();
+    sandbox* box = (sandbox*)JS_GetInstancePrivate(cx, self, &sandbox_class, NULL);
+    const wchar_t* file = JS_GetStringCharsZ(cx, args[0].toString());
     if (file && wcslen(file) <= _MAX_FNAME && box) {
       auto path = (Vars.settings.script_dir / "libs" / file).make_preferred().wstring();
       if (box->list.count(std::wstring(file)) == -1) {
@@ -182,7 +191,7 @@ JSAPI_FUNC(sandbox_include) {
           jsval result;
           if (JS_ExecuteScript(box->context, box->innerObj, tmp, &result)) {
             box->list[file] = true;
-            JS_SET_RVAL(cx, vp, result);
+            args.rval().set(result);
           }
           // nolonger needed?
           // JS_DestroyScript(cx, tmp);
@@ -190,20 +199,26 @@ JSAPI_FUNC(sandbox_include) {
         // JS_RemoveScriptRoot(cx, &tmp);
       }
     }
-  } else
+  } else {
     THROW_ERROR(cx, "Invalid parameter, file expected");
+  }
 
   return JS_TRUE;
 }
 
 JSAPI_FUNC(sandbox_isIncluded) {
-  sandbox* box = (sandbox*)JS_GetInstancePrivate(cx, JS_THIS_OBJECT(cx, vp), &sandbox_class, NULL);
-  if (argc > 0 && JSVAL_IS_STRING(JS_ARGV(cx, vp)[0]) && box) {
-    const wchar_t* file = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  auto self = args.thisv().toObjectOrNull();
+  sandbox* box = (sandbox*)JS_GetInstancePrivate(cx, self, &sandbox_class, NULL);
+  if (args.length() > 0 && args[0].isString() && box) {
+    const wchar_t* file = JS_GetStringCharsZ(cx, args[0].toString());
     auto path = (Vars.settings.script_dir / "libs" / file).make_preferred().wstring();
-    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(!!box->list.count(path)));
-  } else
+    args.rval().setBoolean(box->list.count(path));
+  } else {
     THROW_ERROR(cx, "Invalid parameter, file expected");
+  }
+
   return JS_TRUE;
 }
 

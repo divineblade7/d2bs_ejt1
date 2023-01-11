@@ -43,6 +43,7 @@ JSAPI_FUNC(my_copyUnit) {
           THROW_ERROR(cx, "Couldn't copy unit");
         }
 
+        JS_SetPrivate(jsunit, lpUnit);
         args.rval().setObjectOrNull(jsunit);
       }
     } else if (myPrivate->dwPrivateType == PRIVATE_ITEM) {
@@ -58,6 +59,7 @@ JSAPI_FUNC(my_copyUnit) {
           THROW_ERROR(cx, "Couldn't copy unit");
         }
 
+        JS_SetPrivate(jsunit, lpUnit);
         args.rval().setObjectOrNull(jsunit);
       }
     }
