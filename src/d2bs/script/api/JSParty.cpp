@@ -56,55 +56,54 @@ JSAPI_PROP(party_getProperty) {
 }
 
 JSAPI_FUNC(party_getNext) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  RosterUnit* pUnit = (RosterUnit*)JS_GetPrivate(JS_THIS_OBJECT(cx, vp));
+  auto self = args.thisv();
+  RosterUnit* pUnit = (RosterUnit*)JS_GetPrivate(self.toObjectOrNull());
 
   if (!pUnit) {
-    JS_SET_RVAL(cx, vp, JSVAL_FALSE);
+    args.rval().setBoolean(false);
     return JS_TRUE;
   }
 
   pUnit = pUnit->pNext;
 
   if (pUnit) {
-    JS_SetPrivate(JS_THIS_OBJECT(cx, vp), pUnit);
-    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(JS_THIS_OBJECT(cx, vp)));
+    JS_SetPrivate(self.toObjectOrNull(), pUnit);
+    args.rval().setObjectOrNull(self.toObjectOrNull());
   } else {
-    // JSObject* obj = JS_THIS_OBJECT(cx, vp);
-    //		JS_ClearScope(cx, obj);
-    // if(JS_ValueToObject(cx, JSVAL_NULL, &obj))
-    JS_SET_RVAL(cx, vp, JSVAL_FALSE);
+    args.rval().setBoolean(false);
   }
 
   return JS_TRUE;
 }
 
 JSAPI_FUNC(my_getParty) {
-  if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
 
-  JS_SET_RVAL(cx, vp, JSVAL_VOID);
+  if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
   RosterUnit* pUnit = *p_D2CLIENT_PlayerUnitList;
 
   if (!pUnit) return JS_TRUE;
 
-  if (argc == 1) {
+  if (args.length() == 1) {
     UnitAny* inUnit = NULL;
     char* nPlayerName = nullptr;
     uint32 nPlayerId = NULL;
 
-    if (JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
-      nPlayerName = JS_EncodeStringToUTF8(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
-    } else if (JSVAL_IS_INT(JS_ARGV(cx, vp)[0])) {
-      JS_BeginRequest(cx);
-      if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "u", &nPlayerId)) {
-        JS_EndRequest(cx);
+    if (args[0].isString()) {
+      nPlayerName = JS_EncodeStringToUTF8(cx, args[0].toString());
+    } else if (args[0].isInt32()) {
+      JSAutoRequest r(cx);
+      if (!JS_ConvertArguments(cx, argc, args.array(), "u", &nPlayerId)) {
         THROW_ERROR(cx, "Unable to get ID");
       }
-      JS_EndRequest(cx);
-    } else if (JSVAL_IS_OBJECT(JS_ARGV(cx, vp)[0])) {
-      myUnit* lpUnit = (myUnit*)JS_GetPrivate(JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[0]));
+    } else if (args[0].isObject()) {
+      myUnit* lpUnit = (myUnit*)JS_GetPrivate(args[0].toObjectOrNull());
 
       if (!lpUnit) return JS_TRUE;
 
@@ -139,7 +138,7 @@ JSAPI_FUNC(my_getParty) {
   JSObject* jsUnit = BuildObject(cx, &party_class, party_methods, party_props, pUnit);
   if (!jsUnit) return JS_TRUE;
 
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(jsUnit));
+  args.rval().setObjectOrNull(jsUnit);
 
   return JS_TRUE;
 }
