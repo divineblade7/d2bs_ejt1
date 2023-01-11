@@ -7,19 +7,21 @@
 #include "d2bs/variables.h"
 
 JSAPI_FUNC(my_login) {
-  JS_SET_RVAL(cx, vp, JSVAL_VOID);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  args.rval().setUndefined();
   if (ClientState() != ClientStateMenu) return JS_TRUE;
 
   const wchar_t* name = NULL;
   const char* error;
 
-  if (!JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
+  if (!args[0].isString()) {
     if (Vars.settings.szProfile != NULL) {
       name = Vars.settings.szProfile;
     } else
       THROW_ERROR(cx, "Invalid profile specified!");
   } else {
-    name = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+    name = JS_GetStringCharsZ(cx, args[0].toString());
     wcscpy_s(Vars.settings.szProfile, 256, name);
   }
 
@@ -33,33 +35,35 @@ JSAPI_FUNC(my_login) {
 }
 
 JSAPI_FUNC(my_selectChar) {
-  JS_SET_RVAL(cx, vp, JSVAL_NULL);
-  if (argc != 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0]))
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (args.length() != 1 || !args[0].isString())
     THROW_ERROR(cx, "Invalid parameters specified to selectCharacter");
 
-  const wchar_t* name = JS_GetStringCharsZ(cx, JS_ValueToString(cx, JS_ARGV(cx, vp)[0]));
+  const wchar_t* name = JS_GetStringCharsZ(cx, JS_ValueToString(cx, args[0]));
 
   d2bs::Profile* profile = Vars.settings.get_profile(name);
   if (!profile) THROW_ERROR(cx, "Invalid profile specified");
 
-  JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(OOG_SelectCharacter(profile->charname)));
+  args.rval().setBoolean(OOG_SelectCharacter(profile->charname));
 
   return JS_TRUE;
 }
 
 JSAPI_FUNC(my_createGame) {
-  JS_SET_RVAL(cx, vp, JSVAL_NULL);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
+
   if (ClientState() != ClientStateMenu) return JS_TRUE;
 
   const wchar_t *name = NULL, *pass = NULL;
   jschar *jsname = NULL, *jspass = NULL;
   int32 diff = 3;
   if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "W/Wi", &jsname, &jspass, &diff)) {
-    JS_ReportError(cx, "Invalid arguments specified to createGame");
-    return JS_FALSE;
+    THROW_ERROR(cx, "Invalid arguments specified to createGame");
   }
-  name = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
-  pass = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[1]));
+  name = JS_GetStringCharsZ(cx, args[0].toString());
+  pass = JS_GetStringCharsZ(cx, args[1].toString());
 
   if (!pass) pass = L"";
 
@@ -71,16 +75,18 @@ JSAPI_FUNC(my_createGame) {
 }
 
 JSAPI_FUNC(my_joinGame) {
-  JS_SET_RVAL(cx, vp, JSVAL_NULL);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
+
   if (ClientState() != ClientStateMenu) return JS_TRUE;
+
   jschar *jsname = NULL, *jspass = NULL;
   const wchar_t *name = NULL, *pass = NULL;
   if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "W/W", &jsname, &jspass)) {
-    JS_ReportError(cx, "Invalid arguments specified to createGame");
-    return JS_FALSE;
+    THROW_ERROR(cx, "Invalid arguments specified to createGame");
   }
-  name = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
-  pass = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[1]));
+  name = JS_GetStringCharsZ(cx, args[0].toString());
+  pass = JS_GetStringCharsZ(cx, args[1].toString());
   if (!pass) pass = L"";
 
   if (wcslen(name) > 15 || wcslen(pass) > 15) THROW_ERROR(cx, "Invalid game name or password length");
@@ -91,68 +97,73 @@ JSAPI_FUNC(my_joinGame) {
 }
 
 JSAPI_FUNC(my_addProfile) {
-  JS_SET_RVAL(cx, vp, JSVAL_NULL);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
+
   // validate the args...
   const wchar_t *profile, *mode, *gateway, *username, *password, *charname;
   profile = mode = gateway = username = password = charname = NULL;
   int spdifficulty = 3;
-  if (argc < 6 || argc > 7) THROW_ERROR(cx, "Invalid arguments passed to addProfile");
+  if (args.length() < 6 || args.length() > 7) THROW_ERROR(cx, "Invalid arguments passed to addProfile");
 
-  const wchar_t** args[] = {&profile, &mode, &gateway, &username, &password, &charname};
+  const wchar_t** argv[] = {&profile, &mode, &gateway, &username, &password, &charname};
   for (uint i = 0; i < 6; i++) {
-    if (!JSVAL_IS_STRING(JS_ARGV(cx, vp)[i])) {
+    if (!args[i].isString()) {
       THROW_ERROR(cx, "Invalid argument passed to addProfile");
-    } else
-      *args[i] = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[i]));
+    } else {
+      *argv[i] = JS_GetStringCharsZ(cx, args[i].toString());
+    }
   }
 
   for (int i = 0; i < 6; i++) {
-    if (!(*args[i])) THROW_ERROR(cx, "Failed to convert string");
+    if (!(*argv[i])) THROW_ERROR(cx, "Failed to convert string");
   }
 
-  if (argc == 7) spdifficulty = JSVAL_TO_INT(JS_ARGV(cx, vp)[6]);
+  if (args.length() == 7) spdifficulty = args[6].toInt32();
 
   if (spdifficulty > 3 || spdifficulty < 0) THROW_ERROR(cx, "Invalid argument passed to addProfile");
 
   auto path = (Vars.working_dir / "d2bs.ini").wstring();
   auto file = path.c_str();
-  if (!Vars.settings.has_profile(*args[0])) {
+  if (!Vars.settings.has_profile(*argv[0])) {
     wchar_t settings[600] = L"";
     swprintf_s(settings, _countof(settings),
                L"mode=%s\tgateway=%s\tusername=%s\tpassword=%s\tcharacter=%s\tspdifficulty=%d\t", mode, gateway,
                username, password, charname, spdifficulty);
 
     StringReplace(settings, '\t', '\0', 600);
-    WritePrivateProfileSectionW(*args[0], settings, file);
+    WritePrivateProfileSectionW(*argv[0], settings, file);
   }
 
   return JS_TRUE;
 }
 
 JSAPI_FUNC(my_getOOGLocation) {
-  JS_SET_RVAL(cx, vp, JSVAL_NULL);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
+
   if (ClientState() != ClientStateMenu) return JS_TRUE;
 
-  JS_SET_RVAL(cx, vp, INT_TO_JSVAL(OOG_GetLocation()));
-
+  args.rval().setInt32(OOG_GetLocation());
   return JS_TRUE;
 }
 
 JSAPI_FUNC(my_createCharacter) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
+
   if (ClientState() != ClientStateMenu) return JS_TRUE;
 
   const wchar_t* name = NULL;
   jschar* jsname = NULL;
   int32 type = -1;
   JSBool hc = JS_FALSE, ladder = JS_FALSE;
-  JS_BeginRequest(cx);
-  if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "Wi/bb", &jsname, &type, &hc, &ladder)) {
-    JS_EndRequest(cx);
+  JSAutoRequest r(cx);
+  if (!JS_ConvertArguments(cx, argc, args.array(), "Wi/bb", &jsname, &type, &hc, &ladder)) {
     THROW_ERROR(cx, "Failed to Convert Args createCharacter");
   }
-  JS_EndRequest(cx);
-  name = JS_GetStringCharsZ(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+  name = JS_GetStringCharsZ(cx, args[0].toString());
 
-  JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(!!OOG_CreateCharacter(name, type, !!hc, !!ladder)));
+  args.rval().setBoolean(OOG_CreateCharacter(name, type, !!hc, !!ladder));
   return JS_TRUE;
 }
