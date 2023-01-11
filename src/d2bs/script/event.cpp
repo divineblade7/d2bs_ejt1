@@ -321,7 +321,7 @@ BroadcastEvent::BroadcastEvent(Script* owner, std::vector<std::shared_ptr<JSAuto
 void BroadcastEvent::process() {
   auto cx = owner_->context();
 
-  JS_BeginRequest(cx);
+  JSAutoRequest r(cx);
   auto argc = args.size();
   jsval* argv = new jsval[args.size()];
   for (uint i = 0; i < argc; i++) {
@@ -336,7 +336,6 @@ void BroadcastEvent::process() {
   for (const auto& fn : owner_->functions()[name_]) {
     JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), argc, argv, &rval);
   }
-  JS_EndRequest(cx);
 
   for (uint j = 0; j < argc; j++) {
     JS_RemoveValueRoot(cx, &argv[j]);
