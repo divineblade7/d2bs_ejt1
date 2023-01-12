@@ -40,11 +40,6 @@ ScriptType GetStarterScriptState(void) {
                                              : ScriptType::InGame);
 }
 
-bool ExecCommand(const wchar_t* command) {
-  sScriptEngine->RunCommand(command);
-  return true;
-}
-
 bool StartScript(const wchar_t* scriptname, ScriptType type) {
   auto path = (Vars.settings.script_dir / scriptname).make_preferred().wstring();
   Script* script = sScriptEngine->CompileFile(path.c_str(), type);
@@ -129,10 +124,10 @@ bool ProcessCommand(const wchar_t* command, bool unprocessedIsCommand) {
   }
 #endif
   else if (_wcsicmp(argv, L"exec") == 0 && !unprocessedIsCommand) {
-    ExecCommand(command + 5);
+    sScriptEngine->RunCommand(command + 5);
     result = true;
   } else if (unprocessedIsCommand) {
-    ExecCommand(command);
+    sScriptEngine->RunCommand(command);
     result = true;
   }
   free(buf);
