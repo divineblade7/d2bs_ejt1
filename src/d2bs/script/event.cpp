@@ -84,12 +84,12 @@ void FireMouseMoveEvent(POINT pt) {
   });
 }
 
-void FireScriptBroadcastEvent(JSContext* cx, uint argc, jsval* args) {
+void FireScriptBroadcastEvent(JSContext* cx, uint32_t argc, jsval* args) {
   sScriptEngine->for_each([&](Script* script) {
     if (script->is_running() && script->IsListenerRegistered("scriptmsg")) {
       std::vector<std::shared_ptr<JSAutoStructuredCloneBuffer>> arg;
 
-      for (uint i = 0; i < argc; ++i) {
+      for (uint32_t i = 0; i < argc; ++i) {
         arg.push_back(std::make_shared<JSAutoStructuredCloneBuffer>());
         arg.back()->write(cx, args[i]);
       }
@@ -297,7 +297,7 @@ void PacketEvent::process() {
 
   JS::RootedObject arr(cx,  JS_NewUint8Array(cx, size));
 
-  for (uint i = 0; i < size; i++) {
+  for (uint32_t i = 0; i < size; i++) {
     jsval jsarr = UINT_TO_JSVAL(help[i]);
     JS_SetElement(cx, arr, i, &jsarr);
   }
@@ -324,11 +324,11 @@ void BroadcastEvent::process() {
   JSAutoRequest r(cx);
   auto argc = args.size();
   jsval* argv = new jsval[args.size()];
-  for (uint i = 0; i < argc; i++) {
+  for (uint32_t i = 0; i < argc; i++) {
     args[i]->read(cx, &argv[i]);
   }
 
-  for (uint j = 0; j < argc; j++) {
+  for (uint32_t j = 0; j < argc; j++) {
     JS_AddValueRoot(cx, &argv[j]);
   }
 
@@ -337,11 +337,11 @@ void BroadcastEvent::process() {
     JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), argc, argv, &rval);
   }
 
-  for (uint j = 0; j < argc; j++) {
+  for (uint32_t j = 0; j < argc; j++) {
     JS_RemoveValueRoot(cx, &argv[j]);
   }
 
-  for (uint i = 0; i < argc; i++) {
+  for (uint32_t i = 0; i < argc; i++) {
     args[i]->clear();
   }
 
@@ -537,7 +537,7 @@ void MouseClickEvent::process() {
   argv[2] = JS_NumberValue(y);
   argv[3] = JS_NumberValue(up);
 
-  for (uint j = 0; j < 4; j++) {
+  for (uint32_t j = 0; j < 4; j++) {
     JS_AddValueRoot(cx, &argv[j]);
   }
 

@@ -111,7 +111,7 @@ JSAPI_FUNC(dir_getFiles) {
   if ((hFile = _wfindfirst(search.c_str(), &found)) != -1L) {
     JSAutoRequest r(cx);
 
-    jsint element = 0;
+    int32_t element = 0;
     do {
       if ((found.attrib & _A_SUBDIR)) continue;
       jsval file = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, found.name));
@@ -162,7 +162,7 @@ JSAPI_FUNC(dir_getFolders) {
 
   if ((hFile = _wfindfirst(search.c_str(), &found)) != -1L) {
     JSAutoRequest r(cx);
-    jsint element = 0;
+    int32_t element = 0;
     do {
       if (!wcscmp(found.name, L"..") || !wcscmp(found.name, L".") || !(found.attrib & _A_SUBDIR)) continue;
       jsval file = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, found.name));

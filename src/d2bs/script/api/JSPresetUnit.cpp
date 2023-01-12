@@ -62,15 +62,15 @@ JSAPI_FUNC(my_getPresetUnits) {
     return JS_TRUE;
   }
 
-  uint32 levelId = args[0].toInt32();
+  uint32_t levelId = args[0].toInt32();
   Level* pLevel = GetLevel(levelId);
 
   if (!pLevel) {
     THROW_ERROR(cx, "getPresetUnits failed, couldn't access the level!");
   }
 
-  uint nClassId = NULL;
-  uint nType = NULL;
+  uint32_t nClassId = NULL;
+  uint32_t nType = NULL;
 
   if (args.length() >= 2 && !args[1].isUndefined()) {
     nType = args.get(1).toInt32();
@@ -143,7 +143,7 @@ JSAPI_FUNC(my_getPresetUnit) {
     return JS_TRUE;
   }
 
-  uint32 levelId;
+  uint32_t levelId;
   {
     JSAutoRequest r(cx);
     JS_ValueToECMAUint32(cx, args[0], &levelId);

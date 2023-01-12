@@ -326,7 +326,7 @@ JSAPI_FUNC(room_getStat) {
   args.rval().setNull();
   if (argc < 1 || !args[0].isInt32()) return JS_TRUE;
 
-  jsint nStat = args[0].toInt32();
+  int32_t nStat = args[0].toInt32();
 
   bool bAdded = false;
 
@@ -470,7 +470,7 @@ JSAPI_FUNC(my_getRoom) {
   CriticalRoom cRoom;
 
   if (args.length() == 1 && args[0].isInt32()) {
-    uint32 levelId;
+    uint32_t levelId;
     {
       JSAutoRequest r(cx);
       JS_ValueToECMAUint32(cx, args[0], &levelId);
@@ -506,7 +506,7 @@ JSAPI_FUNC(my_getRoom) {
   {
     Level* pLevel = NULL;
 
-    uint32 levelId;
+    uint32_t levelId;
     {
       JSAutoRequest r(cx);
       JS_ValueToECMAUint32(cx, args[0], &levelId);
@@ -521,8 +521,8 @@ JSAPI_FUNC(my_getRoom) {
       return JS_TRUE;
     }
 
-    uint32 nX = NULL;
-    uint32 nY = NULL;
+    uint32_t nX = NULL;
+    uint32_t nY = NULL;
     {
       JSAutoRequest r(cx);
       if (args.length() == 2) {

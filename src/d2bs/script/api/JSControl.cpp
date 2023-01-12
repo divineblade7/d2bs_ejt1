@@ -115,7 +115,7 @@ JSAPI_STRICT_PROP(control_setProperty) {
       break;
     case CONTROL_STATE:
       if (vp.isInt32()) {
-        int32 nState;
+        int32_t nState;
         JS_BeginRequest(cx);
         if (!JS_ValueToECMAInt32(cx, vp.get(), &nState) || nState < 0 || nState > 3) {
           JS_EndRequest(cx);
@@ -128,7 +128,7 @@ JSAPI_STRICT_PROP(control_setProperty) {
     case CONTROL_CURSORPOS:
       if (vp.isInt32()) {
         JS_BeginRequest(cx);
-        uint32 dwPos;
+        uint32_t dwPos;
         if (!JS_ValueToECMAUint32(cx, vp.get(), &dwPos)) {
           JS_EndRequest(cx);
           THROW_ERROR(cx, "Invalid cursor position value");
@@ -208,7 +208,7 @@ JSAPI_FUNC(control_click) {
     return JS_TRUE;
   }
 
-  uint32 x = (uint32)-1, y = (uint32)-1;
+  uint32_t x = (uint32_t)-1, y = (uint32_t)-1;
 
   if (args.length() > 1 && args[0].isInt32() && args[1].isInt32()) {
     JSAutoRequest r(cx);
@@ -310,11 +310,11 @@ JSAPI_FUNC(my_getControl) {
 
   if (ClientState() != ClientStateMenu) return JS_TRUE;
 
-  int32 nType = -1, nX = -1, nY = -1, nXSize = -1, nYSize = -1;
-  int32* argv[] = {&nType, &nX, &nY, &nXSize, &nYSize};
+  int32_t nType = -1, nX = -1, nY = -1, nXSize = -1, nYSize = -1;
+  int32_t* argv[] = {&nType, &nX, &nY, &nXSize, &nYSize};
   {
     JSAutoRequest r(cx);
-    for (uint i = 0; i < args.length(); i++)
+    for (uint32_t i = 0; i < args.length(); i++)
       if (args[i].isInt32()) JS_ValueToECMAInt32(cx, args[i], argv[i]);
   }
 

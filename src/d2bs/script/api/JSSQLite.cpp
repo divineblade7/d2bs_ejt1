@@ -170,7 +170,7 @@ JSAPI_FUNC(sqlite_query) {
   }
 
   char* szText;
-  for (uint i = 1; i < args.length(); i++) {
+  for (uint32_t i = 1; i < args.length(); i++) {
     switch (JS_TypeOfValue(cx, args[i])) {
       case JSTYPE_VOID:
         sqlite3_bind_null(stmt, i);
@@ -182,7 +182,7 @@ JSAPI_FUNC(sqlite_query) {
         break;
       case JSTYPE_NUMBER:
         if (args[i].isNumber())
-          sqlite3_bind_double(stmt, i, (jsdouble)args[i].toNumber());
+          sqlite3_bind_double(stmt, i, (double)args[i].toNumber());
         else if (args[i].isInt32())
           sqlite3_bind_int(stmt, i, args[i].isInt32());
         break;
@@ -283,7 +283,7 @@ JSAPI_PROP(sqlite_getProperty) {
     } break;
     case SQLITE_CHANGES:
       vp.setDouble(sqlite3_changes(dbobj->db));
-      // JS_NewNumberValue(cx, (jsdouble)sqlite3_changes(dbobj->db), vp);
+      // JS_NewNumberValue(cx, (double)sqlite3_changes(dbobj->db), vp);
       break;
   }
   return JS_TRUE;
@@ -344,8 +344,8 @@ JSAPI_FUNC(sqlite_stmt_getobject) {
     const char* colnam = sqlite3_column_name(stmt, i);
     switch (sqlite3_column_type(stmt, i)) {
       case SQLITE_INTEGER:
-        // jsdouble == double, so this conversion is no problem
-        val = JS_NumberValue((jsdouble)sqlite3_column_int64(stmt, i));
+        // double == double, so this conversion is no problem
+        val = JS_NumberValue((double)sqlite3_column_int64(stmt, i));
         if (!JS_SetProperty(cx, obj2, colnam, &val)) THROW_ERROR(cx, "Failed to add column to row results");
         break;
       case SQLITE_FLOAT:
@@ -401,7 +401,7 @@ JSAPI_FUNC(sqlite_stmt_colval) {
   int i = args[0].toInt32();
   switch (sqlite3_column_type(stmt, i)) {
     case SQLITE_INTEGER:
-      // jsdouble == double, so this conversion is no problem
+      // double == double, so this conversion is no problem
       args.rval().setNumber(static_cast<double>(sqlite3_column_int64(stmt, i)));
       break;
     case SQLITE_FLOAT:

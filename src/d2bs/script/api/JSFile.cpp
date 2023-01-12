@@ -105,21 +105,21 @@ JSAPI_PROP(file_getProperty) {
       case FILE_ACCESSED:
         if (fdata->fptr) {
           _fstat(_fileno(fdata->fptr), &filestat);
-          vp.setNumber((jsdouble)filestat.st_atime);
+          vp.setNumber((double)filestat.st_atime);
         } else
           vp.setInt32(0);  //= JSVAL_ZERO;
         break;
       case FILE_MODIFIED:
         if (fdata->fptr) {
           _fstat(_fileno(fdata->fptr), &filestat);
-          vp.setNumber((jsdouble)filestat.st_mtime);
+          vp.setNumber((double)filestat.st_mtime);
         } else
           vp.setInt32(0);
         break;
       case FILE_CREATED:
         if (fdata->fptr) {
           _fstat(_fileno(fdata->fptr), &filestat);
-          vp.setDouble((jsdouble)filestat.st_ctime);
+          vp.setDouble((double)filestat.st_ctime);
         } else
           vp.setInt32(0);
         break;
@@ -156,7 +156,7 @@ JSAPI_FUNC(file_open) {
 
   // Convert from JS params to C values
   const wchar_t* file = JS_GetStringCharsZ(cx, args[0].toString());
-  int32 mode = args[1].toInt32();
+  int32_t mode = args[1].toInt32();
   bool binary = false;
   bool autoflush = false;
   bool lockFile = false;
@@ -283,7 +283,7 @@ JSAPI_FUNC(file_read) {
   FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, self.toObjectOrNull(), &file_class, NULL);
   if (fdata && fdata->fptr) {
     clearerr(fdata->fptr);
-    int32 count = 1;
+    int32_t count = 1;
     if (!(args.length() > 0 && args[0].toInt32() > 0 && JS_ValueToInt32(cx, args[0], &count)))
       THROW_ERROR(cx, "Invalid arguments");
 
@@ -291,13 +291,13 @@ JSAPI_FUNC(file_read) {
       // binary mode
       int* result = new int[count + 1];
       memset(result, 0, count + 1);
-      uint32 size = 0;
+      uint32_t size = 0;
       if (fdata->locked)
         size = fread(result, sizeof(int), count, fdata->fptr);
       else
         size = _fread_nolock(result, sizeof(int), count, fdata->fptr);
 
-      if (size != (uint32)count && ferror(fdata->fptr)) {
+      if (size != (uint32_t)count && ferror(fdata->fptr)) {
         delete[] result;
         THROW_ERROR(cx, "Read failed");
       }
@@ -314,7 +314,7 @@ JSAPI_FUNC(file_read) {
         }
       }
     } else {
-      uint size = 0;
+      uint32_t size = 0;
       int offset = 0;
       bool begin = false;
 
@@ -338,7 +338,7 @@ JSAPI_FUNC(file_read) {
       else
         size = _fread_nolock(result, sizeof(char), count, fdata->fptr);
 
-      if (size != (uint32)count && ferror(fdata->fptr)) {
+      if (size != (uint32_t)count && ferror(fdata->fptr)) {
         delete[] result;
         THROW_ERROR(cx, "Read failed");
       }
@@ -360,7 +360,7 @@ JSAPI_FUNC(file_readLine) {
   auto self = args.thisv();
   FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, self.toObjectOrNull(), &file_class, NULL);
   if (fdata && fdata->fptr) {
-    uint size = 0;
+    uint32_t size = 0;
     int offset = 0;
     bool begin = false;
 
@@ -395,7 +395,7 @@ JSAPI_FUNC(file_readAllLines) {
     int i = 0;
     JSAutoRequest r(cx);
     while (!feof(fdata->fptr)) {
-      uint size = 0;
+      uint32_t size = 0;
       int offset = 0;
       bool begin = false;
 
@@ -430,7 +430,7 @@ JSAPI_FUNC(file_readAll) {
   auto self = args.thisv();
   FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, self.toObjectOrNull(), &file_class, NULL);
   if (fdata && fdata->fptr) {
-    uint size = 0;
+    uint32_t size = 0;
     int offset = 0;
     bool begin = false;
 
@@ -461,7 +461,7 @@ JSAPI_FUNC(file_readAll) {
 
     char* contents = new char[size + 1];
     memset(contents, 0, size + 1);
-    uint count = 0;
+    uint32_t count = 0;
     if (fdata->locked)
       count = fread(contents, sizeof(char), size, fdata->fptr);
     else
@@ -489,7 +489,7 @@ JSAPI_FUNC(file_write) {
   auto self = args.thisv();
   FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, self.toObjectOrNull(), &file_class, NULL);
   if (fdata && fdata->fptr) {
-    for (uint i = 0; i < argc; i++) writeValue(fdata->fptr, cx, JS_ARGV(cx, vp)[i], !!(fdata->mode > 2), fdata->locked);
+    for (uint32_t i = 0; i < argc; i++) writeValue(fdata->fptr, cx, JS_ARGV(cx, vp)[i], !!(fdata->mode > 2), fdata->locked);
 
     if (fdata->autoflush) {
       if (fdata->locked)
@@ -510,7 +510,7 @@ JSAPI_FUNC(file_seek) {
   FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, self.toObjectOrNull(), &file_class, NULL);
   if (fdata && fdata->fptr) {
     if (args.length() > 0) {
-      int32 bytes;
+      int32_t bytes;
       bool isLines = false, fromStart = false;
       if (JS_ValueToInt32(cx, args[0], &bytes) == JS_FALSE) THROW_ERROR(cx, "Could not convert parameter 1");
       if (args.length() > 1 && args[1].isBoolean()) isLines = args[1].toBoolean();

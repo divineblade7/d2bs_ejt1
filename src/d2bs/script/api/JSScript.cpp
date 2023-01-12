@@ -126,7 +126,7 @@ JSAPI_FUNC(script_send) {
 
   std::vector<std::shared_ptr<JSAutoStructuredCloneBuffer>> argv;
 
-  for (uint i = 0; i < argc; ++i) {
+  for (uint32_t i = 0; i < argc; ++i) {
     argv.push_back(std::make_shared<JSAutoStructuredCloneBuffer>());
     argv.back()->write(cx, args[i]);
   }

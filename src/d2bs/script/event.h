@@ -245,7 +245,7 @@ bool FireKeyDownUpEvent(WPARAM bByte, BYTE bUp);
 void FirePlayerAssignEvent(DWORD dwUnitId);
 void FireMouseClickEvent(int button, POINT pt, bool bUp);
 void FireMouseMoveEvent(POINT pt);
-void FireScriptBroadcastEvent(JSContext* cx, uint argc, jsval* argv);
+void FireScriptBroadcastEvent(JSContext* cx, uint32_t argc, jsval* argv);
 void FireItemActionEvent(DWORD GID, char* Code, BYTE Mode, bool Global);
 bool FireGamePacketEvent(BYTE* pPacket, DWORD dwSize);
 bool FireGamePacketSentEvent(BYTE* pPacket, DWORD dwSize);

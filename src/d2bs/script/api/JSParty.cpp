@@ -31,7 +31,7 @@ JSAPI_PROP(party_getProperty) {
       vp.setInt32(pUnit->dwLevelId);
       break;
     case PARTY_GID:
-      vp.setNumber((jsdouble)pUnit->dwUnitId);
+      vp.setNumber((double)pUnit->dwUnitId);
       break;
     case PARTY_LIFE:
       vp.setInt32(pUnit->dwPartyLife);
@@ -93,7 +93,7 @@ JSAPI_FUNC(my_getParty) {
   if (args.length() == 1) {
     UnitAny* inUnit = NULL;
     char* nPlayerName = nullptr;
-    uint32 nPlayerId = NULL;
+    uint32_t nPlayerId = NULL;
 
     if (args[0].isString()) {
       nPlayerName = JS_EncodeStringToUTF8(cx, args[0].toString());

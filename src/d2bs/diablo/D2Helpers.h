@@ -30,7 +30,7 @@ char* __stdcall GetLevelIdName(DWORD level);
 
 // Input/output
 void SendMouseClick(int x, int y, int clicktype);
-void SendKeyPress(uint type, uint key, uint ext);
+void SendKeyPress(uint32_t type, uint32_t key, uint32_t ext);
 BOOL ClickNPCMenu(DWORD NPCClassId, DWORD MenuId);
 
 // Screen

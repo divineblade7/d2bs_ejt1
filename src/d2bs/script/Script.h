@@ -16,7 +16,7 @@
 DWORD WINAPI ScriptThread(void* data);
 void reportError(JSContext* cx, const char* message, JSErrorReport* report);
 JSBool operationCallback(JSContext* cx);
-JSBool contextCallback(JSContext* cx, uint contextOp);
+JSBool contextCallback(JSContext* cx, uint32_t contextOp);
 
 enum class ScriptType { InGame, OutOfGame, Command };
 enum class ScriptState { Stopped, Running, Paused };
@@ -29,7 +29,7 @@ class Script {
   // Script is aware of the ScriptEngine which owns the Script. This behavior removes the need for a global ScriptEngine
   // variable, however it also means that Script depends on ScriptEngine which may not be the behavior we want here.
   // The ideal condition is that Script is completely removed from ScriptEngine and operates independently from it.
-  Script(ScriptEngine* engine, const wchar_t* file, ScriptType type, uint argc = 0,
+  Script(ScriptEngine* engine, const wchar_t* file, ScriptType type, uint32_t argc = 0,
          JSAutoStructuredCloneBuffer** argv = NULL);
   ~Script();
 
@@ -120,7 +120,7 @@ class Script {
   }
 
   friend JSBool operationCallback(JSContext* cx);
-  friend JSBool contextCallback(JSContext* cx, uint contextOp);
+  friend JSBool contextCallback(JSContext* cx, uint32_t contextOp);
 
  private:
   /**
@@ -136,7 +136,7 @@ class Script {
   JSObject* globals_ = nullptr;
 
   JSAutoStructuredCloneBuffer** argv_;
-  uint argc_;
+  uint32_t argc_;
 
   ScriptType type_;
   ScriptState state_ = ScriptState::Stopped;

@@ -70,7 +70,7 @@ JSAPI_FUNC(socket_open) {
     return JS_TRUE;
   }
   char* hostName = NULL;
-  int32 port = 0;
+  int32_t port = 0;
   if (args[0].isString()) hostName = JS_EncodeStringToUTF8(cx, args[0].toString());
 
   if (!strstr(Vars.settings.szHosts, hostName)) THROW_ERROR(cx, "Invalid hostname specified");

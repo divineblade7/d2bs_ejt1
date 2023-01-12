@@ -40,8 +40,8 @@ JSAPI_PROP(unit_getProperty) {
 
   switch (JSVAL_TO_INT(ID)) {
     case ME_PID:
-      vp.setDouble((jsdouble)GetCurrentProcessId());
-      // JS_NewNumberValue(cx, (jsdouble)GetCurrentProcessId(), vp);
+      vp.setDouble((double)GetCurrentProcessId());
+      // JS_NewNumberValue(cx, (double)GetCurrentProcessId(), vp);
       break;
     case ME_PROFILE:
       vp.setString(JS_NewUCStringCopyZ(cx, Vars.settings.szProfile));
@@ -84,7 +84,7 @@ JSAPI_PROP(unit_getProperty) {
       vp.setString(JS_NewStringCopyZ(cx, pInfo->szGameServerIp));
       break;
     case ME_GAMESTARTTIME:
-      vp.setDouble((jsdouble)Vars.settings.dwGameTime);
+      vp.setDouble((double)Vars.settings.dwGameTime);
       break;
     case ME_GAMETYPE:
       vp.setInt32(*p_D2CLIENT_ExpCharFlag);
@@ -97,13 +97,13 @@ JSAPI_PROP(unit_getProperty) {
       break;
     case ME_AUTOMAP:
       vp.setBoolean(*p_D2CLIENT_AutomapOn);
-      // JS_NewNumberValue(cx, (jsdouble)(*p_D2CLIENT_AutomapOn), vp);
+      // JS_NewNumberValue(cx, (double)(*p_D2CLIENT_AutomapOn), vp);
       //*vp = *p_D2CLIENT_AutomapOn;
       break;
     case ME_LADDER:
       if (pData)
         // vp.setBoolean(!!(pData->ladderflag & (LADDERFLAG_SET|LADDERFLAG_EXPANSION_NORMAL)));
-        vp.setDouble((jsdouble)pData->ladderflag);
+        vp.setDouble((double)pData->ladderflag);
       break;
     case ME_QUITONHOSTILE:
       vp.setBoolean(Vars.settings.bQuitOnHostile);
@@ -203,7 +203,7 @@ JSAPI_PROP(unit_getProperty) {
       break;
     case UNIT_ID:
       JS_BeginRequest(cx);
-      vp.setNumber((jsdouble)pUnit->dwUnitId);
+      vp.setNumber((double)pUnit->dwUnitId);
       JS_EndRequest(cx);
       break;
     case UNIT_XPOS:
@@ -438,7 +438,7 @@ JSAPI_PROP(unit_getProperty) {
       if (pUnit->pItemData) vp.setInt32(pUnit->pItemData->BodyLocation);
       break;
     case UNIT_OWNER:
-      vp.setNumber((jsdouble)pUnit->dwOwnerId);
+      vp.setNumber((double)pUnit->dwOwnerId);
       break;
     case UNIT_OWNERTYPE:
       vp.setInt32(pUnit->dwOwnerType);
@@ -523,9 +523,9 @@ JSAPI_FUNC(unit_getUnit) {
   if (argc < 1) return JS_TRUE;
 
   int nType = -1;
-  uint32 nClassId = (uint32)-1;
-  uint32 nMode = (uint32)-1;
-  uint32 nUnitId = (uint32)-1;
+  uint32_t nClassId = (uint32_t)-1;
+  uint32_t nMode = (uint32_t)-1;
+  uint32_t nUnitId = (uint32_t)-1;
   char* szName = nullptr;
 
   {
@@ -600,10 +600,10 @@ JSAPI_FUNC(unit_getNext) {
     }
 
     if (args.length() > 0 && args[0].isNumber() && !args[1].isNull())
-      JS_ValueToECMAUint32(cx, args[0], (uint32*)&(lpUnit->dwClassId));
+      JS_ValueToECMAUint32(cx, args[0], (uint32_t*)&(lpUnit->dwClassId));
 
     if (args.length() > 1 && args[1].isNumber() && !args[2].isNull())
-      JS_ValueToECMAUint32(cx, args[1], (uint32*)&(lpUnit->dwMode));
+      JS_ValueToECMAUint32(cx, args[1], (uint32_t*)&(lpUnit->dwMode));
 
     pUnit = GetNextUnit(pUnit, lpUnit->szName, lpUnit->dwClassId, lpUnit->dwType, lpUnit->dwMode);
 
@@ -635,10 +635,10 @@ JSAPI_FUNC(unit_getNext) {
     }
 
     if (args.length() > 0 && args[0].isNumber() && !args[1].isNull())
-      JS_ValueToECMAUint32(cx, args[0], (uint32*)&(pmyUnit->dwClassId));
+      JS_ValueToECMAUint32(cx, args[0], (uint32_t*)&(pmyUnit->dwClassId));
 
     if (args.length() > 1 && args[1].isNumber() && !args[2].isNull())
-      JS_ValueToECMAUint32(cx, args[1], (uint32*)&(pmyUnit->dwMode));
+      JS_ValueToECMAUint32(cx, args[1], (uint32_t*)&(pmyUnit->dwMode));
 
     UnitAny* nextItem = GetInvNextUnit(pUnit, pOwner, pmyUnit->szName, pmyUnit->dwClassId, pmyUnit->dwMode);
     if (!nextItem) {
@@ -665,11 +665,11 @@ JSAPI_FUNC(unit_cancel) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
   DWORD automapOn = *p_D2CLIENT_AutomapOn;
-  jsint mode = -1;
+  int32_t mode = -1;
 
   if (args.length() > 0) {
     JSAutoRequest r(cx);
-    if (args[0].isNumber()) JS_ValueToECMAUint32(cx, args[0], (uint32*)&mode);
+    if (args[0].isNumber()) JS_ValueToECMAUint32(cx, args[0], (uint32_t*)&mode);
   } else if (IsScrollingText())
     mode = 3;
   else if (D2CLIENT_GetCurrentInteractingNPC())
@@ -784,7 +784,7 @@ JSAPI_FUNC(unit_interact) {
 
   if (pUnit->dwType == UNIT_OBJECT && args.length() == 1 && args[0].isInt32()) {
     // TODO: check the range on argv[0] to make sure it won't crash the game - Done! TechnoHunter
-    jsint nWaypointID;
+    int32_t nWaypointID;
     JSAutoRequest r(cx);
     if (!JS_ValueToECMAInt32(cx, args[0], &nWaypointID)) {
       return JS_TRUE;
@@ -831,8 +831,8 @@ JSAPI_FUNC(unit_getStat) {
 
   if (!pUnit) return JS_TRUE;
 
-  jsint nStat = 0;
-  jsint nSubIndex = 0;
+  int32_t nStat = 0;
+  int32_t nSubIndex = 0;
   {
     JSAutoRequest r(cx);
     if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "i/i", &nStat, &nSubIndex)) {
@@ -969,7 +969,7 @@ void InsertStatsNow(Stat* pStat, int nStat, JSContext* cx, JSObject* pArray) {
       } else {
         // it is an array, append the new value
         JSObject* arr = index.toObjectOrNull();
-        jsuint len = 0;
+        uint32_t len = 0;
         if (!JS_GetArrayLength(cx, arr, &len)) return;
         len++;
         JSAutoRequest r(cx);
@@ -1016,7 +1016,7 @@ JSAPI_FUNC(unit_getState) {
 
   if (!pUnit || !args.get(0).isInt32()) return JS_TRUE;
 
-  jsint nState;
+  int32_t nState;
   JSAutoRequest r(cx);
   if (JS_ValueToInt32(cx, args[0], &nState) == JS_FALSE) {
     return JS_TRUE;
@@ -1063,7 +1063,7 @@ JSAPI_FUNC(item_getFlag) {
 
   if (!pUnit || pUnit->dwType != UNIT_ITEM) return JS_TRUE;
 
-  jsint nFlag = args[0].toInt32();
+  int32_t nFlag = args[0].toInt32();
 
   args.rval().setBoolean(!!(nFlag & pUnit->pItemData->dwFlags));
   return JS_TRUE;
@@ -1126,10 +1126,10 @@ JSAPI_FUNC(item_getItemCost) {
 
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  jsint nMode;
+  int32_t nMode;
   UnitAny* npc = D2CLIENT_GetCurrentInteractingNPC();
-  jsint nNpcClassId = (npc ? npc->dwTxtFileNo : 0x9A);  // defaults to Charsi's NPC id
-  jsint nDifficulty = D2CLIENT_GetDifficulty();
+  int32_t nNpcClassId = (npc ? npc->dwTxtFileNo : 0x9A);  // defaults to Charsi's NPC id
+  int32_t nDifficulty = D2CLIENT_GetDifficulty();
 
   if (!args.get(0).isInt32()) return JS_TRUE;
 
@@ -1243,8 +1243,8 @@ JSAPI_FUNC(unit_getSkill) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
   bool nCharge = false;
-  jsint nSkillId = NULL;
-  jsint nExt = NULL;
+  int32_t nSkillId = NULL;
+  int32_t nExt = NULL;
 
   auto self = args.thisv().toObjectOrNull();
   myUnit* pmyUnit = (myUnit*)JS_GetPrivate(self);
@@ -1686,9 +1686,9 @@ JSAPI_FUNC(unit_getItem) {
 
   if (!pUnit || !pUnit->pInventory) return JS_TRUE;
 
-  uint32 nClassId = (uint32)-1;
-  uint32 nMode = (uint32)-1;
-  uint32 nUnitId = (uint32)-1;
+  uint32_t nClassId = (uint32_t)-1;
+  uint32_t nMode = (uint32_t)-1;
+  uint32_t nUnitId = (uint32_t)-1;
   char szName[128] = "";
 
   if (args.get(0).isString()) {
@@ -1745,7 +1745,7 @@ JSAPI_FUNC(unit_move) {
 
   if (!pPlayer || !pUnit) return JS_TRUE;
 
-  int32 x, y;
+  int32_t x, y;
 
   if (pUnit == pPlayer) {
     if (args.length() < 2) return JS_TRUE;
@@ -1800,8 +1800,8 @@ JSAPI_FUNC(unit_getQuest) {
 
   if (!args.get(0).isInt32() || !args.get(1).isInt32()) return JS_TRUE;
 
-  jsint nAct = args[0].toInt32();
-  jsint nQuest = args[1].toInt32();
+  int32_t nAct = args[0].toInt32();
+  int32_t nQuest = args[1].toInt32();
 
   args.rval().setInt32(D2COMMON_GetQuestFlag(D2CLIENT_GetQuestInfo(), nAct, nQuest));
   return JS_TRUE;
@@ -1814,7 +1814,7 @@ JSAPI_FUNC(unit_getMinionCount) {
 
   if (!args.get(0).isInt32()) return JS_TRUE;
 
-  jsint nType = args[0].toInt32();
+  int32_t nType = args[0].toInt32();
 
   auto self = args.thisv().toObjectOrNull();
   myUnit* pmyUnit = (myUnit*)JS_GetPrivate(self);
@@ -1835,7 +1835,7 @@ JSAPI_FUNC(me_getRepairCost) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
   UnitAny* npc = D2CLIENT_GetCurrentInteractingNPC();
-  jsint nNpcClassId = (npc ? npc->dwTxtFileNo : 0x9A);
+  int32_t nNpcClassId = (npc ? npc->dwTxtFileNo : 0x9A);
 
   if (args.get(0).isInt32()) nNpcClassId = args[0].toInt32();
 

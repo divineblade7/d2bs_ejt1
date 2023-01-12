@@ -217,7 +217,7 @@ DWORD FillBaseStat(JSContext* cx, jsval* argv, int table, int row, int column, c
       if (!FillBaseStat(table, row, column, &dwBuffer, sizeof(DWORD)))
         (*argv) = JSVAL_VOID;
       else
-        *argv = JS_NumberValue((jsdouble)dwBuffer);
+        *argv = JS_NumberValue((double)dwBuffer);
       return TRUE;
 
     case FIELDTYPE_CALC_TO_DWORD:

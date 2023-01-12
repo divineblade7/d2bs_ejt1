@@ -100,7 +100,7 @@ void ScriptEngine::FlushCache(void) {
   // LeaveCriticalSection(&lock);
 }
 
-Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptType type, uint argc, JSAutoStructuredCloneBuffer** argv,
+Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptType type, uint32_t argc, JSAutoStructuredCloneBuffer** argv,
                                   bool) {
   if (state_ != Running) {
     return NULL;

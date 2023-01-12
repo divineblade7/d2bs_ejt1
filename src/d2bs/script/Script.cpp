@@ -15,7 +15,7 @@
 #include <algorithm>
 #include <io.h>
 
-Script::Script(ScriptEngine* engine, const wchar_t* file, ScriptType type, uint argc,
+Script::Script(ScriptEngine* engine, const wchar_t* file, ScriptType type, uint32_t argc,
                JSAutoStructuredCloneBuffer** argv)
     : engine_(engine), type_(type), argv_(argv), argc_(argc) {
   if (type_ == ScriptType::Command && wcslen(file) < 1) {
@@ -126,11 +126,11 @@ void Script::run() {
 
   // args passed from load
   jsval* argvalue = new jsval[argc_];
-  for (uint i = 0; i < argc_; i++) {
+  for (uint32_t i = 0; i < argc_; i++) {
     argv_[i]->read(context_, &argvalue[i]);
   }
 
-  for (uint j = 0; j < argc_; j++) {
+  for (uint32_t j = 0; j < argc_; j++) {
     JS_AddValueRoot(context_, &argvalue[j]);
   }
 
@@ -142,7 +142,7 @@ void Script::run() {
   }
   JS_RemoveValueRoot(context_, &main);
   JS_RemoveValueRoot(context_, &dummy);
-  for (uint j = 0; j < argc_; j++) {
+  for (uint32_t j = 0; j < argc_; j++) {
     JS_RemoveValueRoot(context_, &argvalue[j]);
   }
 
@@ -260,7 +260,7 @@ void Script::UpdatePlayerGid() {
 }
 
 bool Script::IsIncluded(const wchar_t* file) {
-  uint count = 0;
+  uint32_t count = 0;
   wchar_t* fname = _wcsdup(file);
   if (!fname) return false;
 
@@ -487,7 +487,7 @@ JSBool operationCallback(JSContext* cx) {
   return false;
 }
 
-JSBool contextCallback(JSContext* cx, uint contextOp) {
+JSBool contextCallback(JSContext* cx, uint32_t contextOp) {
   switch (contextOp) {
     case JSCONTEXT_NEW: {
       JS_BeginRequest(cx);

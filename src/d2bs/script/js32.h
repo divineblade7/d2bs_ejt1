@@ -13,13 +13,7 @@
 
 #include <string>
 
-typedef unsigned int uint;
-typedef uint32_t uint32;
-typedef int32_t int32;
-typedef double jsdouble;
-typedef int32_t jsint;
-typedef uint32_t jsuint;
-typedef uint16_t uint16;
+typedef unsigned int uint32_t;
 
 // Deprecate, removed in ESR45+
 #define NUM(x) #x
@@ -35,7 +29,7 @@ struct JSClassSpec {
   JSClass* classp;
   JSClass* proto;
   JSNative ctor;
-  uint argc;
+  uint32_t argc;
   JSFunctionSpec* methods;
   JSPropertySpec* properties;
   JSFunctionSpec* static_methods;
@@ -74,13 +68,13 @@ JSScript* JS_CompileFile(JSContext* cx, JSObject* globalObject, std::wstring fil
     return JS_TRUE;                   \
   }
 
-#define CLASS_CTOR(name) JSBool name##_ctor(JSContext* cx, uint argc, jsval* vp)
+#define CLASS_CTOR(name) JSBool name##_ctor(JSContext* cx, uint32_t argc, jsval* vp)
 
 #define EMPTY_CTOR(name) \
-  JSBool name##_ctor(JSContext* cx, uint, jsval*) { THROW_ERROR(cx, "Invalid Operation"); }
+  JSBool name##_ctor(JSContext* cx, uint32_t, jsval*) { THROW_ERROR(cx, "Invalid Operation"); }
 
 #define JSAPI_FUNC(name) \
-  JSBool name##([[maybe_unused]] JSContext * cx, [[maybe_unused]] uint argc, [[maybe_unused]] jsval * vp)
+  JSBool name##([[maybe_unused]] JSContext * cx, [[maybe_unused]] uint32_t argc, [[maybe_unused]] jsval * vp)
 
 #define JSAPI_PROP(name)                                                                                              \
   JSBool name##([[maybe_unused]] JSContext * cx, [[maybe_unused]] JSHandleObject obj, [[maybe_unused]] JSHandleId id, \

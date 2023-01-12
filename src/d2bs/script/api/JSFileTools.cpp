@@ -158,7 +158,7 @@ JSAPI_FUNC(filetools_readText) {
   // If fileOpenRelScript failed, it already reported the error
   if (fptr == NULL) return JS_FALSE;
 
-  uint size, readCount;
+  uint32_t size, readCount;
   char* contents;
 
   // Determine file size
@@ -209,7 +209,7 @@ JSAPI_FUNC(filetools_writeText) {
     return JS_FALSE;
   }
 
-  for (uint i = 1; i < argc; i++)
+  for (uint32_t i = 1; i < argc; i++)
     if (!writeValue(fptr, cx, JS_ARGV(cx, vp)[i], false, true)) result = false;
 
   fflush(fptr);
@@ -238,7 +238,7 @@ JSAPI_FUNC(filetools_appendText) {
     return JS_FALSE;
   }
 
-  for (uint i = 1; i < argc; i++)
+  for (uint32_t i = 1; i < argc; i++)
     if (!writeValue(fptr, cx, JS_ARGV(cx, vp)[i], false, true)) result = false;
 
   fflush(fptr);

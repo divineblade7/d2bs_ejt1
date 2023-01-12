@@ -95,7 +95,7 @@ JSAPI_FUNC(my_getArea) {
     THROW_ERROR(cx, "Get Area: Game not ready");
   }
 
-  int32 nArea = GetPlayerArea();
+  int32_t nArea = GetPlayerArea();
   if (args.length() == 1) {
     if (args[0].isInt32()) {
       JSAutoRequest r(cx);

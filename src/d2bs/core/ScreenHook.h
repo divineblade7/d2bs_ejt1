@@ -22,15 +22,15 @@ struct HookClickHelper {
   POINT point;
 };
 
-typedef bool (*HookCallback)(Genhook*, void*, uint);
+typedef bool (*HookCallback)(Genhook*, void*, uint32_t);
 
 enum Align { Left, Right, Center };
 enum ScreenhookState { OOG, IG, Perm };
 
-bool DrawHook(Genhook* hook, void* argv, uint argc);
-bool CleanHook(Genhook* hook, void* argv, uint argc);
-bool ClickHook(Genhook* hook, void* argv, uint argc);
-bool HoverHook(Genhook* hook, void* argv, uint argc);
+bool DrawHook(Genhook* hook, void* argv, uint32_t argc);
+bool CleanHook(Genhook* hook, void* argv, uint32_t argc);
+bool ClickHook(Genhook* hook, void* argv, uint32_t argc);
+bool HoverHook(Genhook* hook, void* argv, uint32_t argc);
 
 class Genhook {
  private:
@@ -50,7 +50,7 @@ class Genhook {
   // CRITICAL_SECTION hookSection;
 
  public:
-  Genhook(Script* nowner, JSObject* nself, uint x, uint y, ushort nopacity, bool nisAutomap = false,
+  Genhook(Script* nowner, JSObject* nself, uint32_t x, uint32_t y, ushort nopacity, bool nisAutomap = false,
           Align nalign = Left, ScreenhookState ngameState = Perm);
   virtual ~Genhook(void);
 
@@ -59,10 +59,10 @@ class Genhook {
 
   static void DrawAll(ScreenhookState type);
 
-  static bool ForEachHook(HookCallback proc, void* argv, uint argc);
-  static bool ForEachVisibleHook(HookCallback proc, void* argv, uint argc);
-  static bool ForEachInvisibleHook(HookCallback proc, void* argv, uint argc);
-  static bool ForEachVisibleHookUnLocked(HookCallback proc, void* argv, uint argc);
+  static bool ForEachHook(HookCallback proc, void* argv, uint32_t argc);
+  static bool ForEachVisibleHook(HookCallback proc, void* argv, uint32_t argc);
+  static bool ForEachInvisibleHook(HookCallback proc, void* argv, uint32_t argc);
+  static bool ForEachVisibleHookUnLocked(HookCallback proc, void* argv, uint32_t argc);
   static void Clean(Script* owner);
   static void Initialize(void) {
     InitializeCriticalSection(&globalSection);
@@ -89,17 +89,17 @@ class Genhook {
   void Move(POINT* dist) {
     Move(dist->x, dist->y);
   }
-  void Move(uint nx, uint ny) {
+  void Move(uint32_t nx, uint32_t ny) {
     SetX(GetX() + nx);
     SetY(GetY() + ny);
   }
 
-  void SetX(uint x) {
+  void SetX(uint32_t x) {
     Lock();
     location.x = x;
     Unlock();
   }
-  void SetY(uint y) {
+  void SetY(uint32_t y) {
     Lock();
     location.y = y;
     Unlock();
@@ -143,10 +143,10 @@ class Genhook {
   POINT GetLocation(void) const {
     return location;
   }
-  uint GetX(void) const {
+  uint32_t GetX(void) const {
     return location.x;
   }
-  uint GetY(void) const {
+  uint32_t GetY(void) const {
     return location.y;
   }
   Align GetAlign(void) const {
@@ -193,7 +193,7 @@ class TextHook : public Genhook {
   ushort font, color;
 
  public:
-  TextHook(Script* owner, JSObject* nself, const wchar_t* text, uint x, uint y, ushort nfont, ushort ncolor,
+  TextHook(Script* owner, JSObject* nself, const wchar_t* text, uint32_t x, uint32_t y, ushort nfont, ushort ncolor,
            bool automap = false, Align align = Left, ScreenhookState state = Perm)
       : Genhook(owner, nself, x, y, 0, automap, align, state), text(NULL), font(nfont), color(ncolor) {
     this->text = _wcsdup(text);
@@ -241,7 +241,7 @@ class ImageHook : public Genhook {
   ushort color;
 
  public:
-  ImageHook(Script* owner, JSObject* nself, const wchar_t* nloc, uint x, uint y, ushort ncolor, bool automap = false,
+  ImageHook(Script* owner, JSObject* nself, const wchar_t* nloc, uint32_t x, uint32_t y, ushort ncolor, bool automap = false,
             Align align = Left, ScreenhookState state = Perm)
       : Genhook(owner, nself, x, y, 0, automap, align, state), color(ncolor), image(NULL), location(NULL) {
     location = _wcsdup(nloc);
@@ -278,11 +278,11 @@ class ImageHook : public Genhook {
 
 class LineHook : public Genhook {
  private:
-  uint x2, y2;
+  uint32_t x2, y2;
   ushort color;
 
  public:
-  LineHook(Script* owner, JSObject* nself, uint x, uint y, uint nx2, uint ny2, ushort ncolor, bool automap = false,
+  LineHook(Script* owner, JSObject* nself, uint32_t x, uint32_t y, uint32_t nx2, uint32_t ny2, ushort ncolor, bool automap = false,
            Align align = Left, ScreenhookState state = Perm)
       : Genhook(owner, nself, x, y, 0, automap, align, state), x2(nx2), y2(ny2), color(ncolor) {}
   ~LineHook(void) {}
@@ -298,12 +298,12 @@ class LineHook : public Genhook {
     return false;
   }
 
-  void SetX2(uint nx2) {
+  void SetX2(uint32_t nx2) {
     Lock();
     x2 = nx2;
     Unlock();
   }
-  void SetY2(uint ny2) {
+  void SetY2(uint32_t ny2) {
     Lock();
     y2 = ny2;
     Unlock();
@@ -314,10 +314,10 @@ class LineHook : public Genhook {
     Unlock();
   }
 
-  uint GetX2(void) const {
+  uint32_t GetX2(void) const {
     return x2;
   }
-  uint GetY2(void) const {
+  uint32_t GetY2(void) const {
     return y2;
   }
   ushort GetColor(void) const {
@@ -327,11 +327,11 @@ class LineHook : public Genhook {
 
 class BoxHook : public Genhook {
  private:
-  uint xsize, ysize;
+  uint32_t xsize, ysize;
   ushort color;
 
  public:
-  BoxHook(Script* owner, JSObject* nself, uint x, uint y, uint nxsize, uint nysize, ushort ncolor, ushort opacity,
+  BoxHook(Script* owner, JSObject* nself, uint32_t x, uint32_t y, uint32_t nxsize, uint32_t nysize, ushort ncolor, ushort opacity,
           bool automap = false, Align align = Left, ScreenhookState state = Perm)
       : Genhook(owner, nself, x, y, opacity, automap, align, state), xsize(nxsize), ysize(nysize), color(ncolor) {}
   ~BoxHook(void) {}
@@ -345,12 +345,12 @@ class BoxHook : public Genhook {
  public:
   bool IsInRange(int dx, int dy);
 
-  void SetXSize(uint nxsize) {
+  void SetXSize(uint32_t nxsize) {
     Lock();
     xsize = nxsize;
     Unlock();
   }
-  void SetYSize(uint nysize) {
+  void SetYSize(uint32_t nysize) {
     Lock();
     ysize = nysize;
     Unlock();
@@ -361,10 +361,10 @@ class BoxHook : public Genhook {
     Unlock();
   }
 
-  uint GetXSize(void) const {
+  uint32_t GetXSize(void) const {
     return xsize;
   }
-  uint GetYSize(void) const {
+  uint32_t GetYSize(void) const {
     return ysize;
   }
   ushort GetColor(void) const {
@@ -374,10 +374,10 @@ class BoxHook : public Genhook {
 
 class FrameHook : public Genhook {
  private:
-  uint xsize, ysize;
+  uint32_t xsize, ysize;
 
  public:
-  FrameHook(Script* owner, JSObject* nself, uint x, uint y, uint nxsize, uint nysize, bool automap = false,
+  FrameHook(Script* owner, JSObject* nself, uint32_t x, uint32_t y, uint32_t nxsize, uint32_t nysize, bool automap = false,
             Align align = Left, ScreenhookState state = Perm)
       : Genhook(owner, nself, x, y, 0, automap, align, state), xsize(nxsize), ysize(nysize) {}
   ~FrameHook(void) {}
@@ -391,21 +391,21 @@ class FrameHook : public Genhook {
  public:
   bool IsInRange(int dx, int dy);
 
-  void SetXSize(uint nxsize) {
+  void SetXSize(uint32_t nxsize) {
     Lock();
     xsize = nxsize;
     Unlock();
   }
-  void SetYSize(uint nysize) {
+  void SetYSize(uint32_t nysize) {
     Lock();
     ysize = nysize;
     Unlock();
   }
 
-  uint GetXSize(void) const {
+  uint32_t GetXSize(void) const {
     return xsize;
   }
-  uint GetYSize(void) const {
+  uint32_t GetYSize(void) const {
     return ysize;
   }
 };

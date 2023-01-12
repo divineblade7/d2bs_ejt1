@@ -26,25 +26,25 @@ bool zOrderSort(Genhook* first, Genhook* second) {
   return first->GetZOrder() < second->GetZOrder();
 }
 
-bool HoverHook(Genhook* hook, void* argv, uint) {
+bool HoverHook(Genhook* hook, void* argv, uint32_t) {
   HookClickHelper* helper = (HookClickHelper*)argv;
   hook->Hover(&helper->point);
   return true;
 }
 
-bool ClickHook(Genhook* hook, void* argv, uint) {
+bool ClickHook(Genhook* hook, void* argv, uint32_t) {
   HookClickHelper* helper = (HookClickHelper*)argv;
   return hook->Click(helper->button, &helper->point);
 }
 
-bool DrawHook(Genhook* hook, void* argv, uint) {
+bool DrawHook(Genhook* hook, void* argv, uint32_t) {
   if ((hook->GetGameState() == (ScreenhookState)(int)argv || hook->GetGameState() == Perm) &&
       (!hook->GetIsAutomap() || (hook->GetIsAutomap() && *p_D2CLIENT_AutomapOn)))
     hook->Draw();
   return true;
 }
 
-bool CleanHook(Genhook* hook, void* argv, uint) {
+bool CleanHook(Genhook* hook, void* argv, uint32_t) {
   if (hook->getOwner() == (Script*)argv) hook->SetIsVisible(false);
   return true;
 }
@@ -54,7 +54,7 @@ void Genhook::DrawAll(ScreenhookState type) {
   ForEachVisibleHook(DrawHook, (void*)type, 1);
 }
 
-bool Genhook::ForEachHook(HookCallback proc, void* argv, uint argc) {
+bool Genhook::ForEachHook(HookCallback proc, void* argv, uint32_t argc) {
   // iterate the visible ones, then the invisible ones
   EnterCriticalSection(&globalSection);
 
@@ -81,7 +81,7 @@ bool Genhook::ForEachHook(HookCallback proc, void* argv, uint argc) {
   return (result ? true : (result2 ? true : false));
 }
 
-bool Genhook::ForEachVisibleHook(HookCallback proc, void* argv, uint argc) {
+bool Genhook::ForEachVisibleHook(HookCallback proc, void* argv, uint32_t argc) {
   // iterate the visible hooks
   EnterCriticalSection(&globalSection);
 
@@ -97,7 +97,7 @@ bool Genhook::ForEachVisibleHook(HookCallback proc, void* argv, uint argc) {
   LeaveCriticalSection(&globalSection);
   return result;
 }
-bool Genhook::ForEachVisibleHookUnLocked(HookCallback proc, void* argv, uint argc) {
+bool Genhook::ForEachVisibleHookUnLocked(HookCallback proc, void* argv, uint32_t argc) {
   // iterate the visible hooks  //unlocked to call funcs, locked to draw
   EnterCriticalSection(&globalSection);
 
@@ -114,7 +114,7 @@ bool Genhook::ForEachVisibleHookUnLocked(HookCallback proc, void* argv, uint arg
 
   return result;
 }
-bool Genhook::ForEachInvisibleHook(HookCallback proc, void* argv, uint argc) {
+bool Genhook::ForEachInvisibleHook(HookCallback proc, void* argv, uint32_t argc) {
   // iterate the invisible hooks
   EnterCriticalSection(&globalSection);
 
@@ -159,7 +159,7 @@ void Genhook::Clean(Script* owner) {
   LeaveCriticalSection(&globalSection);
 }
 
-Genhook::Genhook(Script* nowner, JSObject* nself, uint x, uint y, ushort nopacity, bool nisAutomap, Align nalign,
+Genhook::Genhook(Script* nowner, JSObject* nself, uint32_t x, uint32_t y, ushort nopacity, bool nisAutomap, Align nalign,
                  ScreenhookState ngameState)
     : owner(nowner),
       isAutomap(nisAutomap),
@@ -278,7 +278,7 @@ void Genhook::SetHoverHandler(jsval handler) {
 void TextHook::Draw(void) {
   Lock();
   if (GetIsVisible() && GetX() != -1 && GetY() != -1 && text) {
-    uint x = GetX(), y = GetY(), w = CalculateTextLen(text, font).x;
+    uint32_t x = GetX(), y = GetY(), w = CalculateTextLen(text, font).x;
     x -= (alignment != Center ? (alignment != Right ? 0 : w) : w / 2);
     POINT loc = {static_cast<LONG>(x), static_cast<LONG>(y)};
     if (GetIsAutomap()) {
@@ -311,7 +311,7 @@ void TextHook::SetText(const wchar_t* ntext) {
 void ImageHook::Draw(void) {
   Lock();
   if (GetIsVisible() && GetX() != -1 && GetY() != -1 && GetImage() != NULL && image != NULL) {
-    uint x = GetX(), y = GetY(), w = image->cells[0]->width;
+    uint32_t x = GetX(), y = GetY(), w = image->cells[0]->width;
     x += (alignment != Left ? (alignment != Right ? 0 : -1 * (w / 2)) : w / 2);
     POINT loc = {static_cast<LONG>(x), static_cast<LONG>(y)};
     if (GetIsAutomap()) {
@@ -353,7 +353,7 @@ void ImageHook::SetImage(const wchar_t* nimage) {
 void LineHook::Draw(void) {
   Lock();
   if (GetIsVisible() && GetX() != -1 && GetY() != -1) {
-    uint x = GetX(), y = GetY(), _x2 = GetX2(), _y2 = GetY2();
+    uint32_t x = GetX(), y = GetY(), _x2 = GetX2(), _y2 = GetY2();
     POINT loc = {static_cast<LONG>(x), static_cast<LONG>(y)};
     POINT sz = {static_cast<LONG>(_x2), static_cast<LONG>(_y2)};
     if (GetIsAutomap()) {
@@ -370,7 +370,7 @@ void LineHook::Draw(void) {
 void BoxHook::Draw(void) {
   Lock();
   if (GetIsVisible() && GetX() != -1 && GetY() != -1) {
-    uint x = GetX(), y = GetY(), x2 = GetXSize(), y2 = GetYSize();
+    uint32_t x = GetX(), y = GetY(), x2 = GetXSize(), y2 = GetYSize();
     if (alignment == Center) {
       x -= x2 / 2;
     } else if (alignment == Right) {
@@ -399,7 +399,7 @@ bool BoxHook::IsInRange(int dx, int dy) {
 void FrameHook::Draw(void) {
   Lock();
   if (GetIsVisible() && GetX() != -1 && GetY() != -1) {
-    uint x = GetX(), y = GetY(), x2 = GetXSize(), y2 = GetYSize();
+    uint32_t x = GetX(), y = GetY(), x2 = GetXSize(), y2 = GetYSize();
     if (alignment == Center) {
       x -= x2 / 2;
     } else if (alignment == Right) {

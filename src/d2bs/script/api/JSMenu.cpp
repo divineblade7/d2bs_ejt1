@@ -58,7 +58,7 @@ JSAPI_FUNC(my_createGame) {
 
   const wchar_t *name = NULL, *pass = NULL;
   jschar *jsname = NULL, *jspass = NULL;
-  int32 diff = 3;
+  int32_t diff = 3;
   if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "W/Wi", &jsname, &jspass, &diff)) {
     THROW_ERROR(cx, "Invalid arguments specified to createGame");
   }
@@ -107,7 +107,7 @@ JSAPI_FUNC(my_addProfile) {
   if (args.length() < 6 || args.length() > 7) THROW_ERROR(cx, "Invalid arguments passed to addProfile");
 
   const wchar_t** argv[] = {&profile, &mode, &gateway, &username, &password, &charname};
-  for (uint i = 0; i < 6; i++) {
+  for (uint32_t i = 0; i < 6; i++) {
     if (!args[i].isString()) {
       THROW_ERROR(cx, "Invalid argument passed to addProfile");
     } else {
@@ -156,7 +156,7 @@ JSAPI_FUNC(my_createCharacter) {
 
   const wchar_t* name = NULL;
   jschar* jsname = NULL;
-  int32 type = -1;
+  int32_t type = -1;
   JSBool hc = JS_FALSE, ladder = JS_FALSE;
   JSAutoRequest r(cx);
   if (!JS_ConvertArguments(cx, argc, args.array(), "Wi/bb", &jsname, &type, &hc, &ladder)) {

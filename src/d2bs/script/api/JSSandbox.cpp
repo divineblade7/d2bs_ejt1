@@ -48,7 +48,7 @@ JSAPI_PROP(sandbox_addProperty) {
   JS_IdToValue(cx, id, &ID);
 
   if (JSVAL_IS_INT(ID)) {
-    int32 i;
+    int32_t i;
     if (JS_ValueToInt32(cx, ID, &i) == JS_FALSE) return JS_TRUE;
     char name[32];
     _itoa_s(i, name, 32, 10);
@@ -78,7 +78,7 @@ JSAPI_PROP(sandbox_delProperty) {
   JS_IdToValue(cx, id, &ID);
 
   if (JSVAL_IS_INT(ID)) {
-    int32 i;
+    int32_t i;
     if (JS_ValueToInt32(cx, ID, &i) == JS_FALSE) return JS_TRUE;
     char name[32];
     _itoa_s(i, name, 32, 10);
@@ -100,7 +100,7 @@ JSAPI_PROP(sandbox_getProperty) {
   JS_IdToValue(cx, id, &ID);
 
   if (JSVAL_IS_INT(ID)) {
-    int32 i;
+    int32_t i;
     if (JS_ValueToInt32(cx, ID, &i) == JS_FALSE) return JS_TRUE;
     char name[32];
     _itoa_s(i, name, 32, 10);
@@ -129,7 +129,7 @@ JSAPI_STRICT_PROP(sandbox_setProperty) {
   JS_IdToValue(cx, id, &ID);
 
   if (JSVAL_IS_INT(ID)) {
-    int32 i;
+    int32_t i;
     if (JS_ValueToInt32(cx, ID, &i) == JS_FALSE) return JS_TRUE;
     char name[32];
     _itoa_s(i, name, 32, 10);

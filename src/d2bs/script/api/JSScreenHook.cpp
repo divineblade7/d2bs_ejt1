@@ -40,7 +40,7 @@ JSAPI_FUNC(frame_ctor) {
 
   Script* script = (Script*)JS_GetContextPrivate(cx);
 
-  uint x = 0, y = 0, x2 = 0, y2 = 0;
+  uint32_t x = 0, y = 0, x2 = 0, y2 = 0;
   Align align = Left;
   bool automap = false;
   jsval click = JSVAL_VOID, hover = JSVAL_VOID;
@@ -156,7 +156,7 @@ JSAPI_FUNC(box_ctor) {
   Script* script = (Script*)JS_GetContextPrivate(cx);
 
   ScreenhookState state = (script->type() == ScriptType::OutOfGame) ? OOG : IG;
-  uint x = 0, y = 0, x2 = 0, y2 = 0;
+  uint32_t x = 0, y = 0, x2 = 0, y2 = 0;
   ushort color = 0, opacity = 0;
   Align align = Left;
   bool automap = false;
@@ -400,7 +400,7 @@ JSAPI_FUNC(text_ctor) {
   Script* script = (Script*)JS_GetContextPrivate(cx);
 
   ScreenhookState state = (script->type() == ScriptType::OutOfGame) ? OOG : IG;
-  uint x = 0, y = 0;
+  uint32_t x = 0, y = 0;
   ushort color = 0, font = 0;
   Align align = Left;
   bool automap = false;
@@ -529,7 +529,7 @@ JSAPI_FUNC(image_ctor) {
   Script* script = (Script*)JS_GetContextPrivate(cx);
 
   ScreenhookState state = (script->type() == ScriptType::OutOfGame) ? OOG : IG;
-  uint x = 0, y = 0;
+  uint32_t x = 0, y = 0;
   ushort color = 0;
   Align align = Left;
   bool automap = false;
@@ -654,7 +654,7 @@ JSAPI_FUNC(screenToAutomap) {
       if (JS_GetProperty(cx, arg, "x", &x) == JS_FALSE || JS_GetProperty(cx, arg, "y", &y) == JS_FALSE)
         THROW_ERROR(cx, "Failed to get x and/or y values");
       if (!x.isInt32() || !y.isInt32()) THROW_ERROR(cx, "Input has an x or y, but they aren't the correct type!");
-      int32 ix, iy;
+      int32_t ix, iy;
       if (JS_ValueToInt32(cx, x, &ix) == JS_FALSE || JS_ValueToInt32(cx, y, &iy))
         THROW_ERROR(cx, "Failed to convert x and/or y values");
       // convert the values
@@ -671,7 +671,7 @@ JSAPI_FUNC(screenToAutomap) {
   } else if (args.length() == 2) {
     // the args must be ints
     if (args[0].isInt32() && args[1].isInt32()) {
-      int32 ix, iy;
+      int32_t ix, iy;
       jsval* argv = args.array();
       if (JS_ValueToInt32(cx, argv[0], &ix) == JS_FALSE || JS_ValueToInt32(cx, argv[1], &iy) == JS_FALSE)
         THROW_ERROR(cx, "Failed to convert x and/or y values");
@@ -702,7 +702,7 @@ JSAPI_FUNC(automapToScreen) {
       if (JS_GetProperty(cx, arg, "x", &x) == JS_FALSE || JS_GetProperty(cx, arg, "y", &y) == JS_FALSE)
         THROW_ERROR(cx, "Failed to get x and/or y values");
       if (!x.isInt32() || !y.isInt32()) THROW_ERROR(cx, "Input has an x or y, but they aren't the correct type!");
-      int32 ix, iy;
+      int32_t ix, iy;
       JSAutoRequest r(cx);
       if (JS_ValueToInt32(cx, x, &ix) == JS_FALSE || JS_ValueToInt32(cx, y, &iy)) {
         THROW_ERROR(cx, "Failed to convert x and/or y values");
@@ -721,7 +721,7 @@ JSAPI_FUNC(automapToScreen) {
   } else if (args.length() == 2) {
     // the args must be ints
     if (args[0].isInt32() && args[1].isInt32()) {
-      int32 ix, iy;
+      int32_t ix, iy;
       JSAutoRequest r(cx);
       if (JS_ValueToInt32(cx, args[0], &ix) == JS_FALSE || JS_ValueToInt32(cx, args[1], &iy) == JS_FALSE) {
         THROW_ERROR(cx, "Failed to convert x and/or y values");

@@ -73,7 +73,7 @@ JSAPI_FUNC(my_clickMap) {
 
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  uint16 nClickType = NULL, nShift = NULL, nX = NULL, nY = NULL;
+  uint16_t nClickType = NULL, nShift = NULL, nX = NULL, nY = NULL;
 
   args.rval().setBoolean(false);
 
@@ -245,7 +245,7 @@ JSAPI_FUNC(my_getPath) {
 
   if (args.length() < 5) THROW_ERROR(cx, "Not enough parameters were passed to getPath!");
 
-  uint lvl = 0, x = 0, y = 0, dx = 0, dy = 0, reductionType = 0, radius = 20;
+  uint32_t lvl = 0, x = 0, y = 0, dx = 0, dy = 0, reductionType = 0, radius = 20;
 
   {
     JSAutoRequest r(cx);
@@ -334,7 +334,7 @@ JSAPI_FUNC(my_getCollision) {
     THROW_WARNING(cx, vp, "Game not ready");
   }
 
-  uint32 nLevelId, nX, nY;
+  uint32_t nLevelId, nX, nY;
   {
     JSAutoRequest r(cx);
     if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "uuu", &nLevelId, &nX, &nY)) {
@@ -429,8 +429,8 @@ JSAPI_FUNC(my_clickItem) {
     click(D2CLIENT_GetPlayerUnit(), D2CLIENT_GetPlayerUnit()->pInventory, pUnit->pItemData->BodyLocation);
     return JS_TRUE;
   } else if (args.length() == 2 && args[0].isInt32() && args[1].isInt32()) {
-    jsint nClickType = args[0].toInt32();
-    jsint nBodyLoc = args[1].toInt32();
+    int32_t nClickType = args[0].toInt32();
+    int32_t nBodyLoc = args[1].toInt32();
 
     if (nClickType == NULL) {
       clickequip* click = (clickequip*)*(DWORD*)(D2CLIENT_BodyClickTable + (4 * nBodyLoc));
@@ -463,7 +463,7 @@ JSAPI_FUNC(my_clickItem) {
 
     pUnit = D2CLIENT_FindUnit(pmyUnit->dwUnitId, pmyUnit->dwType);
 
-    jsint nClickType = args[0].toInt32();
+    int32_t nClickType = args[0].toInt32();
 
     if (!pUnit || !(pUnit->dwType == UNIT_ITEM) || !pUnit->pItemData) {
       THROW_ERROR(cx, "Object is not an item!");
@@ -554,10 +554,10 @@ JSAPI_FUNC(my_clickItem) {
     }
   } else if (args.length() == 4) {
     if (args[0].isInt32() && args[1].isInt32() && args[2].isInt32() && args[3].isInt32()) {
-      jsint nButton = args[0].toInt32();
-      jsint nX = args[1].toInt32();
-      jsint nY = args[2].toInt32();
-      jsint nLoc = args[3].toInt32();
+      int32_t nButton = args[0].toInt32();
+      int32_t nX = args[1].toInt32();
+      int32_t nY = args[2].toInt32();
+      int32_t nLoc = args[3].toInt32();
 
       int clickTarget = LOCATION_NULL;
       InventoryLayout* pLayout = NULL;
@@ -661,7 +661,7 @@ JSAPI_FUNC(my_getLocaleString) {
 
   if (args.length() < 1 || !args[0].isInt32()) return JS_TRUE;
 
-  uint16 localeId;
+  uint16_t localeId;
   JSAutoRequest r(cx);
   JS_ValueToUint16(cx, args[0], &localeId);
   wchar_t* wString = D2LANG_GetLocaleText(localeId);
@@ -690,8 +690,8 @@ JSAPI_FUNC(my_rand) {
   else
     seed = rand();
 
-  jsint high;
-  jsint low;
+  int32_t high;
+  int32_t low;
   {
     JSAutoRequest r(cx);
     if (JS_ConvertArguments(cx, 2, args.array(), "ii", &low, &high) == JS_FALSE) {
@@ -715,10 +715,10 @@ JSAPI_FUNC(my_getDistance) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
   // TODO: Add the type of distance to the api design
-  jsint nX1 = NULL;
-  jsint nX2 = NULL;
-  jsint nY1 = NULL;
-  jsint nY2 = NULL;
+  int32_t nX1 = NULL;
+  int32_t nX2 = NULL;
+  int32_t nY1 = NULL;
+  int32_t nY2 = NULL;
 
   JSAutoRequest r(cx);
   if (args.length() == 1 && args[0].isObject()) {
@@ -785,7 +785,7 @@ JSAPI_FUNC(my_getDistance) {
     }
   }
 
-  jsdouble jsdist = (jsdouble)abs(GetDistance(nX1, nY1, nX2, nY2));
+  double jsdist = (double)abs(GetDistance(nX1, nY1, nX2, nY2));
   jsval rval;
   rval = JS_NumberValue(jsdist);
   args.rval().set(rval);
@@ -797,8 +797,8 @@ JSAPI_FUNC(my_gold) {
 
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  jsint nGold = NULL;
-  jsint nMode = 1;
+  int32_t nGold = NULL;
+  int32_t nMode = 1;
 
   if (args.length() > 0 && args[0].isInt32()) nGold = args[0].toInt32();
 
@@ -816,7 +816,7 @@ JSAPI_FUNC(my_checkCollision) {
   if (args.length() == 3 && args[0].isObject() && args[1].isObject() && args[2].isInt32()) {
     myUnit* pUnitA = (myUnit*)JS_GetPrivate(args[0].toObjectOrNull());
     myUnit* pUnitB = (myUnit*)JS_GetPrivate(args[1].toObjectOrNull());
-    jsint nBitMask = args[2].toInt32();
+    int32_t nBitMask = args[2].toInt32();
 
     if (!pUnitA || (pUnitA->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT || !pUnitB ||
         (pUnitB->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT)
@@ -837,7 +837,7 @@ JSAPI_FUNC(my_checkCollision) {
 JSAPI_FUNC(my_getCursorType) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
-  jsint nType = NULL;
+  int32_t nType = NULL;
 
   if (args.length() > 0) nType = args[0].toInt32();
 
@@ -869,7 +869,7 @@ JSAPI_FUNC(my_getSkillById) {
 
   if (args.length() < 1 || !args[0].isInt32()) return JS_TRUE;
 
-  jsint nId = args[0].toInt32();
+  int32_t nId = args[0].toInt32();
   JSAutoRequest r(cx);
   args.rval().setString(JS_NewStringCopyZ(cx, "Unknown"));
   int row = 0;
@@ -929,7 +929,7 @@ JSAPI_FUNC(my_getTradeInfo) {
 
   if (!args[0].isInt32()) return JS_TRUE;
 
-  jsint nMode = args[0].toInt32();
+  int32_t nMode = args[0].toInt32();
 
   switch (nMode) {
     case 0:
@@ -964,7 +964,7 @@ JSAPI_FUNC(my_getUIFlag) {
 
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  jsint nUIId = args[0].toInt32();
+  int32_t nUIId = args[0].toInt32();
 
   args.rval().setBoolean(D2CLIENT_GetUIState(nUIId));
   return JS_TRUE;
@@ -980,7 +980,7 @@ JSAPI_FUNC(my_getWaypoint) {
 
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  jsint nWaypointId = args[0].toInt32();
+  int32_t nWaypointId = args[0].toInt32();
 
   if (nWaypointId > 40) nWaypointId = NULL;
 
@@ -1020,7 +1020,7 @@ JSAPI_FUNC(my_playSound) {
     return JS_TRUE;
   }
 
-  // jsint nSoundId = JSVAL_TO_INT(JS_ARGV(cx, vp)[0]);
+  // int32_t nSoundId = JSVAL_TO_INT(JS_ARGV(cx, vp)[0]);
   //  D2CLIENT_PlaySound(nSoundId);
 
   args.rval().setBoolean(true);
@@ -1032,7 +1032,7 @@ JSAPI_FUNC(my_say) {
 
   args.rval().setBoolean(false);
 
-  for (uint i = 0; i < args.length(); i++) {
+  for (uint32_t i = 0; i < args.length(); i++) {
     if (!args[i].isNull()) {
       JSAutoRequest r(cx);
       if (!JS_ConvertValue(cx, args[i], JSTYPE_STRING, &args[i])) {
@@ -1075,7 +1075,7 @@ JSAPI_FUNC(my_clickParty) {
 
   if (!bFound) return JS_TRUE;
 
-  jsint nMode = args[1].toInt32();
+  int32_t nMode = args[1].toInt32();
 
   BnetData* pData = (*p_D2LAUNCH_BnData);
 
@@ -1121,7 +1121,7 @@ JSAPI_FUNC(my_useStatPoint) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
   WORD stat = 0;
-  int32 count = 1;
+  int32_t count = 1;
   JSAutoRequest r(cx);
   if (!JS_ConvertArguments(cx, argc, args.array(), "c/u", &stat, &count)) {
     return JS_FALSE;
@@ -1138,7 +1138,7 @@ JSAPI_FUNC(my_useSkillPoint) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
   WORD skill = 0;
-  int32 count = 1;
+  int32_t count = 1;
   JSAutoRequest r(cx);
   if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "c/u", &skill, &count)) {
     return JS_FALSE;
@@ -1154,9 +1154,9 @@ JSAPI_FUNC(my_getBaseStat) {
 
   if (args.length() > 2) {
     char *szStatName = NULL, *szTableName = NULL;
-    jsint nBaseStat = 0;
-    jsint nClassId = 0;
-    jsint nStat = -1;
+    int32_t nBaseStat = 0;
+    int32_t nClassId = 0;
+    int32_t nStat = -1;
     JSAutoRequest r(cx);
     if (args[0].isString()) {
       szTableName = JS_EncodeStringToUTF8(cx, args[0].toString());
@@ -1202,7 +1202,7 @@ JSAPI_FUNC(my_weaponSwitch) {
 
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  jsint nParameter = NULL;
+  int32_t nParameter = NULL;
   if (args.length() > 0) {
     JSAutoRequest r(cx);
     if (JS_ValueToInt32(cx, args[0], &nParameter) == JS_FALSE) {
@@ -1253,8 +1253,8 @@ JSAPI_FUNC(my_getPlayerFlag) {
 
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
-  uint32 nFirstUnitId = (uint32)-1;
-  uint32 nSecondUnitId = (uint32)-1;
+  uint32_t nFirstUnitId = (uint32_t)-1;
+  uint32_t nSecondUnitId = (uint32_t)-1;
   {
     JSAutoRequest r(cx);
     JS_ValueToECMAUint32(cx, args[0], &nFirstUnitId);

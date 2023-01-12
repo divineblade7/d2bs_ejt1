@@ -45,7 +45,7 @@ JSAPI_FUNC(my_stringToEUC) {
 JSAPI_FUNC(my_print) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
-  for (uint i = 0; i < args.length(); i++) {
+  for (uint32_t i = 0; i < args.length(); i++) {
     if (!args[i].isNull()) {
       JSAutoRequest r(cx);
       if (!JS_ConvertValue(cx, args[i], JSTYPE_STRING, &args[i])) {
@@ -113,7 +113,7 @@ JSAPI_FUNC(my_clearInterval) {
 JSAPI_FUNC(my_delay) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
-  uint32 nDelay = 0;
+  uint32_t nDelay = 0;
   {
     JSAutoRequest r(cx);
     if (!JS_ConvertArguments(cx, argc, args.array(), "u", &nDelay)) {
@@ -175,7 +175,7 @@ JSAPI_FUNC(my_load) {
   }
 
   JSAutoStructuredCloneBuffer** autoBuffer = new JSAutoStructuredCloneBuffer*[args.length() - 1];
-  for (uint i = 1; i < args.length(); i++) {
+  for (uint32_t i = 1; i < args.length(); i++) {
     autoBuffer[i - 1] = new JSAutoStructuredCloneBuffer;
     autoBuffer[i - 1]->write(cx, args[i]);
   }
@@ -243,7 +243,7 @@ JSAPI_FUNC(my_stacktrace) {
 JSAPI_FUNC(my_beep) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
-  jsint nBeepId = NULL;
+  int32_t nBeepId = NULL;
 
   if (args.length() > 0 && args[0].isInt32()) nBeepId = args[0].toInt32();
 
@@ -298,7 +298,7 @@ JSAPI_FUNC(my_version) {
 JSAPI_FUNC(my_debugLog) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
-  for (uint i = 0; i < args.length(); i++) {
+  for (uint32_t i = 0; i < args.length(); i++) {
     if (!args[i].isNull()) {
       {
         JSAutoRequest r(cx);
@@ -366,7 +366,7 @@ JSAPI_FUNC(my_sendCopyData) {
 
   const wchar_t *windowClassName = NULL, *windowName = NULL;
   char* data = NULL;
-  jsint nModeId = NULL;
+  int32_t nModeId = NULL;
   HWND hWnd = NULL;
 
   {
@@ -377,14 +377,14 @@ JSAPI_FUNC(my_sendCopyData) {
 
     if (!args[1].isNull()) {
       if (args[1].isNumber()) {
-        JS_ValueToECMAUint32(cx, args[1], (uint32*)&hWnd);
+        JS_ValueToECMAUint32(cx, args[1], (uint32_t*)&hWnd);
       } else if (args[1].isString()) {
         windowName = JS_GetStringCharsZ(cx, args[1].toString());
       }
     }
 
     if (args[2].isNumber() && !args[2].isNull()) {
-      JS_ValueToECMAUint32(cx, args[2], (uint32*)&nModeId);
+      JS_ValueToECMAUint32(cx, args[2], (uint32_t*)&nModeId);
     }
 
     if (args[3].isString() && !args[3].isNull()) {
@@ -565,7 +565,7 @@ JSAPI_FUNC(my_sendPacket) {
   }
 
   BYTE* aPacket;
-  uint32 len = 0;
+  uint32_t len = 0;
   JSAutoRequest r(cx);
 
   if (args[0].isObject()) {
@@ -585,9 +585,9 @@ JSAPI_FUNC(my_sendPacket) {
     }
 
     aPacket = new BYTE[2 * argc];
-    uint32 size = 0;
+    uint32_t size = 0;
 
-    for (uint i = 0; i < argc; i += 2, len += size) {
+    for (uint32_t i = 0; i < argc; i += 2, len += size) {
       JS_ValueToECMAUint32(cx, args[i], &size);
       JS_ValueToECMAUint32(cx, args[i + 1], (uint32_t*)&aPacket[len]);
     }
@@ -610,7 +610,7 @@ JSAPI_FUNC(my_getPacket) {
 
   JSAutoRequest r(cx);
   BYTE* aPacket;
-  uint32 len = 0;
+  uint32_t len = 0;
 
   if (args[0].isObject()) {
     JSObject* obj = args[0].toObjectOrNull();
@@ -627,9 +627,9 @@ JSAPI_FUNC(my_getPacket) {
     }
 
     aPacket = new BYTE[2 * argc];
-    uint32 size = 0;
+    uint32_t size = 0;
 
-    for (uint i = 0; i < argc; i += 2, len += size) {
+    for (uint32_t i = 0; i < argc; i += 2, len += size) {
       JS_ValueToECMAUint32(cx, args[i], &size);
       JS_ValueToECMAUint32(cx, args[i + 1], (uint32_t*)&aPacket[len]);
     }
@@ -663,8 +663,8 @@ JSAPI_FUNC(my_getIP) {
 JSAPI_FUNC(my_sendClick) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
-  uint32 x = 0;
-  uint32 y = 0;
+  uint32_t x = 0;
+  uint32_t y = 0;
   {
     JSAutoRequest r(cx);
     if (!JS_ConvertArguments(cx, argc, args.array(), "uu", &x, &y)) {
@@ -685,7 +685,7 @@ JSAPI_FUNC(my_sendClick) {
 JSAPI_FUNC(my_sendKey) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
-  uint32 key;
+  uint32_t key;
   {
     JSAutoRequest r(cx);
     if (!JS_ConvertArguments(cx, argc, args.array(), "u", &key)) {
