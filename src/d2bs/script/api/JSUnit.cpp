@@ -1691,9 +1691,8 @@ JSAPI_FUNC(unit_getItem) {
 
   if (args.get(0).isString()) {
     const wchar_t* szText = JS_GetStringCharsZ(cx, args[0].toString());
-    char* euc = UnicodeToAnsi(szText, CP_ACP);
-    strcpy_s(szName, sizeof(szName), euc);
-    delete[] euc;
+    auto euc = d2bs::util::wide_to_ansi(szText);
+    strcpy_s(szName, sizeof(szName), euc.c_str());
   }
 
   if (args.get(0).isNumber() && !args[0].isNull()) JS_ValueToECMAUint32(cx, args[0], &nClassId);

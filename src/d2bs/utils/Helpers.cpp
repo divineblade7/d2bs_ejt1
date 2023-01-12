@@ -15,14 +15,6 @@
 #include <tlhelp32.h>
 #include <wctype.h>
 
-char* UnicodeToAnsi(const wchar_t* str, UINT codepage) {
-  char* buf = NULL;
-  int len = WideCharToMultiByte(codepage, 0, str, -1, buf, 0, (codepage ? NULL : "?"), NULL);
-  buf = new char[len];
-  WideCharToMultiByte(codepage, 0, str, -1, buf, len, (codepage ? NULL : "?"), NULL);
-  return buf;
-}
-
 void StringToLower(char* p) {
   for (; *p; ++p) *p = static_cast<char>(tolower(static_cast<int>(*p)));
 }

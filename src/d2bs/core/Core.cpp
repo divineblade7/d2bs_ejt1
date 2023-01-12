@@ -3,9 +3,10 @@
 #include "d2bs/core/Control.h"
 #include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/diablo/D2Ptrs.h"
+#include "d2bs/new_util/localization.h"
+#include "d2bs/utils/Console.h"
 #include "d2bs/utils/CriticalSections.h"
 #include "d2bs/utils/Helpers.h"
-#include "d2bs/utils/Console.h"
 
 #include <algorithm>
 #include <list>
@@ -120,10 +121,9 @@ void __fastcall Say(const wchar_t* szFormat, ...) {
   // help button and ! ok msg for disconnected
   else if (findControl(CONTROL_BUTTON, 5308, -1, 187, 470, 80, 20) &&
            (!findControl(CONTROL_BUTTON, 5102, -1, 351, 337, 96, 32))) {
-    char* lBuffer = UnicodeToAnsi(szBuffer, CP_ACP);
-    memcpy((char*)p_D2MULTI_ChatBoxMsg, lBuffer, strlen(lBuffer) + 1);
+    auto lBuffer = d2bs::util::wide_to_ansi(szBuffer);
+    memcpy((char*)p_D2MULTI_ChatBoxMsg, lBuffer.c_str(), lBuffer.length() + 1);
     D2MULTI_DoChat();
-    delete[] lBuffer;
   }
 
   delete[] szBuffer;
@@ -182,9 +182,8 @@ void LoadMPQ(const char* mpq) {
 }
 
 void LoadMPQ(const wchar_t* mpq) {
-  char* path = UnicodeToAnsi(mpq);
-  LoadMPQ(path);
-  delete[] path;
+  auto path = d2bs::util::wide_to_ansi(mpq);
+  LoadMPQ(path.c_str());
   // BNCLIENT_DecodeAndLoadKeys();
 }
 

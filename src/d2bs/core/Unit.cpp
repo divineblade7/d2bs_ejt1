@@ -3,6 +3,7 @@
 #include "d2bs/diablo/Constants.h"
 #include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/utils/Helpers.h"
+#include "d2bs/new_util/localization.h"
 
 #include <vector>
 
@@ -196,13 +197,12 @@ const char* GetUnitName(UnitAny* pUnit, char* szTmp, size_t bufSize) {
   if (pUnit->dwType == UNIT_ITEM) {
     wchar_t wBuffer[256] = L"";
     D2CLIENT_GetItemName(pUnit, wBuffer, _countof(wBuffer));
-    char* szBuffer = UnicodeToAnsi(wBuffer);
-    if (strchr(szBuffer, '\n')) {
-      *strchr(szBuffer, '\n') = 0x00;
+    auto szBuffer = d2bs::util::wide_to_ansi(wBuffer);
+    if (!szBuffer.empty() && szBuffer[0] == '\n') {
+      szBuffer[0] = 0;
     }
 
-    strcpy_s(szTmp, bufSize, szBuffer);
-    delete[] szBuffer;
+    strcpy_s(szTmp, bufSize, szBuffer.c_str());
     return szTmp;
   }
   if (pUnit->dwType == UNIT_OBJECT || pUnit->dwType == UNIT_TILE) {

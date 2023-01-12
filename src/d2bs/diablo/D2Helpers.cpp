@@ -46,10 +46,9 @@ void LogNoFormat(const wchar_t* szString) {
   FILE* log = _wfsopen(path, L"a+", _SH_DENYNO);
   // #endif
   static DWORD id = GetProcessId(GetCurrentProcess());
-  char* sString = UnicodeToAnsi(szString);
+  auto sString = d2bs::util::wide_to_ansi(szString);
   strftime(szTime, sizeof(szTime), "%x %X", &timestamp);
-  fprintf(log, "[%s] D2BS %d: %s\n", szTime, id, sString);
-  delete[] sString;
+  fprintf(log, "[%s] D2BS %d: %s\n", szTime, id, sString.c_str());
   // #ifndef DEBUG
   fflush(log);
   fclose(log);
