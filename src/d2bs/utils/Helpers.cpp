@@ -15,30 +15,6 @@
 #include <tlhelp32.h>
 #include <wctype.h>
 
-bool StringToBool(const char* str) {
-  switch (tolower(str[0])) {
-    case 't':
-    case '1':
-      return true;
-    case 'f':
-    case '0':
-    default:
-      return false;
-  }
-}
-
-bool StringToBool(const wchar_t* str) {
-  switch (tolower(str[0])) {
-    case 't':
-    case '1':
-      return true;
-    case 'f':
-    case '0':
-    default:
-      return false;
-  }
-}
-
 void StringReplace(char* str, const char find, const char replace, size_t buflen) {
   for (size_t i = 0; i < buflen; i++) {
     if (str[i] == find) str[i] = replace;
