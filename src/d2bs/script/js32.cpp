@@ -4,10 +4,6 @@
 
 #include <fstream>
 
-JSBool JSVAL_IS_OBJECT(jsval v) {
-  return JSVAL_IS_PRIMITIVE(v) == JS_FALSE;
-}
-
 JSObject* BuildObject(JSContext* cx, JSClass* classp, JSFunctionSpec* funcs, JSPropertySpec* props, void* priv,
                       JSObject* proto, JSObject* parent) {
   JS_BeginRequest(cx);

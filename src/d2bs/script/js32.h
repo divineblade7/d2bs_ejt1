@@ -21,8 +21,6 @@ typedef unsigned int uint32_t;
 #define JS_AddValueRoot(cx, vp) JS_AddNamedValueRoot((cx), (vp), NAME(__LINE__, vp))
 #define JS_AddObjectRoot(cx, vp) JS_AddNamedObjectRoot((cx), (vp), NAME(__LINE__, vp))
 
-JSBool JSVAL_IS_OBJECT(jsval v);
-
 // IMPORTANT: Ordering is critical here! If your object has a
 // defined prototype, _THAT PROTOTYPE MUST BE LISTED ABOVE IT_
 struct JSClassSpec {
