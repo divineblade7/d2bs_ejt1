@@ -66,9 +66,12 @@ ActMap::ActMap(const Level* level) {
 }
 
 ActMap::~ActMap(void) {
-  DeleteCriticalSection(lock);
-  delete lock;
-  lock = NULL;
+  if (lock) {
+    // had AV here, will be fixed in cleanup when getting rid of the fuckery ~ ejt
+    DeleteCriticalSection(lock);
+    delete lock;
+    lock = NULL;
+  }
   PathingPointList.clear();
 }
 

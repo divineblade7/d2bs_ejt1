@@ -76,7 +76,7 @@ class ActMap : public Map {
   RoomList addedRooms;
 
   // Level* cachedLevel;
-  CRITICAL_SECTION* lock;
+  CRITICAL_SECTION* lock = nullptr;
 
   void Build(void);
 
