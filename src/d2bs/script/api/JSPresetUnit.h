@@ -12,6 +12,16 @@ JSAPI_PROP(presetunit_getProperty);
 JSAPI_FUNC(my_getPresetUnit);
 JSAPI_FUNC(my_getPresetUnits);
 
+struct myPresetUnit {
+  DWORD dwType;
+  DWORD dwRoomX;
+  DWORD dwRoomY;
+  DWORD dwPosX;
+  DWORD dwPosY;
+  DWORD dwId;
+  DWORD dwLevel;
+};
+
 enum presetunit_tinyid {
   PUNIT_TYPE,   // 0
   PUNIT_ROOMX,  // 1
@@ -32,12 +42,7 @@ static JSPropertySpec presetunit_props[] = {
     {"level", PUINT_LEVEL, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(presetunit_getProperty), JSOP_NULLWRAPPER},
     {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
 
-struct myPresetUnit {
-  DWORD dwType;
-  DWORD dwRoomX;
-  DWORD dwRoomY;
-  DWORD dwPosX;
-  DWORD dwPosY;
-  DWORD dwId;
-  DWORD dwLevel;
-};
+static JSClass presetunit_class = {
+    "PresetUnit", JSCLASS_HAS_PRIVATE,
+    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
+                 JS_ResolveStub, JS_ConvertStub, presetunit_finalize, presetunit_ctor)};

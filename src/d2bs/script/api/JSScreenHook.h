@@ -38,6 +38,11 @@ static JSPropertySpec frame_props[] = {
 
 static JSFunctionSpec frame_methods[] = {JS_FS("remove", hook_remove, 0, FUNCTION_FLAGS), JS_FS_END};
 
+static JSClass frame_class = {
+    "Frame", JSCLASS_HAS_PRIVATE,
+    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
+                 JS_ResolveStub, JS_ConvertStub, hook_finalize, frame_ctor)};
+
 /*********************************************************
                                         box Header
 **********************************************************/
@@ -75,6 +80,10 @@ static JSPropertySpec box_props[] = {
 
 static JSFunctionSpec box_methods[] = {JS_FS("remove", hook_remove, 0, FUNCTION_FLAGS), JS_FS_END};
 
+static JSClass box_class = {"Box", JSCLASS_HAS_PRIVATE,
+                            JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                         JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, hook_finalize, box_ctor)};
+
 /*********************************************************
                                         Line Header
 **********************************************************/
@@ -107,6 +116,10 @@ static JSPropertySpec line_props[] = {
     {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
 
 static JSFunctionSpec line_methods[] = {JS_FS("remove", hook_remove, 0, FUNCTION_FLAGS), JS_FS_END};
+
+static JSClass line_class = {"Line", JSCLASS_HAS_PRIVATE,
+                             JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                          JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, hook_finalize, line_ctor)};
 
 /*********************************************************
                                         Text Header
@@ -143,6 +156,10 @@ static JSPropertySpec text_props[] = {
 
 static JSFunctionSpec text_methods[] = {JS_FS("remove", hook_remove, 0, FUNCTION_FLAGS), JS_FS_END};
 
+static JSClass text_class = {"Text", JSCLASS_HAS_PRIVATE,
+                             JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                          JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, hook_finalize, text_ctor)};
+
 /*********************************************************
                                         Image Header
 **********************************************************/
@@ -173,6 +190,11 @@ static JSPropertySpec image_props[] = {
     {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
 
 static JSFunctionSpec image_methods[] = {JS_FS("remove", hook_remove, 0, FUNCTION_FLAGS), JS_FS_END};
+
+static JSClass image_class = {
+    "Image", JSCLASS_HAS_PRIVATE,
+    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
+                 JS_ResolveStub, JS_ConvertStub, hook_finalize, image_ctor)};
 
 JSAPI_FUNC(screenToAutomap);
 JSAPI_FUNC(automapToScreen);

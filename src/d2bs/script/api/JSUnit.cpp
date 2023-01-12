@@ -1563,6 +1563,10 @@ JSAPI_FUNC(unit_getMercHP) {
 
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
+  if (!args.thisv().isObject()) {
+    args.rval().setUndefined();
+    return JS_TRUE; // should be an error but cant change the API :(
+  }
   auto self = args.thisv().toObjectOrNull();
   JS::Value* rest = 0;
   myUnit* lpUnit = (myUnit*)JS_GetInstancePrivate(cx, self, &unit_class, rest);

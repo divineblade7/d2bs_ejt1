@@ -112,3 +112,7 @@ static JSPropertySpec file_props[] = {
     {"modified", FILE_MODIFIED, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(file_getProperty), JSOP_NULLWRAPPER},
     {"autoflush", FILE_AUTOFLUSH, JSPROP_STATIC_VAR, JSOP_WRAPPER(file_getProperty), JSOP_WRAPPER(file_setProperty)},
     {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
+
+static JSClass file_class = {"File", JSCLASS_HAS_PRIVATE,
+                             JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                          JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, file_finalize, file_ctor)};

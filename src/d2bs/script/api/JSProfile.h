@@ -57,3 +57,13 @@ static JSPropertySpec profileType_props[] = {{"singlePlayer", d2bs::PROFILETYPE_
                                              {"tcpIpJoin", d2bs::PROFILETYPE_TCPIP_JOIN, JSPROP_PERMANENT_VAR,
                                               JSOP_WRAPPER(profileType_getProperty), JSOP_NULLWRAPPER},
                                              {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
+
+static JSClass profile_class = {
+    "Profile", JSCLASS_HAS_PRIVATE,
+    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
+                 JS_ResolveStub, JS_ConvertStub, profile_finalize, profile_ctor)};
+
+static JSClass profileType_class = {
+    "ProfileType", JSCLASS_HAS_PRIVATE,
+    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
+                 JS_ResolveStub, JS_ConvertStub, NULL, profileType_ctor)};

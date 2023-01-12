@@ -14,7 +14,7 @@ JSAPI_FUNC(sqlite_close);
 JSAPI_FUNC(sqlite_open);
 JSAPI_PROP(sqlite_getProperty);
 void sqlite_finalize(JSFreeOp* fop, JSObject* obj);
-//JSBool sqlite_equal(JSContext* cx, JSObject* obj, JS::Value v, JSBool* bp);
+// JSBool sqlite_equal(JSContext* cx, JSObject* obj, JS::Value v, JSBool* bp);
 
 CLASS_CTOR(sqlite_stmt);
 
@@ -64,3 +64,12 @@ static JSPropertySpec sqlite_stmt_props[] = {
     {"ready", SQLITE_STMT_READY, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(sqlite_stmt_getProperty), JSOP_NULLWRAPPER},
     {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
 
+static JSClass sqlite_db = {"SQLite", JSCLASS_HAS_PRIVATE,
+                            JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, (JSPropertyOp)JS_PropertyStub,
+                                         (JSStrictPropertyOp)JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub,
+                                         JS_ConvertStub, sqlite_finalize, sqlite_ctor)};
+
+static JSClass sqlite_stmt = {
+    "DBStatement", JSCLASS_HAS_PRIVATE,
+    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
+                 JS_ResolveStub, JS_ConvertStub, sqlite_stmt_finalize, sqlite_stmt_ctor)};

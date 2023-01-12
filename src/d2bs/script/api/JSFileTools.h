@@ -37,3 +37,7 @@ static JSFunctionSpec filetools_s_methods[] = {JS_FS("remove", filetools_remove,
                                                JS_FS("writeText", filetools_writeText, 2, FUNCTION_FLAGS),
                                                JS_FS("appendText", filetools_appendText, 2, FUNCTION_FLAGS),
                                                JS_FS_END};
+
+static JSClass filetools_class = {"FileTools", NULL,
+                                  JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                               JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL, filetools_ctor)};

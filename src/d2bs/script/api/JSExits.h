@@ -9,6 +9,15 @@ CLASS_CTOR(exit);
 void exit_finalize(JSFreeOp* fop, JSObject* obj);
 JSAPI_PROP(exit_getProperty);
 
+struct myExit {
+  DWORD x;
+  DWORD y;
+  DWORD id;
+  DWORD type;
+  DWORD tileid;
+  DWORD level;
+};
+
 enum exit_tinyid { EXIT_X, EXIT_Y, EXIT_TARGET, EXIT_TYPE, EXIT_TILEID, EXIT_LEVELID };
 
 static JSPropertySpec exit_props[] = {
@@ -20,11 +29,6 @@ static JSPropertySpec exit_props[] = {
     {"level", EXIT_LEVELID, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(exit_getProperty), JSOP_NULLWRAPPER},
     {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
 
-struct myExit {
-  DWORD x;
-  DWORD y;
-  DWORD id;
-  DWORD type;
-  DWORD tileid;
-  DWORD level;
-};
+static JSClass exit_class = {"Exit", JSCLASS_HAS_PRIVATE,
+                             JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                          JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, exit_finalize, exit_ctor)};

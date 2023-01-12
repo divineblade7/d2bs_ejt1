@@ -40,3 +40,7 @@ static JSFunctionSpec script_methods[] = {JS_FS("getNext", script_getNext, 0, FU
                                           JS_FS("join", script_join, 0, FUNCTION_FLAGS),
                                           JS_FS("send", script_send, 1, FUNCTION_FLAGS),
                                           JS_FS_END};
+
+static JSClass script_class = {"D2BSScript", JSCLASS_HAS_PRIVATE,
+                               JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                            JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL, script_ctor)};

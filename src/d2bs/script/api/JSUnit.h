@@ -40,7 +40,7 @@ void unit_finalize(JSFreeOp* fop, JSObject* obj);
 JSAPI_PROP(unit_getProperty);
 JSAPI_STRICT_PROP(unit_setProperty);
 
-//JSBool unit_equal(JSContext* cx, JSObject* obj, JS::Value v, JSBool* bp);
+// JSBool unit_equal(JSContext* cx, JSObject* obj, JS::Value v, JSBool* bp);
 
 struct myUnit {
   DWORD _dwPrivateType;
@@ -317,3 +317,7 @@ static JSFunctionSpec unit_methods[] = {
     JS_FS("getMinionCount", unit_getMinionCount, 1, FUNCTION_FLAGS),
     JS_FS("getRepairCost", me_getRepairCost, 1, FUNCTION_FLAGS),
     JS_FS("getItemCost", item_getItemCost, 1, FUNCTION_FLAGS), JS_FS_END};
+
+static JSClass unit_class = {"Unit", JSCLASS_HAS_PRIVATE,
+                             JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                          JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, unit_finalize, unit_ctor)};

@@ -26,7 +26,6 @@ typedef unsigned int uint32_t;
 struct JSClassSpec {
   JSClass* classp;
   JSClass* proto;
-  JSNative ctor;
   uint32_t argc;
   JSFunctionSpec* methods;
   JSPropertySpec* properties;
@@ -87,4 +86,4 @@ JSScript* JS_CompileFile(JSContext* cx, JSObject* globalObject, std::wstring fil
 #define JS_PS_END JS_PS(0, 0, 0, 0, 0)
 
 #define JSCLASS_SPEC(add, del, get, set, enumerate, resolve, convert, finalize, ctor) \
-  add, del, get, set, enumerate, resolve, convert, finalize, NULL, NULL, NULL, ctor, NULL
+  add, del, get, set, enumerate, resolve, convert, finalize, nullptr, nullptr, nullptr, ctor, nullptr

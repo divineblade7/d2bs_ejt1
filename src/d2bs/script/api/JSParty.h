@@ -36,3 +36,7 @@ static JSPropertySpec party_props[] = {
     {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
 
 static JSFunctionSpec party_methods[] = {JS_FS("getNext", party_getNext, 0, FUNCTION_FLAGS), JS_FS_END};
+
+static JSClass party_class = {"Party", JSCLASS_HAS_PRIVATE,
+                              JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                           JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL, party_ctor)};

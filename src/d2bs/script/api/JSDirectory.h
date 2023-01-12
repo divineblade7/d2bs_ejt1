@@ -19,6 +19,14 @@ JSAPI_PROP(dir_getProperty);
 
 void dir_finalize(JSFreeOp* fop, JSObject* obj);
 
+class DirData {
+ public:
+  wchar_t name[_MAX_FNAME];
+  DirData(const wchar_t* newname) {
+    wcscpy_s(name, _MAX_FNAME, newname);
+  }
+};
+
 //////////////////////////////////////////////////////////////////
 // directory stuff
 //////////////////////////////////////////////////////////////////
@@ -34,10 +42,6 @@ static JSFunctionSpec dir_methods[] = {JS_FS("create", dir_create, 1, FUNCTION_F
                                        JS_FS("getFiles", dir_getFiles, 1, FUNCTION_FLAGS),
                                        JS_FS("getFolders", dir_getFolders, 1, FUNCTION_FLAGS), JS_FS_END};
 
-class DirData {
- public:
-  wchar_t name[_MAX_FNAME];
-  DirData(const wchar_t* newname) {
-    wcscpy_s(name, _MAX_FNAME, newname);
-  }
-};
+static JSClass folder_class = {"Folder", JSCLASS_HAS_PRIVATE,
+                               JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                            JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, dir_finalize, dir_ctor)};

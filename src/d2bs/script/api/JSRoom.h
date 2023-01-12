@@ -54,3 +54,6 @@ static JSFunctionSpec room_methods[] = {JS_FS("getNext", room_getNext, 0, FUNCTI
                                         JS_FS("unitInRoom", room_unitInRoom, 1, FUNCTION_FLAGS),
                                         JS_FS_END};
 
+static JSClass room_class = {"Room", JSCLASS_HAS_PRIVATE,
+                             JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                          JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL, room_ctor)};

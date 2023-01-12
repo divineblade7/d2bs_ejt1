@@ -1,2 +1,1 @@
-getItemCost crashes when buying merc
-in debug builds units are not fetched correctly. it will only grab 1-2 units
+pretty much always end up crashing in weird ways during game chicken

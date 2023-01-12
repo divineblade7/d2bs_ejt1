@@ -32,3 +32,7 @@ static JSPropertySpec socket_props[] = {
     {"writeable", SOCKET_WRITEABLE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(socket_getProperty), JSOP_NULLWRAPPER},
     {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
 
+static JSClass socket_class = {
+    "Socket", JSCLASS_HAS_PRIVATE,
+    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
+                 JS_ResolveStub, JS_ConvertStub, socket_finalize, socket_ctor)};

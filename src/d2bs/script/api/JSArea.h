@@ -12,6 +12,16 @@ JSAPI_PROP(area_getProperty);
 
 JSAPI_FUNC(my_getArea);
 
+class ApiArea {
+ public:
+  ApiArea() = default;
+  ~ApiArea() = default;
+
+  DWORD AreaId;
+  DWORD Exits;
+  JSObject* ExitArray;
+};
+
 enum area_tinyid { AUNIT_EXITS, AUNIT_NAME, AUNIT_X, AUNIT_XSIZE, AUNIT_Y, AUNIT_YSIZE, AUNIT_ID };
 
 static JSPropertySpec area_props[] = {
@@ -24,8 +34,6 @@ static JSPropertySpec area_props[] = {
     {"id", AUNIT_ID, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(area_getProperty), JSOP_NULLWRAPPER},
     {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
 
-struct myArea {
-  DWORD AreaId;
-  DWORD Exits;
-  JSObject* ExitArray;
-};
+static JSClass area_class = {"Area", JSCLASS_HAS_PRIVATE,
+                             JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+                                          JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, area_finalize, area_ctor)};

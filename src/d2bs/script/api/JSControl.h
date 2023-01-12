@@ -69,3 +69,8 @@ static JSFunctionSpec control_funcs[] = {JS_FS("getNext", control_getNext, 0, FU
                                          JS_FS("click", control_click, 0, FUNCTION_FLAGS),
                                          JS_FS("setText", control_setText, 1, FUNCTION_FLAGS),
                                          JS_FS("getText", control_getText, 0, FUNCTION_FLAGS), JS_FS_END};
+
+static JSClass control_class = {
+    "Control", JSCLASS_HAS_PRIVATE,
+    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
+                 JS_ResolveStub, JS_ConvertStub, control_finalize, control_ctor)};

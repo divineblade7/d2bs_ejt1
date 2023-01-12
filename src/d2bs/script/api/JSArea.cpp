@@ -9,7 +9,7 @@
 EMPTY_CTOR(area)
 
 void area_finalize(JSFreeOp*, JSObject* obj) {
-  myArea* pArea = (myArea*)JS_GetPrivate(obj);
+  ApiArea* pArea = (ApiArea*)JS_GetPrivate(obj);
 
   if (pArea) {
     JS_SetPrivate(obj, NULL);
@@ -18,8 +18,8 @@ void area_finalize(JSFreeOp*, JSObject* obj) {
 }
 
 JSAPI_PROP(area_getProperty) {
-  myArea* pArea = (myArea*)JS_GetPrivate(obj);
-  ;
+  ApiArea* pArea = (ApiArea*)JS_GetPrivate(obj);
+
   if (!pArea) return JS_FALSE;
 
   Level* pLevel = GetLevel(pArea->AreaId);
@@ -116,7 +116,7 @@ JSAPI_FUNC(my_getArea) {
     return JS_TRUE;
   }
 
-  myArea* pArea = new myArea;
+  ApiArea* pArea = new ApiArea;
   if (!pArea) {
     args.rval().setBoolean(false);
     return JS_TRUE;
