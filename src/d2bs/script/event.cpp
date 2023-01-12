@@ -173,8 +173,9 @@ bool PacketEventCallback(Script* script, const char* name, BYTE* pPacket, DWORD 
 
     script->FireEvent(evt);
     script->request_interrupt();
-    evt->wait();
-    return evt->block();
+    // TODO: Removed packet blocking because of deadlock inside evt->wait() 
+    //evt->wait();
+    //return evt->block();
   }
 
   return false;
@@ -295,7 +296,7 @@ void PacketEvent::process() {
 
   JS_BeginRequest(cx);
 
-  JS::RootedObject arr(cx,  JS_NewUint8Array(cx, size));
+  JS::RootedObject arr(cx, JS_NewUint8Array(cx, size));
 
   for (uint32_t i = 0; i < size; i++) {
     JS::Value jsarr = UINT_TO_JSVAL(help[i]);
@@ -623,6 +624,8 @@ void DisposeEvent::process() {
 Event::Event(Script* owner, std::string name) : owner_(owner), name_(name) {}
 
 void Event::wait() {
+  // TODO: This could be a source for deadlocks, only temporarily made it like this to support waiting for results to
+  // see if events should block or not. Refactor this properly some time! ~ ejt
   is_processed_.wait(true);
 }
 
