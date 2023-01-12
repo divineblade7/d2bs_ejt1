@@ -2,7 +2,7 @@
 
 #include <intrin.h> // __debugbreak
 
-AutoRoot::AutoRoot(JSContext* ncx, jsval nvar) : cx(ncx), var(nvar), count(0) {
+AutoRoot::AutoRoot(JSContext* ncx, JS::Value nvar) : cx(ncx), var(nvar), count(0) {
   Take();
 }
 

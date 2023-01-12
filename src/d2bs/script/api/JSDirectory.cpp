@@ -114,7 +114,7 @@ JSAPI_FUNC(dir_getFiles) {
     int32_t element = 0;
     do {
       if ((found.attrib & _A_SUBDIR)) continue;
-      jsval file = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, found.name));
+      JS::Value file = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, found.name));
       JS_SetElement(cx, jsarray, element++, &file);
     } while (_wfindnext(hFile, &found) == 0);
   }
@@ -165,7 +165,7 @@ JSAPI_FUNC(dir_getFolders) {
     int32_t element = 0;
     do {
       if (!wcscmp(found.name, L"..") || !wcscmp(found.name, L".") || !(found.attrib & _A_SUBDIR)) continue;
-      jsval file = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, found.name));
+      JS::Value file = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, found.name));
       JS_SetElement(cx, jsarray, element++, &file);
     } while (_wfindnext(hFile, &found) == 0);
   }
@@ -231,7 +231,7 @@ JSAPI_PROP(dir_getProperty) {
 
   if (!d) return JS_FALSE;
 
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case DIR_NAME:

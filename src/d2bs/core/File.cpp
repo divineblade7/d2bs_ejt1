@@ -41,7 +41,7 @@ char* readLine(FILE* fptr, bool locking) {
   return _strdup(buffer.c_str());
 }
 
-bool writeValue(FILE* fptr, JSContext* cx, jsval value, bool isBinary, bool locking) {
+bool writeValue(FILE* fptr, JSContext* cx, JS::Value value, bool isBinary, bool locking) {
   char* str;
   int len = 0, result;
   int32_t ival = 0;
@@ -139,7 +139,7 @@ bool writeValue(FILE* fptr, JSContext* cx, jsval value, bool isBinary, bool lock
                                       JS_GetArrayLength(cx, arr, &uival);
                                       for(jsuint i = 0; i < uival; i++)
                                       {
-                                              jsval val;
+                                              JS::Value val;
                                               JS_GetElement(cx, arr, i, &val);
                                               if(!writeValue(fptr, cx, val, isBinary))
                                                       return false;

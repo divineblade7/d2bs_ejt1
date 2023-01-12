@@ -44,7 +44,7 @@ JSAPI_PROP(sandbox_addProperty) {
   sandbox* box = (sandbox*)JS_GetInstancePrivate(cx, obj, &sandbox_class, NULL);
   JSContext* cxptr = (!box ? cx : box->context);
   JSObject* ptr = (!box ? obj : box->innerObj);
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
 
   if (JSVAL_IS_INT(ID)) {
@@ -74,7 +74,7 @@ JSAPI_PROP(sandbox_addProperty) {
 
 JSAPI_PROP(sandbox_delProperty) {
   sandbox* box = (sandbox*)JS_GetInstancePrivate(cx, obj, &sandbox_class, NULL);
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
 
   if (JSVAL_IS_INT(ID)) {
@@ -96,7 +96,7 @@ JSAPI_PROP(sandbox_delProperty) {
 
 JSAPI_PROP(sandbox_getProperty) {
   sandbox* box = (sandbox*)JS_GetInstancePrivate(cx, obj, &sandbox_class, NULL);
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
 
   if (JSVAL_IS_INT(ID)) {
@@ -125,7 +125,7 @@ JSAPI_PROP(sandbox_getProperty) {
 
 JSAPI_STRICT_PROP(sandbox_setProperty) {
   sandbox* box = (sandbox*)JS_GetInstancePrivate(cx, obj, &sandbox_class, NULL);
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
 
   if (JSVAL_IS_INT(ID)) {
@@ -163,7 +163,7 @@ JSAPI_FUNC(sandbox_eval) {
     sandbox* box = (sandbox*)JS_GetInstancePrivate(cx, self, &sandbox_class, NULL);
     if (!box) THROW_ERROR(cx, "Invalid execution object!");
     char* code = JS_EncodeStringToUTF8(cx, args[0].toString());
-    jsval result;
+    JS::Value result;
     if (JS_BufferIsCompilableUnit(box->context, box->innerObj, code, strlen(code)) &&
         JS_EvaluateScript(box->context, box->innerObj, code, strlen(code), "sandbox", 0, &result)) {
       args.rval().set(result);
@@ -188,7 +188,7 @@ JSAPI_FUNC(sandbox_include) {
       if (box->list.count(std::wstring(file)) == -1) {
         JSScript* tmp = JS_CompileFile(box->context, box->innerObj, path.c_str());
         if (tmp) {
-          jsval result;
+          JS::Value result;
           if (JS_ExecuteScript(box->context, box->innerObj, tmp, &result)) {
             box->list[file] = true;
             args.rval().set(result);

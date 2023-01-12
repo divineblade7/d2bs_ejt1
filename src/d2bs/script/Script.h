@@ -62,9 +62,9 @@ class Script {
   bool Include(const wchar_t* file);
 
   bool IsListenerRegistered(const char* evtName);
-  void RegisterEvent(const char* evtName, jsval evtFunc);
-  bool IsRegisteredEvent(const char* evtName, jsval evtFunc);
-  void UnregisterEvent(const char* evtName, jsval evtFunc);
+  void RegisterEvent(const char* evtName, JS::Value evtFunc);
+  bool IsRegisteredEvent(const char* evtName, JS::Value evtFunc);
+  void UnregisterEvent(const char* evtName, JS::Value evtFunc);
   void ClearEvent(const char* evtName);
   void ClearAllEvents();
 

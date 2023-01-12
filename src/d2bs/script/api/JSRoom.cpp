@@ -15,7 +15,7 @@ JSAPI_PROP(room_getProperty) {
   Room2* pRoom2 = (Room2*)JS_GetPrivate(obj);
 
   if (!pRoom2) return JS_TRUE;
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case ROOM_NUM:
@@ -123,7 +123,7 @@ JSAPI_FUNC(room_getPresetUnits) {
         return JS_TRUE;
       }
 
-      jsval a = JS::ObjectOrNullValue(jsUnit);
+      JS::Value a = JS::ObjectOrNullValue(jsUnit);
       JSAutoRequest r(cx);
       JS_SetElement(cx, pReturnArray, dwArrayCount, &a);
       dwArrayCount++;
@@ -186,7 +186,7 @@ JSAPI_FUNC(room_getCollisionTypeArray) {
   for (int j = y; j < nLimitY; j++) {
     int nCurrentArrayX = 0;
     for (int i = x; i < nLimitX; i++) {
-      jsval nNode = JS::Int32Value(*p);
+      JS::Value nNode = JS::Int32Value(*p);
 
       if (!JS_SetElement(cx, jsobjy, nCurrentArrayY * nCx + nCurrentArrayX, &nNode)) {
         if (bAdded)
@@ -258,7 +258,7 @@ JSAPI_FUNC(room_getCollision) {
 
     int nCurrentArrayX = 0;
     for (int i = x; i < nLimitX; i++) {
-      jsval nNode = JS::Int32Value(*p);
+      JS::Value nNode = JS::Int32Value(*p);
 
       if (!JS_SetElement(cx, jsobjx, nCurrentArrayX, &nNode)) {
         if (bAdded)
@@ -271,7 +271,7 @@ JSAPI_FUNC(room_getCollision) {
       p++;
     }
 
-    jsval jsu = JS::ObjectOrNullValue(jsobjx);
+    JS::Value jsu = JS::ObjectOrNullValue(jsobjx);
 
     if (!JS_SetElement(cx, jsobjy, nCurrentArrayY, &jsu)) {
       if (bAdded)
@@ -305,7 +305,7 @@ JSAPI_FUNC(room_getNearby) {
     if (!jsroom) {
       return JS_TRUE;
     }
-    jsval jsu = JS::ObjectOrNullValue(jsroom);
+    JS::Value jsu = JS::ObjectOrNullValue(jsroom);
 
     if (!JS_SetElement(cx, jsobj, i, &jsu)) {
       return JS_TRUE;

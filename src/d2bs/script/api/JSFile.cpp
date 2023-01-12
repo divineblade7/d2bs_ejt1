@@ -39,7 +39,7 @@ struct FileData {
 
 EMPTY_CTOR(file)
 
-// JSBool file_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+// JSBool file_equality(JSContext *cx, JSObject *obj, JS::Value v, JSBool *bp)
 //{
 //	*bp = JS_FALSE;
 //	if(JSVAL_IS_OBJECT(v) && !JSVAL_IS_VOID(v) && !JSVAL_IS_NULL(v))
@@ -56,7 +56,7 @@ JSAPI_PROP(file_getProperty) {
   FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, obj, &file_class, NULL);
   struct _stat filestat = {0};
   if (fdata) {
-    jsval ID;
+    JS::Value ID;
     JS_IdToValue(cx, id, &ID);
     JS_BeginRequest(cx);
     switch (JSVAL_TO_INT(ID)) {
@@ -134,7 +134,7 @@ JSAPI_PROP(file_getProperty) {
 JSAPI_STRICT_PROP(file_setProperty) {
   FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, obj, &file_class, NULL);
   if (fdata) {
-    jsval ID;
+    JS::Value ID;
     JS_IdToValue(cx, id, &ID);
     switch (JSVAL_TO_INT(ID)) {
       case FILE_AUTOFLUSH:
@@ -309,7 +309,7 @@ JSAPI_FUNC(file_read) {
         JSObject* arr = JS_NewArrayObject(cx, 0, NULL);
         args.rval().setObjectOrNull(arr);
         for (int i = 0; i < count; i++) {
-          jsval val = INT_TO_JSVAL(result[i]);
+          JS::Value val = INT_TO_JSVAL(result[i]);
           JS_SetElement(cx, arr, i, &val);
         }
       }
@@ -414,7 +414,7 @@ JSAPI_FUNC(file_readAllLines) {
       }
 
       wchar_t* wline = AnsiToUnicode(line + offset);
-      jsval val = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, wline));
+      JS::Value val = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, wline));
       JS_SetElement(cx, arr, i++, &val);
       delete[] wline;
       free(line);

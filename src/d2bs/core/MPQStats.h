@@ -59,7 +59,7 @@ bool FillBaseStat(const char* szTable, int row, const char* szStat, void* result
 bool FillBaseStat(const char* szTable, int row, int column, void* result, size_t size);
 bool FillBaseStat(int table, int row, const char* szStat, void* result, size_t size);
 bool FillBaseStat(int table, int row, int column, void* result, size_t size);
-DWORD FillBaseStat(JSContext* cx, jsval* argv, int table, int row, int column, const char* szTable, const char* szStat);
+DWORD FillBaseStat(JSContext* cx, JS::Value* argv, int table, int row, int column, const char* szTable, const char* szStat);
 
 // Tables dumped by Sheppard
 

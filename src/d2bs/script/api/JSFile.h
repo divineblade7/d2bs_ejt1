@@ -7,7 +7,7 @@
 //////////////////////////////////////////////////////////////////
 
 CLASS_CTOR(file);
-JSBool file_equality(JSContext* cx, JSObject* obj, jsval v, JSBool* bp);
+JSBool file_equality(JSContext* cx, JSObject* obj, JS::Value v, JSBool* bp);
 
 JSAPI_PROP(file_getProperty);
 JSAPI_STRICT_PROP(file_setProperty);

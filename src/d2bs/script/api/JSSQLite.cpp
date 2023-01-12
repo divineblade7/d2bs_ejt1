@@ -255,7 +255,7 @@ JSAPI_FUNC(sqlite_open) {
 JSAPI_PROP(sqlite_getProperty) {
   SqliteDB* dbobj = (SqliteDB*)JS_GetInstancePrivate(cx, obj, &sqlite_db, NULL);
 
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case SQLITE_PATH:
@@ -275,7 +275,7 @@ JSAPI_PROP(sqlite_getProperty) {
       for (StmtList::iterator it = dbobj->stmts.begin(); it != dbobj->stmts.end(); it++, i++) {
         if ((*it)->open) {
           JSObject* stmt = BuildObject(cx, &sqlite_stmt, sqlite_stmt_methods, sqlite_stmt_props, *it);
-          jsval tmp = OBJECT_TO_JSVAL(stmt);
+          JS::Value tmp = OBJECT_TO_JSVAL(stmt);
           JS_SetElement(cx, stmts, i, &tmp);
         }
       }
@@ -298,7 +298,7 @@ void sqlite_finalize(JSFreeOp*, JSObject* obj) {
   }
 }
 
-// JSBool sqlite_equal(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+// JSBool sqlite_equal(JSContext *cx, JSObject *obj, JS::Value v, JSBool *bp)
 //{
 //	SqliteDB* dbobj = (SqliteDB*)JS_GetInstancePrivate(cx, obj, &sqlite_db, NULL);
 //	if(!JSVAL_IS_OBJECT(v))
@@ -338,7 +338,7 @@ JSAPI_FUNC(sqlite_stmt_getobject) {
   }
   JSObject* obj2 = JS_New(cx, NULL, NULL, NULL);
   // JSObject *obj2 = JS_ConstructObject(cx, NULL, NULL);
-  jsval val;
+  JS::Value val;
   if (!obj2) THROW_ERROR(cx, "Failed to create row result object");
   for (int i = 0; i < cols; i++) {
     const char* colnam = sqlite3_column_name(stmt, i);
@@ -362,7 +362,7 @@ JSAPI_FUNC(sqlite_stmt_getobject) {
         THROW_ERROR(cx, "Blob type not supported (yet)");
         break;
       case SQLITE_NULL:
-        jsval nul = JS::NullValue();
+        JS::Value nul = JS::NullValue();
         if (!JS_SetProperty(cx, obj2, colnam, &nul)) THROW_ERROR(cx, "Failed to add column to row results");
         break;
     }
@@ -576,7 +576,7 @@ JSAPI_FUNC(sqlite_stmt_close) {
 JSAPI_PROP(sqlite_stmt_getProperty) {
   DBStmt* stmtobj = (DBStmt*)JS_GetInstancePrivate(cx, obj, &sqlite_stmt, NULL);
 
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case SQLITE_STMT_SQL: {

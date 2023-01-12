@@ -14,7 +14,7 @@ JSAPI_PROP(exit_getProperty) {
 
   if (!pExit) return JS_TRUE;
 
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case EXIT_X:

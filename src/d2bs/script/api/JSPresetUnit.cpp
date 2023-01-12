@@ -21,7 +21,7 @@ JSAPI_PROP(presetunit_getProperty) {
 
   if (!pUnit) return JS_TRUE;
 
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case PUNIT_TYPE:
@@ -115,7 +115,7 @@ JSAPI_FUNC(my_getPresetUnits) {
           THROW_ERROR(cx, "Failed to build object?");
         }
 
-        jsval a = JS::ObjectOrNullValue(unit);
+        JS::Value a = JS::ObjectOrNullValue(unit);
         JS_SetElement(cx, pReturnArray, dwArrayCount, &a);
 
         dwArrayCount++;

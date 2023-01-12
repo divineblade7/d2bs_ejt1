@@ -5,17 +5,17 @@
 class AutoRoot {
  public:
   AutoRoot() {}
-  AutoRoot(JSContext* cx, jsval var);
+  AutoRoot(JSContext* cx, JS::Value var);
   ~AutoRoot();
 
   AutoRoot(const AutoRoot&) = delete;
   AutoRoot& operator=(const AutoRoot&) = delete;
 
-  jsval* value() {
+  JS::Value* value() {
     return &var;
   }
 
-  jsval operator*() {
+  JS::Value operator*() {
     return *value();
   }
 
@@ -28,6 +28,6 @@ class AutoRoot {
 
  private:
   JSContext* cx = nullptr;
-  jsval var = JSVAL_NULL;
+  JS::Value var = JSVAL_NULL;
   int count = 0;
 };

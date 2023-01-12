@@ -43,7 +43,7 @@ JSAPI_FUNC(frame_ctor) {
   uint32_t x = 0, y = 0, x2 = 0, y2 = 0;
   Align align = Left;
   bool automap = false;
-  jsval click = JSVAL_VOID, hover = JSVAL_VOID;
+  JS::Value click = JSVAL_VOID, hover = JSVAL_VOID;
 
   if (args.get(0).isInt32()) x = args[0].toInt32();
   if (args.get(1).isInt32()) y = args[1].toInt32();
@@ -75,7 +75,7 @@ JSAPI_PROP(frame_getProperty) {
   FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
   if (!pFramehook) return JS_TRUE;
 
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case FRAME_X:
@@ -113,7 +113,7 @@ JSAPI_STRICT_PROP(frame_setProperty) {
   FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
   if (!pFramehook) return JS_TRUE;
 
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case FRAME_X:
@@ -160,7 +160,7 @@ JSAPI_FUNC(box_ctor) {
   ushort color = 0, opacity = 0;
   Align align = Left;
   bool automap = false;
-  jsval click = JSVAL_VOID, hover = JSVAL_VOID;
+  JS::Value click = JSVAL_VOID, hover = JSVAL_VOID;
 
   if (args.get(0).isInt32()) x = args[0].toInt32();
   if (args.get(1).isInt32()) y = args[1].toInt32();
@@ -192,7 +192,7 @@ JSAPI_PROP(box_getProperty) {
   BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
   if (!pBoxHook) return JS_TRUE;
 
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case BOX_X:
@@ -236,7 +236,7 @@ JSAPI_STRICT_PROP(box_setProperty) {
   BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
   if (!pBoxHook) return JS_TRUE;
 
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case BOX_X:
@@ -288,7 +288,7 @@ JSAPI_FUNC(line_ctor) {
   int x = 0, y = 0, x2 = 0, y2 = 0;
   ushort color = 0;
   bool automap = false;
-  jsval click = JSVAL_VOID, hover = JSVAL_VOID;
+  JS::Value click = JSVAL_VOID, hover = JSVAL_VOID;
 
   if (args.get(0).isInt32()) x = args[0].toInt32();
   if (args.get(1).isInt32()) y = args[1].toInt32();
@@ -319,7 +319,7 @@ JSAPI_PROP(line_getProperty) {
   LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
   if (!pLineHook) return JS_TRUE;
 
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case LINE_X:
@@ -357,7 +357,7 @@ JSAPI_STRICT_PROP(line_setProperty) {
   LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
   if (!pLineHook) return JS_TRUE;
 
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case LINE_X:
@@ -404,7 +404,7 @@ JSAPI_FUNC(text_ctor) {
   ushort color = 0, font = 0;
   Align align = Left;
   bool automap = false;
-  jsval click = JSVAL_VOID, hover = JSVAL_VOID;
+  JS::Value click = JSVAL_VOID, hover = JSVAL_VOID;
   const wchar_t* szText = L"";
 
   if (args.get(0).isString()) szText = JS_GetStringCharsZ(cx, args[0].toString());
@@ -438,7 +438,7 @@ JSAPI_PROP(text_getProperty) {
   TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
   if (!pTextHook) return JS_TRUE;
 
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case TEXT_X:
@@ -479,7 +479,7 @@ JSAPI_STRICT_PROP(text_setProperty) {
   TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
   if (!pTextHook) return JS_TRUE;
 
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case TEXT_X:
@@ -533,7 +533,7 @@ JSAPI_FUNC(image_ctor) {
   ushort color = 0;
   Align align = Left;
   bool automap = false;
-  jsval click = JSVAL_VOID, hover = JSVAL_VOID;
+  JS::Value click = JSVAL_VOID, hover = JSVAL_VOID;
   const wchar_t* szText = L"";
   wchar_t path[_MAX_FNAME + _MAX_PATH];
 
@@ -572,7 +572,7 @@ JSAPI_PROP(image_getProperty) {
   ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
   if (!pImageHook) return JS_TRUE;
 
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case IMAGE_X:
@@ -607,7 +607,7 @@ JSAPI_STRICT_PROP(image_setProperty) {
   ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
   if (!pImageHook) return JS_TRUE;
 
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case IMAGE_X:
@@ -650,7 +650,7 @@ JSAPI_FUNC(screenToAutomap) {
     if (args[0].isObject()) {
       // get the params
       JSObject* arg = args[0].toObjectOrNull();
-      jsval x, y;
+      JS::Value x, y;
       if (JS_GetProperty(cx, arg, "x", &x) == JS_FALSE || JS_GetProperty(cx, arg, "y", &y) == JS_FALSE)
         THROW_ERROR(cx, "Failed to get x and/or y values");
       if (!x.isInt32() || !y.isInt32()) THROW_ERROR(cx, "Input has an x or y, but they aren't the correct type!");
@@ -662,7 +662,7 @@ JSAPI_FUNC(screenToAutomap) {
       x = JS::Int32Value(result.x);
       y = JS::Int32Value(result.y);
       JSObject* res = JS_NewObject(cx, NULL, NULL, NULL);
-      jsval* argv = JS_ARGV(cx, vp);
+      JS::Value* argv = JS_ARGV(cx, vp);
       if (JS_SetProperty(cx, res, "x", &argv[0]) == JS_FALSE || JS_SetProperty(cx, res, "y", &argv[1]) == JS_FALSE)
         THROW_ERROR(cx, "Failed to set x and/or y values");
       args.rval().setObjectOrNull(res);
@@ -672,7 +672,7 @@ JSAPI_FUNC(screenToAutomap) {
     // the args must be ints
     if (args[0].isInt32() && args[1].isInt32()) {
       int32_t ix, iy;
-      jsval* argv = args.array();
+      JS::Value* argv = args.array();
       if (JS_ValueToInt32(cx, argv[0], &ix) == JS_FALSE || JS_ValueToInt32(cx, argv[1], &iy) == JS_FALSE)
         THROW_ERROR(cx, "Failed to convert x and/or y values");
       // convert the values
@@ -698,7 +698,7 @@ JSAPI_FUNC(automapToScreen) {
     if (args[0].isObject()) {
       // get the params
       JSObject* arg = args[0].toObjectOrNull();
-      jsval x, y;
+      JS::Value x, y;
       if (JS_GetProperty(cx, arg, "x", &x) == JS_FALSE || JS_GetProperty(cx, arg, "y", &y) == JS_FALSE)
         THROW_ERROR(cx, "Failed to get x and/or y values");
       if (!x.isInt32() || !y.isInt32()) THROW_ERROR(cx, "Input has an x or y, but they aren't the correct type!");

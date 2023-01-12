@@ -240,7 +240,7 @@ void Genhook::Hover(POINT* loc) {
     owner->FireEvent(evt);
   }
 }
-void Genhook::SetClickHandler(jsval handler) {
+void Genhook::SetClickHandler(JS::Value handler) {
   if (!owner) return;
   if (JSVAL_IS_VOID(handler)) return;
   Lock();
@@ -267,7 +267,7 @@ void Genhook::SetClickHandler(jsval handler) {
   Unlock();
 }
 
-void Genhook::SetHoverHandler(jsval handler) {
+void Genhook::SetHoverHandler(JS::Value handler) {
   if (!owner) return;
   if (JSVAL_IS_VOID(handler)) return;
   Lock();

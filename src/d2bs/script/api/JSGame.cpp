@@ -188,7 +188,7 @@ JSAPI_FUNC(my_getDialogLines) {
   TransactionDialogsInfo_t* pTdi = *p_D2CLIENT_pTransactionDialogsInfo;
   unsigned int i;
   JSObject* line;
-  jsval js_text, js_selectable, js_line, js_addr;
+  JS::Value js_text, js_selectable, js_line, js_addr;
   JSFunction* jsf_handler;
 
   CriticalRoom cRoom;
@@ -308,9 +308,9 @@ JSAPI_FUNC(my_getPath) {
 
   int count = list.size();
 
-  jsval* vec = new jsval[count];
+  JS::Value* vec = new JS::Value[count];
   for (int i = 0; i < count; i++) {
-    jsval jx = JS::Int32Value(list[i].first), jy = JS::Int32Value(list[i].second);
+    JS::Value jx = JS::Int32Value(list[i].first), jy = JS::Int32Value(list[i].second);
 
     JSObject* point = BuildObject(cx);
     JS_SetProperty(cx, point, "x", &jx);
@@ -350,7 +350,7 @@ JSAPI_FUNC(my_getCollision) {
 
   ActMap* map = ActMap::GetMap(level);
 
-  jsval rval;
+  JS::Value rval;
   {
     JSAutoRequest r(cx);
     rval = JS_NumberValue(map->GetMapData(point, true));
@@ -722,7 +722,7 @@ JSAPI_FUNC(my_getDistance) {
 
   JSAutoRequest r(cx);
   if (args.length() == 1 && args[0].isObject()) {
-    jsval x1, y1;
+    JS::Value x1, y1;
     if (JS_GetProperty(cx, args[0].toObjectOrNull(), "x", &x1) &&
         JS_GetProperty(cx, args[0].toObjectOrNull(), "y", &y1)) {
       nX1 = D2CLIENT_GetUnitX(D2CLIENT_GetPlayerUnit());
@@ -737,7 +737,7 @@ JSAPI_FUNC(my_getDistance) {
       JS_ValueToECMAInt32(cx, args[0], &nX2);
       JS_ValueToECMAInt32(cx, args[1], &nY2);
     } else if (args[0].isObject() && args[1].isObject()) {
-      jsval x, y, x2, y2;
+      JS::Value x, y, x2, y2;
       if (JS_GetProperty(cx, args[0].toObjectOrNull(), "x", &x) &&
           JS_GetProperty(cx, args[0].toObjectOrNull(), "y", &y) &&
           JS_GetProperty(cx, args[1].toObjectOrNull(), "x", &x2) &&
@@ -786,7 +786,7 @@ JSAPI_FUNC(my_getDistance) {
   }
 
   double jsdist = (double)abs(GetDistance(nX1, nY1, nX2, nY2));
-  jsval rval;
+  JS::Value rval;
   rval = JS_NumberValue(jsdist);
   args.rval().set(rval);
   return JS_TRUE;
@@ -896,8 +896,8 @@ JSAPI_FUNC(my_getTextSize) {
   if (!pString) THROW_ERROR(cx, "Could not convert string");
 
   POINT r = CalculateTextLen(pString, JSVAL_TO_INT(JS_ARGV(cx, vp)[1]));
-  jsval x = JS::Int32Value(r.x);
-  jsval y = JS::Int32Value(r.y);
+  JS::Value x = JS::Int32Value(r.x);
+  JS::Value y = JS::Int32Value(r.y);
 
   JS::RootedObject pObj(cx);
   if (args.length() > 2 && args[2].isBoolean() && args[2].toBoolean() == TRUE) {
@@ -1183,7 +1183,7 @@ JSAPI_FUNC(my_getBaseStat) {
       JS_free(cx, szTableName);
       THROW_ERROR(cx, "Invalid column value");
     }
-    jsval rval;
+    JS::Value rval;
     FillBaseStat(cx, &rval, nBaseStat, nClassId, nStat, szTableName, szStatName);
 
     args.rval().set(rval);
@@ -1284,8 +1284,8 @@ JSAPI_FUNC(my_getMouseCoords) {
     D2COMMON_AbsScreenToMap(&Coords.x, &Coords.y);
   }
 
-  jsval jsX = JS::Int32Value(Coords.x);
-  jsval jsY = JS::Int32Value(Coords.y);
+  JS::Value jsX = JS::Int32Value(Coords.x);
+  JS::Value jsY = JS::Int32Value(Coords.y);
 
   JS::RootedObject pObj(cx);
   if (nReturn) {

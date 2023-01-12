@@ -66,13 +66,13 @@ JSScript* JS_CompileFile(JSContext* cx, JSObject* globalObject, std::wstring fil
     return JS_TRUE;                   \
   }
 
-#define CLASS_CTOR(name) JSBool name##_ctor(JSContext* cx, uint32_t argc, jsval* vp)
+#define CLASS_CTOR(name) JSBool name##_ctor(JSContext* cx, uint32_t argc, JS::Value* vp)
 
 #define EMPTY_CTOR(name) \
-  JSBool name##_ctor(JSContext* cx, uint32_t, jsval*) { THROW_ERROR(cx, "Invalid Operation"); }
+  JSBool name##_ctor(JSContext* cx, uint32_t, JS::Value*) { THROW_ERROR(cx, "Invalid Operation"); }
 
 #define JSAPI_FUNC(name) \
-  JSBool name##([[maybe_unused]] JSContext * cx, [[maybe_unused]] uint32_t argc, [[maybe_unused]] jsval * vp)
+  JSBool name##([[maybe_unused]] JSContext * cx, [[maybe_unused]] uint32_t argc, [[maybe_unused]] JS::Value * vp)
 
 #define JSAPI_PROP(name)                                                                                              \
   JSBool name##([[maybe_unused]] JSContext * cx, [[maybe_unused]] JSHandleObject obj, [[maybe_unused]] JSHandleId id, \

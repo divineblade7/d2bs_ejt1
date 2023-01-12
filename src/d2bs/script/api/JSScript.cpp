@@ -20,7 +20,7 @@ JSAPI_PROP(script_getProperty) {
 
   // TODO: make this check stronger
   if (!script) return JS_TRUE;
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
 
   switch (JSVAL_TO_INT(ID)) {
@@ -207,7 +207,7 @@ JSAPI_FUNC(my_getScripts) {
   auto& scripts = sScriptEngine->scripts();
   for (const auto& [_, script] : scripts) {
     JSObject* res = BuildObject(cx, &script_class, script_methods, script_props, script);
-    jsval a = JS::ObjectOrNullValue(res);
+    JS::Value a = JS::ObjectOrNullValue(res);
     JS_SetElement(cx, pReturnArray, dwArrayCount, &a);
     dwArrayCount++;
   }

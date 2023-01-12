@@ -84,7 +84,7 @@ void FireMouseMoveEvent(POINT pt) {
   });
 }
 
-void FireScriptBroadcastEvent(JSContext* cx, uint32_t argc, jsval* args) {
+void FireScriptBroadcastEvent(JSContext* cx, uint32_t argc, JS::Value* args) {
   sScriptEngine->for_each([&](Script* script) {
     if (script->is_running() && script->IsListenerRegistered("scriptmsg")) {
       std::vector<std::shared_ptr<JSAutoStructuredCloneBuffer>> arg;
@@ -208,14 +208,14 @@ CopyDataEvent::CopyDataEvent(Script* owner, DWORD mode_, std::wstring msg_)
 void CopyDataEvent::process() {
   auto cx = owner_->context();
 
-  jsval* argv = new jsval[2];
+  JS::Value* argv = new JS::Value[2];
   JS_BeginRequest(cx);
   argv[0] = JS_NumberValue(mode);
   argv[1] = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, msg.c_str()));
 
   for (int j = 0; j < 2; j++) JS_AddValueRoot(cx, &argv[j]);
 
-  jsval rval;
+  JS::Value rval;
   for (const auto& fn : owner_->functions()[name_]) {
     JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 2, argv, &rval);
   }
@@ -240,7 +240,7 @@ void CommandEvent::process() {
   cmd.append(L" } catch (error){print(error)}");
 
   JS_BeginRequest(cx);
-  jsval rval;
+  JS::Value rval;
 
   if (JS_EvaluateUCScript(cx, JS_GetGlobalObject(cx), cmd.data(), cmd.length(), "Command Line", 0, &rval)) {
     if (!JSVAL_IS_NULL(rval) && !JSVAL_IS_VOID(rval)) {
@@ -261,7 +261,7 @@ ChatEvent::ChatEvent(Script* owner, const char* name, std::string name1_, std::s
 void ChatEvent::process() {
   auto cx = owner_->context();
 
-  jsval* argv = new jsval[2];
+  JS::Value* argv = new JS::Value[2];
   JS_BeginRequest(cx);
   argv[0] = (STRING_TO_JSVAL(JS_NewStringCopyZ(cx, nick.c_str())));
   argv[1] = (STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, msg.c_str())));
@@ -270,7 +270,7 @@ void ChatEvent::process() {
     JS_AddValueRoot(cx, &argv[j]);
   }
 
-  jsval rval;
+  JS::Value rval;
   for (const auto& fn : owner_->functions()[name_]) {
     JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 2, argv, &rval);
     block_ |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
@@ -298,12 +298,12 @@ void PacketEvent::process() {
   JS::RootedObject arr(cx,  JS_NewUint8Array(cx, size));
 
   for (uint32_t i = 0; i < size; i++) {
-    jsval jsarr = UINT_TO_JSVAL(help[i]);
+    JS::Value jsarr = UINT_TO_JSVAL(help[i]);
     JS_SetElement(cx, arr, i, &jsarr);
   }
-  jsval argv = OBJECT_TO_JSVAL(arr);
+  JS::Value argv = OBJECT_TO_JSVAL(arr);
 
-  jsval rval;
+  JS::Value rval;
   for (const auto& fn : owner_->functions()[name_]) {
     JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 1, &argv, &rval);
     block_ |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
@@ -323,7 +323,7 @@ void BroadcastEvent::process() {
 
   JSAutoRequest r(cx);
   auto argc = args.size();
-  jsval* argv = new jsval[args.size()];
+  JS::Value* argv = new JS::Value[args.size()];
   for (uint32_t i = 0; i < argc; i++) {
     args[i]->read(cx, &argv[i]);
   }
@@ -332,7 +332,7 @@ void BroadcastEvent::process() {
     JS_AddValueRoot(cx, &argv[j]);
   }
 
-  jsval rval;
+  JS::Value rval;
   for (const auto& fn : owner_->functions()[name_]) {
     JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), argc, argv, &rval);
   }
@@ -356,7 +356,7 @@ GameActionEvent::GameActionEvent(Script* owner, BYTE mode_, DWORD param1_, DWORD
 void GameActionEvent::process() {
   auto cx = owner_->context();
 
-  jsval* argv = new jsval[5];
+  JS::Value* argv = new JS::Value[5];
   JS_BeginRequest(cx);
 
   argv[0] = JS_NumberValue(mode);
@@ -369,7 +369,7 @@ void GameActionEvent::process() {
     JS_AddValueRoot(cx, &argv[j]);
   }
 
-  jsval rval;
+  JS::Value rval;
   for (const auto& fn : owner_->functions()[name_]) {
     JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 5, argv, &rval);
   }
@@ -388,12 +388,12 @@ KeyEvent::KeyEvent(Script* owner, WPARAM key_, BYTE bUp)
 void KeyEvent::process() {
   auto cx = owner_->context();
 
-  jsval* argv = new jsval[1];
+  JS::Value* argv = new JS::Value[1];
   JS_BeginRequest(cx);
   argv[0] = JS_NumberValue(key);
   JS_AddValueRoot(cx, &argv[0]);
 
-  jsval rval;
+  JS::Value rval;
   for (const auto& fn : owner_->functions()[name_]) {
     JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 1, argv, &rval);
     block_ |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
@@ -411,7 +411,7 @@ ItemEvent::ItemEvent(Script* owner, DWORD id_, std::string code_, WORD mode_, bo
 void ItemEvent::process() {
   auto cx = owner_->context();
 
-  jsval* argv = new jsval[4];
+  JS::Value* argv = new JS::Value[4];
   JS_BeginRequest(cx);
 
   argv[0] = JS_NumberValue(id);
@@ -422,7 +422,7 @@ void ItemEvent::process() {
     JS_AddValueRoot(cx, &argv[j]);
   }
 
-  jsval rval;
+  JS::Value rval;
   for (const auto& fn : owner_->functions()[name_]) {
     JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 4, argv, &rval);
     block_ |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
@@ -438,13 +438,13 @@ void ItemEvent::process() {
   is_processed_.notify_all();
 }
 
-TimeoutEvent::TimeoutEvent(Script* owner, const char* name, jsval* val_) : Event(owner, name), val(val_) {}
+TimeoutEvent::TimeoutEvent(Script* owner, const char* name, JS::Value* val_) : Event(owner, name), val(val_) {}
 
 void TimeoutEvent::process() {
   auto cx = owner_->context();
 
   JS_BeginRequest(cx);
-  jsval rval;
+  JS::Value rval;
   for (const auto& fn : owner_->functions()[name_]) {
     JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 0, &rval, &rval);
   }
@@ -463,12 +463,12 @@ LifeEvent::LifeEvent(Script* owner, DWORD life_) : Event(owner, "melife"), life(
 void LifeEvent::process() {
   auto cx = owner_->context();
 
-  jsval* argv = new jsval[1];
+  JS::Value* argv = new JS::Value[1];
   JS_BeginRequest(cx);
   argv[0] = JS_NumberValue(life);
   JS_AddValueRoot(cx, &argv[0]);
 
-  jsval rval;
+  JS::Value rval;
   for (const auto& fn : owner_->functions()[name_]) {
     JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 1, argv, &rval);
     block_ |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
@@ -485,12 +485,12 @@ ManaEvent::ManaEvent(Script* owner, DWORD mana_) : Event(owner, "memana"), mana(
 void ManaEvent::process() {
   auto cx = owner_->context();
 
-  jsval* argv = new jsval[1];
+  JS::Value* argv = new JS::Value[1];
   JS_BeginRequest(cx);
   argv[0] = JS_NumberValue(mana);
   JS_AddValueRoot(cx, &argv[0]);
 
-  jsval rval;
+  JS::Value rval;
   for (const auto& fn : owner_->functions()[name_]) {
     JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 1, argv, &rval);
     block_ |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
@@ -507,12 +507,12 @@ PlayerAssignEvent::PlayerAssignEvent(Script* owner, DWORD unitid) : Event(owner,
 void PlayerAssignEvent::process() {
   auto cx = owner_->context();
 
-  jsval* argv = new jsval[1];
+  JS::Value* argv = new JS::Value[1];
   JS_BeginRequest(cx);
   argv[0] = JS_NumberValue(unit_id);
   JS_AddValueRoot(cx, &argv[0]);
 
-  jsval rval;
+  JS::Value rval;
   for (const auto& fn : owner_->functions()[name_]) {
     JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 1, argv, &rval);
     block_ |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
@@ -530,7 +530,7 @@ MouseClickEvent::MouseClickEvent(Script* owner, DWORD button_, DWORD x_, DWORD y
 void MouseClickEvent::process() {
   auto cx = owner_->context();
 
-  jsval* argv = new jsval[4];
+  JS::Value* argv = new JS::Value[4];
   JS_BeginRequest(cx);
   argv[0] = JS_NumberValue(button);
   argv[1] = JS_NumberValue(x);
@@ -541,7 +541,7 @@ void MouseClickEvent::process() {
     JS_AddValueRoot(cx, &argv[j]);
   }
 
-  jsval rval;
+  JS::Value rval;
   for (const auto& fn : owner_->functions()[name_]) {
     JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 4, argv, &rval);
   }
@@ -560,7 +560,7 @@ ScreenHookClickEvent::ScreenHookClickEvent(Script* owner, FunctionList funcs, in
 void ScreenHookClickEvent::process() {
   auto cx = owner_->context();
 
-  jsval* argv = new jsval[3];
+  JS::Value* argv = new JS::Value[3];
   JS_BeginRequest(cx);
   argv[0] = JS_NumberValue(button);
   argv[1] = JS_NumberValue(x);
@@ -569,7 +569,7 @@ void ScreenHookClickEvent::process() {
     JS_AddValueRoot(cx, &argv[j]);
   }
 
-  jsval rval;
+  JS::Value rval;
   // diffrent function source for hooks
   for (const auto& fn : functions) {
     JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 3, argv, &rval);
@@ -590,7 +590,7 @@ MouseMoveEvent::MouseMoveEvent(Script* owner, DWORD x_, DWORD y_) : Event(owner,
 void MouseMoveEvent::process() {
   auto cx = owner_->context();
 
-  jsval* argv = new jsval[2];
+  JS::Value* argv = new JS::Value[2];
   JS_BeginRequest(cx);
   argv[0] = JS_NumberValue(x);
   argv[1] = JS_NumberValue(y);
@@ -599,7 +599,7 @@ void MouseMoveEvent::process() {
     JS_AddValueRoot(cx, &argv[j]);
   }
 
-  jsval rval;
+  JS::Value rval;
   for (const auto& fn : owner_->functions()[name_]) {
     JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 2, argv, &rval);
   }
@@ -636,12 +636,12 @@ KeyBlockEvent::KeyBlockEvent(Script* owner, WPARAM key_, BYTE bUp)
 void KeyBlockEvent::process() {
   auto cx = owner_->context();
 
-  jsval* argv = new jsval[1];
+  JS::Value* argv = new JS::Value[1];
   JS_BeginRequest(cx);
   argv[0] = JS_NumberValue(key);
   JS_AddValueRoot(cx, &argv[0]);
 
-  jsval rval;
+  JS::Value rval;
   for (const auto& fn : owner_->functions()[name_]) {
     JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 1, argv, &rval);
     block_ |= static_cast<bool>(JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval));
@@ -659,7 +659,7 @@ ScreenHookHoverEvent::ScreenHookHoverEvent(Script* owner, FunctionList funcs, LO
 void ScreenHookHoverEvent::process() {
   auto cx = owner_->context();
 
-  jsval* argv = new jsval[2];
+  JS::Value* argv = new JS::Value[2];
   JS_BeginRequest(cx);
   argv[0] = JS_NumberValue(x);
   argv[1] = JS_NumberValue(y);
@@ -668,7 +668,7 @@ void ScreenHookHoverEvent::process() {
     JS_AddValueRoot(cx, &argv[j]);
   }
 
-  jsval rval;
+  JS::Value rval;
   for (const auto& fn : functions) {
     JS_CallFunctionValue(cx, JS_GetGlobalObject(cx), *fn->value(), 2 + 1, argv, &rval);
   }

@@ -14,7 +14,7 @@ JSAPI_FUNC(sqlite_close);
 JSAPI_FUNC(sqlite_open);
 JSAPI_PROP(sqlite_getProperty);
 void sqlite_finalize(JSFreeOp* fop, JSObject* obj);
-//JSBool sqlite_equal(JSContext* cx, JSObject* obj, jsval v, JSBool* bp);
+//JSBool sqlite_equal(JSContext* cx, JSObject* obj, JS::Value v, JSBool* bp);
 
 CLASS_CTOR(sqlite_stmt);
 

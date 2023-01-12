@@ -137,8 +137,8 @@ class Genhook {
     zorder = norder;
     Unlock();
   }
-  void SetClickHandler(jsval handler);
-  void SetHoverHandler(jsval handler);
+  void SetClickHandler(JS::Value handler);
+  void SetHoverHandler(JS::Value handler);
 
   POINT GetLocation(void) const {
     return location;
@@ -167,10 +167,10 @@ class Genhook {
   ushort GetZOrder(void) const {
     return zorder;
   }
-  jsval GetClickHandler(void) {
+  JS::Value GetClickHandler(void) {
     return clicked;
   }
-  jsval GetHoverHandler(void) {
+  JS::Value GetHoverHandler(void) {
     return hovered;
   }
 

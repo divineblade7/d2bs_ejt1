@@ -168,7 +168,7 @@ bool FillBaseStat(int table, int row, int column, void* result, size_t size) {
   return true;
 }
 
-DWORD FillBaseStat(JSContext* cx, jsval* argv, int table, int row, int column, const char* szTable,
+DWORD FillBaseStat(JSContext* cx, JS::Value* argv, int table, int row, int column, const char* szTable,
                    const char* szStat) {
   if (szTable) {
     table = -1;

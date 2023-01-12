@@ -146,13 +146,13 @@ struct ItemEvent : public Event {
 
 struct TimeoutEvent : public Event {
  public:
-  TimeoutEvent(Script* owner, const char* name, jsval* val_);
+  TimeoutEvent(Script* owner, const char* name, JS::Value* val_);
 
   void process();
 
   int key;
   HANDLE handle;
-  jsval* val;
+  JS::Value* val;
 };
 
 struct LifeEvent : public Event {
@@ -245,7 +245,7 @@ bool FireKeyDownUpEvent(WPARAM bByte, BYTE bUp);
 void FirePlayerAssignEvent(DWORD dwUnitId);
 void FireMouseClickEvent(int button, POINT pt, bool bUp);
 void FireMouseMoveEvent(POINT pt);
-void FireScriptBroadcastEvent(JSContext* cx, uint32_t argc, jsval* argv);
+void FireScriptBroadcastEvent(JSContext* cx, uint32_t argc, JS::Value* argv);
 void FireItemActionEvent(DWORD GID, char* Code, BYTE Mode, bool Global);
 bool FireGamePacketEvent(BYTE* pPacket, DWORD dwSize);
 bool FireGamePacketSentEvent(BYTE* pPacket, DWORD dwSize);

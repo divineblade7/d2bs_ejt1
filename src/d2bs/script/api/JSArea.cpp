@@ -25,7 +25,7 @@ JSAPI_PROP(area_getProperty) {
   Level* pLevel = GetLevel(pArea->AreaId);
   if (!pLevel) return JS_FALSE;
 
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case AUNIT_EXITS: {
@@ -54,7 +54,7 @@ JSAPI_PROP(area_getProperty) {
             delete exit;
             THROW_ERROR(cx, "Failed to create exit object!");
           }
-          jsval a = OBJECT_TO_JSVAL(pExit);
+          JS::Value a = OBJECT_TO_JSVAL(pExit);
           JS_SetElement(cx, exitArray, i, &a);
         }
 

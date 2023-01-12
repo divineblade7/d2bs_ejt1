@@ -34,7 +34,7 @@ void unit_finalize(JSFreeOp*, JSObject* obj) {
 JSAPI_PROP(unit_getProperty) {
   BnetData* pData = *p_D2LAUNCH_BnData;
   GameStructInfo* pInfo = *p_D2CLIENT_GameInfo;
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   JS_BeginRequest(cx);
 
@@ -307,7 +307,7 @@ JSAPI_PROP(unit_getProperty) {
 
         for (int i = 0; i < 3; i++) {
           if (D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicPrefix[i])) {
-            jsval nPrefix =
+            JS::Value nPrefix =
                 STRING_TO_JSVAL(JS_InternString(cx, D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicPrefix[i])));
 
             JS_SetElement(cx, pReturnArray, i, &nPrefix);
@@ -324,7 +324,7 @@ JSAPI_PROP(unit_getProperty) {
 
         for (int i = 0; i < 3; i++) {
           if (pUnit->pItemData->wMagicPrefix[i]) {
-            jsval nPrefixnum = INT_TO_JSVAL(pUnit->pItemData->wMagicPrefix[i]);
+            JS::Value nPrefixnum = INT_TO_JSVAL(pUnit->pItemData->wMagicPrefix[i]);
 
             JS_SetElement(cx, pReturnArray, i, &nPrefixnum);
           }
@@ -340,7 +340,7 @@ JSAPI_PROP(unit_getProperty) {
 
         for (int i = 0; i < 3; i++) {
           if (D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicSuffix[i])) {
-            jsval nSuffix =
+            JS::Value nSuffix =
                 STRING_TO_JSVAL(JS_InternString(cx, D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicSuffix[i])));
 
             JS_SetElement(cx, pReturnArray, i, &nSuffix);
@@ -357,7 +357,7 @@ JSAPI_PROP(unit_getProperty) {
 
         for (int i = 0; i < 3; i++) {
           if (pUnit->pItemData->wMagicSuffix[i]) {
-            jsval nSuffixnum = INT_TO_JSVAL(pUnit->pItemData->wMagicSuffix[i]);
+            JS::Value nSuffixnum = INT_TO_JSVAL(pUnit->pItemData->wMagicSuffix[i]);
 
             JS_SetElement(cx, pReturnArray, i, &nSuffixnum);
           }
@@ -478,7 +478,7 @@ JSAPI_PROP(unit_getProperty) {
 }
 
 JSAPI_STRICT_PROP(unit_setProperty) {
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case ME_CHICKENHP:
@@ -877,15 +877,15 @@ JSAPI_FUNC(unit_getStat) {
 
         if (!pArrayInsert) continue;
 
-        jsval nIndex = JS::Int32Value(aStatList[i].wStatIndex);
-        jsval nSubIndexVal = JS::Int32Value(aStatList[i].wSubIndex);
-        jsval nValue = JS::Int32Value(aStatList[i].dwStatValue);
+        JS::Value nIndex = JS::Int32Value(aStatList[i].wStatIndex);
+        JS::Value nSubIndexVal = JS::Int32Value(aStatList[i].wSubIndex);
+        JS::Value nValue = JS::Int32Value(aStatList[i].dwStatValue);
 
         JS_SetElement(cx, pArrayInsert, 0, &nIndex);
         JS_SetElement(cx, pArrayInsert, 1, &nSubIndexVal);
         JS_SetElement(cx, pArrayInsert, 2, &nValue);
 
-        jsval aObj = OBJECT_TO_JSVAL(pArrayInsert);
+        JS::Value aObj = OBJECT_TO_JSVAL(pArrayInsert);
 
         JS_SetElement(cx, pReturnArray, i, &aObj);
       }
@@ -945,7 +945,7 @@ void InsertStatsNow(Stat* pStat, int nStat, JSContext* cx, JSObject* pArray) {
       maxcharges = pStat[nStat].dwStatValue >> 8;
     }
     JSObject* val = BuildObject(cx, NULL);
-    jsval jsskill = JS::Int32Value(skill), jslevel = JS::Int32Value(level), jscharges = JS::Int32Value(charges),
+    JS::Value jsskill = JS::Int32Value(skill), jslevel = JS::Int32Value(level), jscharges = JS::Int32Value(charges),
           jsmaxcharges = JS::Int32Value(maxcharges);
     // val is an anonymous object that holds properties
     if (!JS_SetProperty(cx, val, "skill", &jsskill) || !JS_SetProperty(cx, val, "level", &jslevel)) return;
@@ -954,7 +954,7 @@ void InsertStatsNow(Stat* pStat, int nStat, JSContext* cx, JSObject* pArray) {
         return;
     }
     // find where we should put it
-    jsval index = JS::UndefinedValue(), obj = JS::ObjectOrNullValue(val);
+    JS::Value index = JS::UndefinedValue(), obj = JS::ObjectOrNullValue(val);
     if (!JS_GetElement(cx, pArray, pStat[nStat].wStatIndex, &index)) return;
     if (index != JS::UndefinedValue()) {
       // modify the existing object by stuffing it into an array
@@ -964,7 +964,7 @@ void InsertStatsNow(Stat* pStat, int nStat, JSContext* cx, JSObject* pArray) {
         JS::RootedObject arr(cx, JS_NewArrayObject(cx, 0, NULL));
         JS_SetElement(cx, arr, 0, &index);
         JS_SetElement(cx, arr, 1, &obj);
-        jsval arr2 = JS::ObjectOrNullValue(arr);
+        JS::Value arr2 = JS::ObjectOrNullValue(arr);
         JS_SetElement(cx, pArray, pStat[nStat].wStatIndex, &arr2);
       } else {
         // it is an array, append the new value
@@ -984,7 +984,7 @@ void InsertStatsNow(Stat* pStat, int nStat, JSContext* cx, JSObject* pArray) {
     int value = pStat[nStat].dwStatValue;
     if (pStat[nStat].wStatIndex >= 6 && pStat[nStat].wStatIndex <= 11) value = value >> 8;
 
-    jsval index = JS::UndefinedValue(), val = JS::Int32Value(value);
+    JS::Value index = JS::UndefinedValue(), val = JS::Int32Value(value);
     if (!JS_GetElement(cx, pArray, pStat[nStat].wStatIndex, &index)) return;
     if (index == JS::UndefinedValue()) {
       // the array index doesn't exist, make it
@@ -1227,7 +1227,7 @@ JSAPI_FUNC(unit_getItems) {
     if (!jsunit) {
       THROW_ERROR(cx, "Failed to build item array");
     }
-    jsval a = JS::ObjectOrNullValue(jsunit);
+    JS::Value a = JS::ObjectOrNullValue(jsunit);
     JS_SetElement(cx, pReturnArray, dwArrayCount, &a);
   }
 
@@ -1307,15 +1307,15 @@ JSAPI_FUNC(unit_getSkill) {
 
           if (!pArrayInsert) continue;
 
-          jsval nId = INT_TO_JSVAL(pSkill->pSkillInfo->wSkillId);
-          jsval nBase = INT_TO_JSVAL(pSkill->dwSkillLevel);
-          jsval nTotal = INT_TO_JSVAL(D2COMMON_GetSkillLevel(pUnit, pSkill, 1));
+          JS::Value nId = INT_TO_JSVAL(pSkill->pSkillInfo->wSkillId);
+          JS::Value nBase = INT_TO_JSVAL(pSkill->dwSkillLevel);
+          JS::Value nTotal = INT_TO_JSVAL(D2COMMON_GetSkillLevel(pUnit, pSkill, 1));
           JSAutoRequest r(cx);
           JS_SetElement(cx, pArrayInsert, 0, &nId);
           JS_SetElement(cx, pArrayInsert, 1, &nBase);
           JS_SetElement(cx, pArrayInsert, 2, &nTotal);
 
-          jsval aObj = JS::ObjectOrNullValue(pArrayInsert);
+          JS::Value aObj = JS::ObjectOrNullValue(pArrayInsert);
 
           JS_SetElement(cx, pReturnArray, i, &aObj);
           i++;
@@ -1565,7 +1565,7 @@ JSAPI_FUNC(unit_getMercHP) {
   if (!WaitForGameReady()) THROW_WARNING(cx, vp, "Game not ready");
 
   auto self = args.thisv().toObjectOrNull();
-  jsval* rest = 0;
+  JS::Value* rest = 0;
   myUnit* lpUnit = (myUnit*)JS_GetInstancePrivate(cx, self, &unit_class, rest);
   // myUnit* lpUnit = (myUnit*)JS_GetPrivate(test);
 

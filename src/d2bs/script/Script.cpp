@@ -82,7 +82,7 @@ void Script::run() {
     JS_BeginRequest(context_);
 
     globals_ = JS_GetGlobalObject(context_);
-    jsval meVal = JSVAL_VOID;
+    JS::Value meVal = JSVAL_VOID;
     if (JS_GetProperty(context_, globals_, "me", &meVal) != JS_FALSE) {
       JSObject* meObject = JSVAL_TO_OBJECT(meVal);
       me_ = (myUnit*)JS_GetPrivate(meObject);
@@ -121,11 +121,11 @@ void Script::run() {
   hasActiveCX_ = true;
   state_ = ScriptState::Running;
 
-  jsval main = INT_TO_JSVAL(1), dummy = INT_TO_JSVAL(1);
+  JS::Value main = INT_TO_JSVAL(1), dummy = INT_TO_JSVAL(1);
   JS_BeginRequest(context_);
 
   // args passed from load
-  jsval* argvalue = new jsval[argc_];
+  JS::Value* argvalue = new JS::Value[argc_];
   for (uint32_t i = 0; i < argc_; i++) {
     argv_[i]->read(context_, &argvalue[i]);
   }
@@ -300,7 +300,7 @@ bool Script::Include(const wchar_t* file) {
 
   JSScript* _script = JS_CompileFile(cx, globals_, fname);
   if (_script) {
-    jsval dummy;
+    JS::Value dummy;
     inProgress_[fname] = true;
     rval = !!JS_ExecuteScript(cx, globals_, _script, &dummy);
     if (rval) {
@@ -322,7 +322,7 @@ bool Script::IsListenerRegistered(const char* evtName) {
   return strlen(evtName) > 0 && functions_.count(evtName) > 0;
 }
 
-void Script::RegisterEvent(const char* evtName, jsval evtFunc) {
+void Script::RegisterEvent(const char* evtName, JS::Value evtFunc) {
   std::lock_guard<std::mutex> lock(mutex_);
 
   if (JSVAL_IS_FUNCTION(context_, evtFunc) && strlen(evtName) > 0) {
@@ -331,7 +331,7 @@ void Script::RegisterEvent(const char* evtName, jsval evtFunc) {
   }
 }
 
-bool Script::IsRegisteredEvent(const char* evtName, jsval evtFunc) {
+bool Script::IsRegisteredEvent(const char* evtName, JS::Value evtFunc) {
   if (strlen(evtName) < 1 || !functions_.contains(evtName)) {
     return false;
   }
@@ -345,7 +345,7 @@ bool Script::IsRegisteredEvent(const char* evtName, jsval evtFunc) {
   return false;
 }
 
-void Script::UnregisterEvent(const char* evtName, jsval evtFunc) {
+void Script::UnregisterEvent(const char* evtName, JS::Value evtFunc) {
   std::lock_guard<std::mutex> lock(mutex_);
 
   if (strlen(evtName) < 1 || !functions_.contains(evtName)) {

@@ -14,7 +14,7 @@ JSAPI_PROP(party_getProperty) {
 
   if (!pUnit) return JS_TRUE;
 
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   JS_BeginRequest(cx);
   switch (JSVAL_TO_INT(ID)) {

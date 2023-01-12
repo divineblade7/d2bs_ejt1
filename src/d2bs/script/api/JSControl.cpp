@@ -27,7 +27,7 @@ JSAPI_PROP(control_getProperty) {
       findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
   if (!ctrl) return JS_FALSE;
 
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   JS_BeginRequest(cx);
 
@@ -103,7 +103,7 @@ JSAPI_STRICT_PROP(control_setProperty) {
       findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
   if (!ctrl) return JS_FALSE;
 
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case CONTROL_TEXT:
@@ -286,15 +286,15 @@ JSAPI_FUNC(control_getText) {
 
       for (int i = 0; i < 5; i++) {
         if (pText->wText[i]) {
-          jsval aString = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, pText->wText[i]));
+          JS::Value aString = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, pText->wText[i]));
           JS_SetElement(cx, pSubArray, i, &aString);
         }
       }
 
-      jsval sub = OBJECT_TO_JSVAL(pSubArray);
+      JS::Value sub = OBJECT_TO_JSVAL(pSubArray);
       JS_SetElement(cx, pReturnArray, nArrayCount, &sub);
     } else {
-      jsval aString = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, pText->wText[0]));
+      JS::Value aString = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, pText->wText[0]));
       JS_SetElement(cx, pReturnArray, nArrayCount, &aString);
     }
 
@@ -357,7 +357,7 @@ JSAPI_FUNC(my_getControls) {
     data->pControl = pControl;
 
     JSObject* res = BuildObject(cx, &control_class, control_funcs, control_props, data);
-    jsval a = OBJECT_TO_JSVAL(res);
+    JS::Value a = OBJECT_TO_JSVAL(res);
     JS_SetElement(cx, pReturnArray, dwArrayCount, &a);
     dwArrayCount++;
   }

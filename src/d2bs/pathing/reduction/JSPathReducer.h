@@ -18,7 +18,7 @@ class JSPathReducer : public PathReducer {
   JS::RootedValue reject, reduce, mutate;
 
  public:
-  JSPathReducer(ActMap*, JSContext* cx, JSObject*, jsval _reject, jsval _reduce, jsval _mutate)
+  JSPathReducer(ActMap*, JSContext* cx, JSObject*, JS::Value _reject, JS::Value _reduce, JS::Value _mutate)
       : reject(cx, _reject), reduce(cx, _reduce), mutate(cx, _mutate) {
   }
   ~JSPathReducer(void) {
@@ -33,9 +33,9 @@ class JSPathReducer : public PathReducer {
 
     //	JS_EnterLocalRootScope(cx);
 
-    jsval* vec = new jsval[count];
+    JS::Value* vec = new JS::Value[count];
     for (int i = 0; i < count; i++) {
-      jsval x = INT_TO_JSVAL(in[i].first), y = INT_TO_JSVAL(in[i].second);
+      JS::Value x = INT_TO_JSVAL(in[i].first), y = INT_TO_JSVAL(in[i].second);
 
       JSObject* pt = BuildObject(cx);
       JS_SetProperty(cx, pt, "x", &x);
@@ -45,9 +45,9 @@ class JSPathReducer : public PathReducer {
     }
     JSObject* arr = JS_NewArrayObject(cx, count, vec);
 
-    jsval argv[] = {JSVAL_NULL, JSVAL_ZERO, OBJECT_TO_JSVAL(arr)};
+    JS::Value argv[] = {JSVAL_NULL, JSVAL_ZERO, OBJECT_TO_JSVAL(arr)};
     for (int i = 0; i < count; i++) {
-      jsval rval = JSVAL_FALSE;
+      JS::Value rval = JSVAL_FALSE;
       argv[0] = vec[i];
       argv[1] = INT_TO_JSVAL(i);
       JS_CallFunctionValue(cx, obj, reduce, 3, argv, &rval);
@@ -58,8 +58,8 @@ class JSPathReducer : public PathReducer {
     delete[] vec;
   }
   bool Reject(Point const& pt, bool) {
-    jsval rval = JSVAL_FALSE;
-    jsval argv[] = {INT_TO_JSVAL(pt.first), INT_TO_JSVAL(pt.second)};
+    JS::Value rval = JSVAL_FALSE;
+    JS::Value argv[] = {INT_TO_JSVAL(pt.first), INT_TO_JSVAL(pt.second)};
     JS_CallFunctionValue(cx, obj, reject, 2, argv, &rval);
     return !!JSVAL_TO_BOOLEAN(rval);
   }
@@ -76,7 +76,7 @@ class JSPathReducer : public PathReducer {
   }
   void MutatePoint(Point& pt, bool) {
     JS::Value rval = JS::BooleanValue(false);
-    jsval argv[] = {INT_TO_JSVAL(pt.first), INT_TO_JSVAL(pt.second)};
+    JS::Value argv[] = {INT_TO_JSVAL(pt.first), INT_TO_JSVAL(pt.second)};
     JS_CallFunctionValue(cx, obj, mutate, 2, argv, &rval);
     if (rval.isObject()) {
       JS_GetElement(cx, rval.toObjectOrNull(), 0, &argv[0]);

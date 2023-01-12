@@ -7,7 +7,7 @@
 //////////////////////////////////////////////////////////////////
 
 CLASS_CTOR(socket);
-//JSBool socket_equality(JSContext* cx, JSObject* obj, jsval v, JSBool* bp);
+//JSBool socket_equality(JSContext* cx, JSObject* obj, JS::Value v, JSBool* bp);
 
 JSAPI_PROP(socket_getProperty);
 JSAPI_STRICT_PROP(socket_setProperty);

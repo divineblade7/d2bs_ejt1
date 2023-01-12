@@ -124,7 +124,7 @@ JSAPI_PROP(profile_getProperty) {
   d2bs::Profile* prof;
 
   prof = (d2bs::Profile*)JS_GetPrivate(obj);
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
 
   switch (JSVAL_TO_INT(ID)) {
@@ -160,7 +160,7 @@ JSAPI_PROP(profile_getProperty) {
 EMPTY_CTOR(profileType);
 
 JSAPI_PROP(profileType_getProperty) {
-  jsval ID;
+  JS::Value ID;
   JS_IdToValue(cx, id, &ID);
   vp.set(ID);
 
