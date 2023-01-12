@@ -15,14 +15,6 @@
 #include <tlhelp32.h>
 #include <wctype.h>
 
-void StringToLower(char* p) {
-  for (; *p; ++p) *p = static_cast<char>(tolower(static_cast<int>(*p)));
-}
-
-void StringToLower(wchar_t* p) {
-  for (; *p; ++p) *p = towlower(*p);
-}
-
 bool StringToBool(const char* str) {
   switch (tolower(str[0])) {
     case 't':

@@ -3,8 +3,6 @@
 #include "d2bs/script/Script.h"
 
 bool GetStackWalk();
-void StringToLower(char* p);
-void StringToLower(wchar_t* p);
 bool StringToBool(const char* str);
 bool StringToBool(const wchar_t* str);
 void StringReplace(char* str, const char find, const char replace, size_t buflen);

@@ -3,6 +3,7 @@
 #include "d2bs/diablo/Constants.h"
 #include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/diablo/D2Ptrs.h"
+#include "d2bs/new_util/localization.h"
 #include "d2bs/utils/Helpers.h"
 
 Control* findControl(int Type, int LocaleID, int Disabled, int PosX, int PosY, int SizeX, int SizeY) {
@@ -192,14 +193,10 @@ BOOL OOG_SelectCharacter(const wchar_t* szCharacter) {
     if (cText != NULL) {
       if (!cText->wText[0]) return FALSE;
 
-      wchar_t* cLine = _wcsdup(cText->wText[0]);
-      wchar_t* cCharacter = _wcsdup(szCharacter);
-      StringToLower(cLine);
-      StringToLower(cCharacter);
+      auto cLine = d2bs::util::to_lower(cText->wText[0]);
+      auto cCharacter = d2bs::util::to_lower(szCharacter);
 
-      if (wcslen(cLine) == wcslen(cCharacter) && wcsstr(cLine, cCharacter) != NULL) {
-        free(cLine);
-        free(cCharacter);
+      if (cLine == cCharacter) {
         if (!clickControl(pControl)) return FALSE;
 
         // OK Button
@@ -213,8 +210,6 @@ BOOL OOG_SelectCharacter(const wchar_t* szCharacter) {
           return FALSE;
 
       } else {
-        free(cLine);
-        free(cCharacter);
       }
     }
     pControl = pControl->pNext;
@@ -231,18 +226,13 @@ BOOL OOG_SelectGateway(const wchar_t* szGateway, [[maybe_unused]] size_t strSize
 
   // if the control exists and has the text label, check if it matches the selected gateway
   if (pControl && pControl->wText2) {
-    wchar_t* wzLine = _wcsdup(pControl->wText2);
-    wchar_t* wzGate = _wcsdup(szGateway);
-    StringToLower(wzLine);
-    StringToLower(wzGate);
+    auto wzLine = d2bs::util::to_lower(pControl->wText2);
+    auto wzGate = d2bs::util::to_lower(szGateway);
 
-    if (wcsstr(wzLine, wzGate)) {
+    if (wzLine == wzGate) {
       // gateway is correct, do nothing and return true
-      free(wzLine);
-      free(wzGate);
       return TRUE;
     } else {
-      free(wzLine);
       // gateway is NOT correct, change gateway to selected gateway if it exists
       // open the gateway select screen
       if (!clickControl(pControl)) return FALSE;
@@ -256,34 +246,26 @@ BOOL OOG_SelectGateway(const wchar_t* szGateway, [[maybe_unused]] size_t strSize
       if (pControl && pControl->pFirstText) {
         cText = pControl->pFirstText;
         while (cText) {
-          wchar_t* wzGatelist = _wcsdup(cText->wText[0]);
-          if (!wzGatelist) {
-            free(wzGate);
+          auto wzGatelist = d2bs::util::to_lower(cText->wText[0]);
+          if (wzGatelist.empty()) {
             return FALSE;
           }
 
-          StringToLower(wzGatelist);
-          if (wcsstr(wzGatelist, wzGate)) {
+          if (wzGatelist == wzGate) {
             // chosen gateway IS in the list and matches, cleanup and break the loop
-            free(wzGatelist);
-            free(wzGate);
             gatefound = true;
             break;
           }
-          free(wzGatelist);
           index++;
           cText = cText->pNext;
         }
         if (gatefound) {
           // click the correct gateway using the control plus a default x and a y based on (index*24)+12
           if (!clickControl(pControl, -1, 344 + ((index * 24) + 12))) {
-            free(wzGate);
             return FALSE;
           }
         }
       }
-
-      free(wzGate);
 
       // OK Button, gateway select screen
       pControl = findControl(CONTROL_BUTTON, (const wchar_t*)NULL, -1, 281, 538, 96, 32);
