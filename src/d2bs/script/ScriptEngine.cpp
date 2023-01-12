@@ -4,6 +4,7 @@
 #include "d2bs/diablo/Constants.h"
 #include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/diablo/D2Ptrs.h"
+#include "d2bs/new_util/localization.h"
 #include "d2bs/script/api/JSGlobalClasses.h"
 #include "d2bs/script/api/JSGlobalFuncs.h"
 #include "d2bs/script/api/JSUnit.h"
@@ -100,8 +101,8 @@ void ScriptEngine::FlushCache(void) {
   // LeaveCriticalSection(&lock);
 }
 
-Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptType type, uint32_t argc, JSAutoStructuredCloneBuffer** argv,
-                                  bool) {
+Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptType type, uint32_t argc,
+                                  JSAutoStructuredCloneBuffer** argv, bool) {
   if (state_ != Running) {
     return NULL;
   }
@@ -119,9 +120,8 @@ Script* ScriptEngine::CompileFile(const wchar_t* file, ScriptType type, uint32_t
     free(fileName);
     return script;
   } catch (std::exception e) {
-    wchar_t* what = AnsiToUnicode(e.what());
-    Print(what);
-    delete[] what;
+    auto what = d2bs::util::ansi_to_wide(e.what());
+    Print(what.c_str());
     free(fileName);
     return NULL;
   }
@@ -138,9 +138,8 @@ void ScriptEngine::RunCommand(const wchar_t* command) {
       scripts_[L"console"]->RunCommand(command);
     }
   } catch (std::exception e) {
-    wchar_t* what = AnsiToUnicode(e.what());
-    Print(what);
-    delete[] what;
+    auto what = d2bs::util::ansi_to_wide(e.what());
+    Print(what.c_str());
   }
 }
 

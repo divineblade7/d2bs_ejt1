@@ -5,6 +5,7 @@
 #include "d2bs/core/ScreenHook.h"
 #include "d2bs/core/Unit.h"
 #include "d2bs/diablo/Constants.h"
+#include "d2bs/new_util/localization.h"
 #include "d2bs/script/Script.h"
 #include "d2bs/script/ScriptEngine.h"
 #include "d2bs/script/event.h"
@@ -52,15 +53,9 @@ DWORD HPMPUpdateHandler(BYTE* pPacket, [[maybe_unused]] DWORD dwSize) {
 DWORD ChatEventHandler(BYTE* pPacket, [[maybe_unused]] DWORD dwSize) {
   char* pName = (char*)pPacket + 10;
   char* pMessage = (char*)pPacket + strlen(pName) + 11;
-  wchar_t* uc = AnsiToUnicode(pMessage, CP_ACP);
-  //   char* enc = UnicodeToAnsi(uc); // convert d2 string to unicode to utf-8 for js compatibility
-
+  auto uc = d2bs::util::ansi_to_wide(pMessage);
   if (Vars.bDontCatchNextMsg) Vars.bDontCatchNextMsg = FALSE;
-
-  DWORD result = !(FireChatEvent(pName, uc));
-  //    delete[] enc;
-  delete[] uc;
-
+  DWORD result = !(FireChatEvent(pName, uc.c_str()));
   return result;
 }
 
@@ -82,7 +77,7 @@ DWORD EventMessagesHandler(BYTE* pPacket, [[maybe_unused]] DWORD dwSize) {
   char name1[16] = "", name2[28] = "";
   strcpy_s(name1, 16, (char*)pPacket + 8);
   strcpy_s(name2, 16, (char*)pPacket + 24);
-  wchar_t* wname2 = NULL;
+  std::wstring wname2;
 
   const char* tables[3] = {"", "monstats", "objects"};
   const char* columns[3] = {"", "NameStr", "Name"};
@@ -112,12 +107,11 @@ DWORD EventMessagesHandler(BYTE* pPacket, [[maybe_unused]] DWORD dwSize) {
       break;
   }
 
-  if (!wname2) {
-    wname2 = AnsiToUnicode(name2, CP_ACP);
-    FireGameActionEvent(mode, param1, param2, name1, wname2);
-    delete[] wname2;
+  if (wname2.empty()) {
+    wname2 = d2bs::util::ansi_to_wide(name2);
+    FireGameActionEvent(mode, param1, param2, name1, wname2.data());
   } else
-    FireGameActionEvent(mode, param1, param2, name1, wname2);
+    FireGameActionEvent(mode, param1, param2, name1, wname2.data());
 
   return TRUE;
 }

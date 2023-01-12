@@ -14,7 +14,7 @@ DWORD WINAPI D2BS_MainThread(void* userdata) {
   // remove filename from path and make preferred, '\\' instead of '/'
   root_dir_.remove_filename();
 
-  Vars.working_dir = root_dir_;  // DEPRECATED
+  Vars.working_dir = root_dir_;       // DEPRECATED
   Vars.log_dir = root_dir_ / "logs";  // DEPRECATED
 
   // create log directory if it does not exist

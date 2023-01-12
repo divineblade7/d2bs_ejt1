@@ -6,6 +6,7 @@
 #include "d2bs/diablo/Constants.h"
 #include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/diablo/D2Skills.h"
+#include "d2bs/new_util/localization.h"
 #include "d2bs/utils/CriticalSections.h"
 #include "d2bs/utils/Helpers.h"
 
@@ -184,9 +185,7 @@ JSAPI_PROP(unit_getProperty) {
     case UNIT_NAME: {
       char tmp[128] = "";
       GetUnitName(pUnit, tmp, 128);
-      wchar_t* wtmp = AnsiToUnicode(tmp);
-      vp.setString(JS_InternUCString(cx, wtmp));
-      delete[] wtmp;
+      vp.setString(JS_InternString(cx, tmp));
     } break;
     case ME_MAPID:
       vp.setInt32(*p_D2CLIENT_MapId);
@@ -946,7 +945,7 @@ void InsertStatsNow(Stat* pStat, int nStat, JSContext* cx, JSObject* pArray) {
     }
     JSObject* val = BuildObject(cx, NULL);
     JS::Value jsskill = JS::Int32Value(skill), jslevel = JS::Int32Value(level), jscharges = JS::Int32Value(charges),
-          jsmaxcharges = JS::Int32Value(maxcharges);
+              jsmaxcharges = JS::Int32Value(maxcharges);
     // val is an anonymous object that holds properties
     if (!JS_SetProperty(cx, val, "skill", &jsskill) || !JS_SetProperty(cx, val, "level", &jslevel)) return;
     if (maxcharges > 0) {
@@ -1644,13 +1643,12 @@ JSAPI_FUNC(my_overhead) {
       // Fix overhead msg for locale text
       // wchar_t* tmpw = AnsiToUnicode(lpszText);
       // Convert back to multibyte in locale code page
-      char* tmpc = UnicodeToAnsi(lpszText, CP_ACP);
-      OverheadMsg* pMsg = D2COMMON_GenerateOverheadMsg(NULL, tmpc, *p_D2CLIENT_OverheadTrigger);
+      auto tmpc = d2bs::util::wide_to_ansi(lpszText);
+      OverheadMsg* pMsg = D2COMMON_GenerateOverheadMsg(NULL, tmpc.data(), *p_D2CLIENT_OverheadTrigger);
       if (pMsg) {
         // D2COMMON_FixOverheadMsg(pMsg, NULL);
         pUnit->pOMsg = pMsg;
       }
-      delete[] tmpc;
       // delete[] tmpw;
     }
     // JS_free(cx, lpszText);

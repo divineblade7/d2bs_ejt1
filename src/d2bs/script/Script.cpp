@@ -5,6 +5,7 @@
 #include "d2bs/diablo/Constants.h"
 #include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/diablo/D2Ptrs.h"
+#include "d2bs/new_util/localization.h"
 #include "d2bs/script/ScriptEngine.h"
 #include "d2bs/script/api/JSGlobalFuncs.h"
 #include "d2bs/script/api/JSUnit.h"
@@ -444,22 +445,17 @@ void reportError(JSContext*, const char* message, JSErrorReport* report) {
   bool isStrict = JSREPORT_IS_STRICT(report->flags);
   const char* type = (warn ? "Warning" : "Error");
   const char* strict = (isStrict ? "Strict " : "");
-  wchar_t* filename = report->filename ? AnsiToUnicode(report->filename) : _wcsdup(L"<unknown>");
-  wchar_t* displayName = filename;
-  if (_wcsicmp(L"Command Line", filename) != 0 && _wcsicmp(L"<unknown>", filename) != 0) {
-    displayName = filename + Vars.working_dir.wstring().length();
+  std::wstring filename = report->filename ? d2bs::util::ansi_to_wide(report->filename) : L"<unknown>";
+  std::wstring displayName = filename;
+  if (_wcsicmp(L"Command Line", filename.c_str()) != 0 && _wcsicmp(L"<unknown>", filename.c_str()) != 0) {
+    displayName = filename + Vars.working_dir.wstring();
   }
 
-  Log(L"[%hs%hs] Code(%d) File(%s:%d) %hs\nLine: %hs", strict, type, report->errorNumber, filename, report->lineno,
+  Log(L"[%hs%hs] Code(%d) File(%s:%d) %hs\nLine: %hs", strict, type, report->errorNumber, filename.c_str(),
+      report->lineno,
       message, report->linebuf);
   Print(L"[\u00FFc%d%hs%hs\u00FFc0 (%d)] File(%s:%d) %hs", (warn ? 9 : 1), strict, type, report->errorNumber,
-        displayName, report->lineno, message);
-
-  if (filename[0] == L'<') {
-    free(filename);
-  } else {
-    delete[] filename;
-  }
+        displayName.c_str(), report->lineno, message);
 
   if (Vars.settings.bQuitOnError && !JSREPORT_IS_WARNING(report->flags) && ClientState() == ClientStateInGame) {
     D2CLIENT_ExitGame();

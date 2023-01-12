@@ -6,6 +6,7 @@
 #include "d2bs/core/Unit.h"
 #include "d2bs/diablo/D2Ptrs.h"
 #include "d2bs/diablo/handlers/D2Handlers.h"
+#include "d2bs/new_util/localization.h"
 #include "d2bs/utils/CommandLine.h"
 #include "d2bs/utils/Console.h"
 #include "d2bs/utils/Helpers.h"
@@ -22,23 +23,22 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
       pCopy = (COPYDATASTRUCT*)lparam;
 
       if (pCopy) {
-        wchar_t* lpwData = AnsiToUnicode((const char*)pCopy->lpData);
+        auto lpwData = d2bs::util::ansi_to_wide(static_cast<const char*>(pCopy->lpData));
         if (pCopy->dwData == 0x1337)  // 0x1337 = Execute Script
         {
           while (!Vars.bActive || (sScriptEngine->state() != Running)) {
             Sleep(100);
           }
-          sScriptEngine->RunCommand(lpwData);
+          sScriptEngine->RunCommand(lpwData.c_str());
         } else if (pCopy->dwData == 0x31337) {  // 0x31337 = Set Profile
-          if (Vars.settings.set_profile(lpwData)) {
-            Print(L"\u00FFc2D2BS\u00FFc0 :: Switched to profile %s", lpwData);
+          if (Vars.settings.set_profile(lpwData.c_str())) {
+            Print(L"\u00FFc2D2BS\u00FFc0 :: Switched to profile %s", lpwData.c_str());
           } else {
-            Print(L"\u00FFc2D2BS\u00FFc0 :: Profile %s not found", lpwData);
+            Print(L"\u00FFc2D2BS\u00FFc0 :: Profile %s not found", lpwData.c_str());
           }
         } else {
-          FireCopyDataEvent(pCopy->dwData, lpwData);
+          FireCopyDataEvent(pCopy->dwData, lpwData.data());
         }
-        delete[] lpwData;
       }
 
       return TRUE;
@@ -195,7 +195,6 @@ LONG WINAPI wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
   }
 
   return (LONG)CallWindowProcA(orig_wndproc_, hwnd, msg, wparam, lparam);
-
 }
 namespace d2bs {
 
@@ -288,7 +287,6 @@ Application::~Application() {
 }
 
 void Application::run() {
-
   while (Vars.bActive) {
     static bool bInGame = false;
 
@@ -352,10 +350,8 @@ void Application::parse_commandline_args() {
   CommandLine cmdline(GetCommandLineA());
   for (const auto& [arg, val] : cmdline.args()) {
     if (arg == "-title") {
-      const wchar_t* text = AnsiToUnicode(val.c_str());
-      int len = wcslen((wchar_t*)text);
-      wcsncat_s(Vars.szTitle, (wchar_t*)text, len);
-      delete[] text;  // ugh...
+      auto text = d2bs::util::ansi_to_wide(val);
+      wcsncat_s(Vars.szTitle, text.c_str(), text.length());
     } else if (arg == "-sleepy") {
       Vars.bSleepy = TRUE;
     } else if (arg == "-cachefix") {
@@ -374,12 +370,11 @@ void Application::parse_commandline_args() {
     } else if (arg == "-mpq") {
       LoadMPQ(val.c_str());
     } else if (arg == "-profile") {
-      const wchar_t* profile = AnsiToUnicode(val.c_str());
+      auto profile = d2bs::util::ansi_to_wide(val);
       if (Vars.settings.set_profile(profile))
-        Print(L"\u00FFc2D2BS\u00FFc0 :: Switched to profile %s (-profile)", profile);
+        Print(L"\u00FFc2D2BS\u00FFc0 :: Switched to profile %s (-profile)", profile.c_str());
       else
-        Print(L"\u00FFc2D2BS\u00FFc0 :: Profile %s not found (-profile)", profile);
-      delete[] profile;  // ugh...
+        Print(L"\u00FFc2D2BS\u00FFc0 :: Profile %s not found (-profile)", profile.c_str());
     }
   }
 }

@@ -3,7 +3,6 @@
 #include "d2bs/script/Script.h"
 
 bool GetStackWalk();
-wchar_t* AnsiToUnicode(const char* str, UINT codepage = CP_UTF8);
 char* UnicodeToAnsi(const wchar_t* str, UINT codepage = CP_UTF8);
 void StringToLower(char* p);
 void StringToLower(wchar_t* p);

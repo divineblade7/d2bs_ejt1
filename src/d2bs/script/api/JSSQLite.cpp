@@ -580,9 +580,7 @@ JSAPI_PROP(sqlite_stmt_getProperty) {
   JS_IdToValue(cx, id, &ID);
   switch (JSVAL_TO_INT(ID)) {
     case SQLITE_STMT_SQL: {
-      wchar_t* wText = AnsiToUnicode(sqlite3_sql(stmtobj->stmt));
-      vp.setString(JS_NewUCStringCopyZ(cx, wText));
-      delete[] wText;
+      vp.setString(JS_NewStringCopyZ(cx, sqlite3_sql(stmtobj->stmt)));
       break;
     }
     case SQLITE_STMT_READY:

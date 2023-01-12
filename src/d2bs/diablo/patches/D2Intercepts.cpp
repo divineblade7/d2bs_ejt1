@@ -3,6 +3,7 @@
 #include "d2bs/diablo/D2Helpers.h"
 #include "d2bs/diablo/D2Ptrs.h"
 #include "d2bs/diablo/handlers/D2Handlers.h"
+#include "d2bs/new_util/localization.h"
 #include "d2bs/utils/Console.h"
 #include "d2bs/utils/Helpers.h"
 #include "d2bs/variables.h"
@@ -333,16 +334,16 @@ HMODULE __stdcall Multi(LPSTR, LPSTR) {
 
 HANDLE __stdcall Windowname(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR, DWORD dwStyle, int x, int y, int nWidth,
                             int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam) {
-  WCHAR szWindowName[200] = L"D2";
-  WCHAR szClassName[200] = L"CNAME";
+  std::wstring szWindowName = L"D2";
+  std::wstring szClassName = L"CNAME" + d2bs::util::ansi_to_wide(lpClassName);
 
-  if (wcslen(Vars.szTitle) > 1) wcscpy_s(szWindowName, _countof(szWindowName), Vars.szTitle);
+  if (wcslen(Vars.szTitle) > 1) {
+    szWindowName = Vars.szTitle;
+  }
 
-  WCHAR* wClassName = AnsiToUnicode(lpClassName);
-  wcscpy_s(szClassName, _countof(szClassName), wClassName);
-  delete[] wClassName;
-
-  return CreateWindowExW(dwExStyle, szClassName, szWindowName, dwStyle, x, y, nWidth, nHeight, hWndParent, hMenu,
+  return CreateWindowExW(dwExStyle, szClassName.c_str(), szWindowName.c_str(), dwStyle, x, y, nWidth, nHeight,
+                         hWndParent,
+                         hMenu,
                          hInstance, lpParam);
 }
 

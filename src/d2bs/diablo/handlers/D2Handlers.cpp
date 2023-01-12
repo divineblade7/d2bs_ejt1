@@ -6,6 +6,7 @@
 #include "d2bs/core/Unit.h"
 #include "d2bs/diablo/Constants.h"
 #include "d2bs/diablo/handlers/D2NetHandlers.h"
+#include "d2bs/new_util/localization.h"
 #include "d2bs/script/Script.h"
 #include "d2bs/script/ScriptEngine.h"
 #include "d2bs/script/event.h"
@@ -110,9 +111,8 @@ void SetMaxDiff(void) {
 
 void __fastcall WhisperHandler(char* szAcc, char* szText) {
   if (!Vars.bDontCatchNextMsg) {
-    wchar_t* szwText = AnsiToUnicode(szText, CP_ACP);
-    FireWhisperEvent(szAcc, szwText);
-    delete[] szwText;
+    auto szwText = d2bs::util::ansi_to_wide(szText);
+    FireWhisperEvent(szAcc, szwText.c_str());
   } else
     Vars.bDontCatchNextMsg = FALSE;
 }
@@ -170,7 +170,7 @@ BOOL __fastcall ChatPacketRecv(BYTE* pPacket, [[maybe_unused]] int len) {
     // DWORD mode = pPacket[4];
     const char* who = (char*)pPacket + 28;
     char* said = (char*)pPacket + 29 + strlen(who);
-    wchar_t* wsaid = AnsiToUnicode(said, CP_ACP);
+    auto wsaid = d2bs::util::ansi_to_wide(said);
 
     switch (pPacket[4]) {
       case 0x02:  // channel join
@@ -181,18 +181,17 @@ BOOL __fastcall ChatPacketRecv(BYTE* pPacket, [[maybe_unused]] int len) {
         break;
       case 0x04:  // whispers
       case 0x0A:
-        FireWhisperEvent(who, wsaid);
+        FireWhisperEvent(who, wsaid.c_str());
         break;
       case 0x05:  // normal text
       case 0x12:  // info blue text
       case 0x13:  // error message
       case 0x17:  // emoted text
-        FireChatEvent(who, wsaid);
+        FireChatEvent(who, wsaid.c_str());
         break;
       default:
         break;
     }
-    delete[] wsaid;
     // ChannelEvent(mode,who,said);
   }
 

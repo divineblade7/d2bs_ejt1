@@ -14,8 +14,7 @@ HookList Genhook::invisible = HookList();
 CRITICAL_SECTION Genhook::globalSection = {0};
 
 void DrawLogo(void) {
-  // Cancer ansi -> unicode right now before we can get rid of all unicode usages ~ ejt
-  static const wchar_t* version = AnsiToUnicode(std::format("D2BS {}", D2BS_VERSION).c_str());
+  static const wchar_t* version = L"D2BS " D2BS_VERSION;
   static int len = CalculateTextLen(version, 0).x;
   int dx = GetScreenSize().x - len - 1;
   int dy = GetScreenSize().y - 1;
@@ -159,8 +158,8 @@ void Genhook::Clean(Script* owner) {
   LeaveCriticalSection(&globalSection);
 }
 
-Genhook::Genhook(Script* nowner, JSObject* nself, uint32_t x, uint32_t y, ushort nopacity, bool nisAutomap, Align nalign,
-                 ScreenhookState ngameState)
+Genhook::Genhook(Script* nowner, JSObject* nself, uint32_t x, uint32_t y, ushort nopacity, bool nisAutomap,
+                 Align nalign, ScreenhookState ngameState)
     : owner(nowner),
       isAutomap(nisAutomap),
       isVisible(true),

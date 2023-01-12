@@ -3,6 +3,7 @@
 #include "d2bs/diablo/Constants.h"
 #include "d2bs/diablo/D2Skills.h"
 #include "d2bs/diablo/patches/D2Intercepts.h"
+#include "d2bs/new_util/localization.h"
 #include "d2bs/utils/CriticalSections.h"
 #include "d2bs/utils/Helpers.h"
 #include "d2bs/utils/stringhash.h"
@@ -39,20 +40,20 @@ void LogNoFormat(const wchar_t* szString) {
   strftime(szTime, sizeof(szTime), "%Y%m%d", &timestamp);
   swprintf_s(path, _countof(path), L"%s\\d2bs-%s-%S.log", Vars.log_dir.wstring().c_str(), Vars.settings.szProfile,
              szTime);
-  //#ifdef DEBUG
-//  FILE* log = stderr;
-//#else
+  // #ifdef DEBUG
+  //  FILE* log = stderr;
+  // #else
   FILE* log = _wfsopen(path, L"a+", _SH_DENYNO);
-//#endif
+  // #endif
   static DWORD id = GetProcessId(GetCurrentProcess());
   char* sString = UnicodeToAnsi(szString);
   strftime(szTime, sizeof(szTime), "%x %X", &timestamp);
   fprintf(log, "[%s] D2BS %d: %s\n", szTime, id, sString);
   delete[] sString;
-//#ifndef DEBUG
+  // #ifndef DEBUG
   fflush(log);
   fclose(log);
-//#endif
+  // #endif
 }
 
 bool InArea(int x, int y, int x2, int y2, int sizex, int sizey) {
@@ -152,9 +153,8 @@ POINT CalculateTextLen(const char* szwText, int Font) {
 
   if (!szwText) return ret;
 
-  wchar_t* buf = AnsiToUnicode(szwText);
-  ret = CalculateTextLen(buf, Font);
-  delete[] buf;
+  auto buf = d2bs::util::ansi_to_wide(szwText);
+  ret = CalculateTextLen(buf.c_str(), Font);
   return ret;
 }
 
@@ -418,9 +418,8 @@ CellFile* LoadCellFile(const char* lpszPath, DWORD bMPQ) {
     Vars.mCachedCellFiles[hash] = result;
     return result;
   } else {
-    wchar_t* path = AnsiToUnicode(lpszPath);
-    CellFile* ret = LoadCellFile(path, bMPQ);
-    delete[] path;
+    auto path = d2bs::util::ansi_to_wide(lpszPath);
+    CellFile* ret = LoadCellFile(path.c_str(), bMPQ);
     return ret;
   }
 }

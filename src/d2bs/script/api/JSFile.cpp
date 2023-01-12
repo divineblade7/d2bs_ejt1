@@ -413,10 +413,8 @@ JSAPI_FUNC(file_readAllLines) {
         offset = 3;
       }
 
-      wchar_t* wline = AnsiToUnicode(line + offset);
-      JS::Value val = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, wline));
+      JS::Value val = JS::StringValue(JS_NewStringCopyZ(cx, line + offset));
       JS_SetElement(cx, arr, i++, &val);
-      delete[] wline;
       free(line);
     }
   }
