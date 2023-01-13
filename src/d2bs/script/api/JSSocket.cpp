@@ -17,48 +17,47 @@ struct SocketData {
   int mode;
   SOCKET socket;
 };
+
 EMPTY_CTOR(socket)
 
-JSAPI_PROP(socket_getProperty) {
-  SocketData* sdata = (SocketData*)JS_GetInstancePrivate(cx, obj, &socket_class, NULL);
-
-  if (sdata) {
-    JS::Value ID;
-    JS_IdToValue(cx, id, &ID);
-    JS_BeginRequest(cx);
-    switch (JSVAL_TO_INT(ID)) {
-      struct timeval timeout;
-      int result;
-      case SOCKET_READABLE:
-        fd_set read_set;
-        timeout.tv_sec = 0;
-        timeout.tv_usec = 100;  // 100 ms
-        FD_ZERO(&read_set);
-        FD_SET(sdata->socket, &read_set);
-
-        result = select(1, &read_set, NULL, NULL, &timeout);
-        vp.setInt32(result);
-        break;
-
-      case SOCKET_WRITEABLE:
-        fd_set write_set;
-
-        timeout.tv_sec = 0;
-        timeout.tv_usec = 100;  // 100 ms
-        FD_ZERO(&write_set);
-        FD_SET(sdata->socket, &write_set);
-
-        result = select(1, NULL, &write_set, NULL, &timeout);
-
-        vp.setInt32(result);
-        break;
-    }
+void socket_finalize(JSFreeOp*, JSObject* obj) {
+  SocketData* sData = (SocketData*)JS_GetPrivate(obj);
+  if (sData) {
+    closesocket(sData->socket);
+    WSACleanup();
   }
+}
 
+JSAPI_PROP(socket_readable) {
+  SocketData* sdata = (SocketData*)JS_GetInstancePrivate(cx, obj, &socket_class, NULL);
+  if (!sdata) return JS_TRUE;
+
+  struct timeval timeout;
+  int result;
+  fd_set read_set;
+  timeout.tv_sec = 0;
+  timeout.tv_usec = 100;  // 100 ms
+  FD_ZERO(&read_set);
+  FD_SET(sdata->socket, &read_set);
+
+  result = select(1, &read_set, NULL, NULL, &timeout);
+  vp.setInt32(result);
   return JS_TRUE;
 }
 
-JSAPI_STRICT_PROP(socket_setProperty) {
+JSAPI_PROP(socket_writable) {
+  SocketData* sdata = (SocketData*)JS_GetInstancePrivate(cx, obj, &socket_class, NULL);
+  if (!sdata) return JS_TRUE;
+
+  struct timeval timeout;
+  int result;
+  fd_set write_set;
+  timeout.tv_sec = 0;
+  timeout.tv_usec = 100;  // 100 ms
+  FD_ZERO(&write_set);
+  FD_SET(sdata->socket, &write_set);
+  result = select(1, NULL, &write_set, NULL, &timeout);
+  vp.setInt32(result);
   return JS_TRUE;
 }
 
@@ -165,12 +164,4 @@ JSAPI_FUNC(socket_read) {
 
   args.rval().setString(JS_InternString(cx, returnVal.c_str()));
   return JS_TRUE;
-}
-
-void socket_finalize(JSFreeOp*, JSObject* obj) {
-  SocketData* sData = (SocketData*)JS_GetPrivate(obj);
-  if (sData) {
-    closesocket(sData->socket);
-    WSACleanup();
-  }
 }

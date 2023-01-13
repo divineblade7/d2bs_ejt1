@@ -86,6 +86,8 @@ set(NSPR_SRCS
 add_library(nspr ${LIBRARY_TYPE} ${NSPR_SRCS})
 add_library(mozjs::nspr ALIAS nspr)
 
+target_compile_options(nspr PRIVATE /W0)
+
 target_include_directories(nspr PUBLIC
   "${CMAKE_CURRENT_BINARY_DIR}"
   "${CMAKE_CURRENT_SOURCE_DIR}/include/md"

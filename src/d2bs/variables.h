@@ -11,17 +11,6 @@
 #include <utility>     // std::pair
 #include <vector>      // std::vector
 
-// Temporarily adding these here until I can untangle the great web och inclusions.
-// ArraySize, PRIVATE_ITEM, PRIVATE_UNIT and Private should be moved. ~ ejt
-#define ArraySize(x) (sizeof((x)) / sizeof((x)[0]))
-
-#define PRIVATE_UNIT 1
-#define PRIVATE_ITEM 3
-
-struct Private {
-  DWORD dwPrivateType;
-};
-
 struct Variables {
   // Temporarily defining settings here to make it globally available
   d2bs::Settings settings;

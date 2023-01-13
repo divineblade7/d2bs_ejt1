@@ -160,4 +160,4 @@ install(FILES
   resources/version.bmp
   DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
   
-add_subdirectory(vendor/mozjs)
+add_subdirectory(vendor)

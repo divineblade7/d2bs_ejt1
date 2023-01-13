@@ -15,7 +15,7 @@ void control_finalize(JSFreeOp*, JSObject* obj) {
   }
 }
 
-JSAPI_PROP(control_getProperty) {
+JSAPI_PROP(control_type) {
   if (ClientState() != ClientStateMenu) {
     return JS_FALSE;
   }
@@ -27,73 +27,29 @@ JSAPI_PROP(control_getProperty) {
       findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
   if (!ctrl) return JS_FALSE;
 
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  JS_BeginRequest(cx);
-
-  // JSType a = JS_TypeOfValue(cx, ID);
-
-  if (JSID_IS_STRING(id)) {
-    // TODO: Figure out what this is for
-    // JSString* b = JSVAL_TO_STRING(ID);
-    // char* pText = JS_EncodeString(cx, b);
-
-    return JS_TRUE;
-  }
-  if (JSID_IS_VOID(id)) return JS_TRUE;
-  if (JSID_IS_ZERO(id)) return JS_TRUE;
-  switch (JSID_TO_INT(id)) {
-    case CONTROL_TEXT:
-      if (ctrl->dwIsCloaked != 33) {
-        vp.setString(JS_InternUCString(cx, ctrl->dwType == 6 ? ctrl->wText2 : ctrl->wText));
-      }
-      break;
-    case CONTROL_X:
-      vp.setNumber((double)ctrl->dwPosX);
-      // JS_NewNumberValue(cx, ctrl->dwPosX, vp);
-      break;
-    case CONTROL_Y:
-      vp.setNumber((double)ctrl->dwPosY);
-      break;
-    case CONTROL_XSIZE:
-      vp.setNumber((double)ctrl->dwSizeX);
-      break;
-    case CONTROL_YSIZE:
-      vp.setNumber((double)ctrl->dwSizeY);
-      break;
-    case CONTROL_STATE:
-      vp.setNumber((double)(ctrl->dwDisabled - 2));
-      break;
-    case CONTROL_MAXLENGTH:
-      // JS_NewNumberValue(cx, ctrl->dwMaxLength, vp);
-      break;
-    case CONTROL_TYPE:
-      vp.setNumber((double)ctrl->dwType);
-      break;
-    case CONTROL_VISIBLE:
-      // nothing to do yet because we don't know what to do
-      break;
-    case CONTROL_CURSORPOS:
-      vp.setNumber((double)ctrl->dwCursorPos);
-      break;
-    case CONTROL_SELECTSTART:
-      vp.setNumber((double)ctrl->dwSelectStart);
-      break;
-    case CONTROL_SELECTEND:
-      vp.setNumber((double)ctrl->dwSelectEnd);
-      break;
-    case CONTROL_PASSWORD:
-      vp.setBoolean(!!(ctrl->dwIsCloaked == 33));
-      break;
-    case CONTROL_DISABLED:
-      vp.setNumber((double)ctrl->dwDisabled);
-      break;
-  }
-  JS_EndRequest(cx);
+  vp.setNumber((double)ctrl->dwType);
   return JS_TRUE;
 }
 
-JSAPI_STRICT_PROP(control_setProperty) {
+JSAPI_PROP(control_text) {
+  if (ClientState() != ClientStateMenu) {
+    return JS_FALSE;
+  }
+
+  ControlData* pData = ((ControlData*)JS_GetPrivate(obj));
+  if (!pData) return JS_FALSE;
+
+  Control* ctrl =
+      findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
+  if (!ctrl) return JS_FALSE;
+
+  if (ctrl->dwIsCloaked != 33) {
+    vp.setString(JS_InternUCString(cx, ctrl->dwType == 6 ? ctrl->wText2 : ctrl->wText));
+  }
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(control_text_setter) {
   if (ClientState() != ClientStateMenu) return JS_FALSE;
 
   ControlData* pData = ((ControlData*)JS_GetPrivate(obj));  // JS_THIS_OBJECT(cx, &vp.get())));
@@ -103,47 +59,229 @@ JSAPI_STRICT_PROP(control_setProperty) {
       findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
   if (!ctrl) return JS_FALSE;
 
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  switch (JSVAL_TO_INT(ID)) {
-    case CONTROL_TEXT:
-      if (ctrl->dwType == 1 && vp.isString()) {
-        const wchar_t* szwText = JS_GetStringCharsZ(cx, vp.toString());
-        if (!szwText) return JS_TRUE;
-        D2WIN_SetControlText(ctrl, szwText);
-      }
-      break;
-    case CONTROL_STATE:
-      if (vp.isInt32()) {
-        int32_t nState;
-        JS_BeginRequest(cx);
-        if (!JS_ValueToECMAInt32(cx, vp.get(), &nState) || nState < 0 || nState > 3) {
-          JS_EndRequest(cx);
-          THROW_ERROR(cx, "Invalid state value");
-        }
-        memset((void*)&ctrl->dwDisabled, (nState + 2), sizeof(DWORD));
-        JS_EndRequest(cx);
-      }
-      break;
-    case CONTROL_CURSORPOS:
-      if (vp.isInt32()) {
-        JS_BeginRequest(cx);
-        uint32_t dwPos;
-        if (!JS_ValueToECMAUint32(cx, vp.get(), &dwPos)) {
-          JS_EndRequest(cx);
-          THROW_ERROR(cx, "Invalid cursor position value");
-        }
-        JS_EndRequest(cx);
-        memset((void*)&ctrl->dwCursorPos, dwPos, sizeof(DWORD));
-      }
-      break;
-    case CONTROL_DISABLED:
-      if (vp.isInt32()) {
-        memset((void*)&ctrl->dwDisabled, vp.toInt32(), sizeof(DWORD));
-      }
-      break;
+  if (ctrl->dwType == 1 && vp.isString()) {
+    const wchar_t* szwText = JS_GetStringCharsZ(cx, vp.toString());
+    if (!szwText) return JS_TRUE;
+    D2WIN_SetControlText(ctrl, szwText);
+  }
+  return JS_TRUE;
+}
+
+JSAPI_PROP(control_state) {
+  if (ClientState() != ClientStateMenu) {
+    return JS_FALSE;
   }
 
+  ControlData* pData = ((ControlData*)JS_GetPrivate(obj));
+  if (!pData) return JS_FALSE;
+
+  Control* ctrl =
+      findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
+  if (!ctrl) return JS_FALSE;
+
+  vp.setNumber((double)(ctrl->dwDisabled - 2));
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(control_state_setter) {
+  if (ClientState() != ClientStateMenu) return JS_FALSE;
+
+  ControlData* pData = ((ControlData*)JS_GetPrivate(obj));  // JS_THIS_OBJECT(cx, &vp.get())));
+  if (!pData) return JS_FALSE;
+
+  Control* ctrl =
+      findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
+  if (!ctrl) return JS_FALSE;
+
+  if (vp.isInt32()) {
+    JSAutoRequest r(cx);
+    int32_t nState;
+    if (!JS_ValueToECMAInt32(cx, vp.get(), &nState) || nState < 0 || nState > 3) {
+      THROW_ERROR(cx, "Invalid state value");
+    }
+    memset((void*)&ctrl->dwDisabled, (nState + 2), sizeof(DWORD));
+  }
+  return JS_TRUE;
+}
+
+JSAPI_PROP(control_disabled) {
+  if (ClientState() != ClientStateMenu) {
+    return JS_FALSE;
+  }
+
+  ControlData* pData = ((ControlData*)JS_GetPrivate(obj));
+  if (!pData) return JS_FALSE;
+
+  Control* ctrl =
+      findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
+  if (!ctrl) return JS_FALSE;
+
+  vp.setNumber((double)ctrl->dwDisabled);
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(control_disabled_setter) {
+  if (ClientState() != ClientStateMenu) return JS_FALSE;
+
+  ControlData* pData = ((ControlData*)JS_GetPrivate(obj));  // JS_THIS_OBJECT(cx, &vp.get())));
+  if (!pData) return JS_FALSE;
+
+  Control* ctrl =
+      findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
+  if (!ctrl) return JS_FALSE;
+
+  if (vp.isInt32()) {
+    memset((void*)&ctrl->dwDisabled, vp.toInt32(), sizeof(DWORD));
+  }
+  return JS_TRUE;
+}
+
+JSAPI_PROP(control_password) {
+  if (ClientState() != ClientStateMenu) {
+    return JS_FALSE;
+  }
+
+  ControlData* pData = ((ControlData*)JS_GetPrivate(obj));
+  if (!pData) return JS_FALSE;
+
+  Control* ctrl =
+      findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
+  if (!ctrl) return JS_FALSE;
+
+  vp.setBoolean(!!(ctrl->dwIsCloaked == 33));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(control_x) {
+  if (ClientState() != ClientStateMenu) {
+    return JS_FALSE;
+  }
+
+  ControlData* pData = ((ControlData*)JS_GetPrivate(obj));
+  if (!pData) return JS_FALSE;
+
+  Control* ctrl =
+      findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
+  if (!ctrl) return JS_FALSE;
+
+  vp.setNumber((double)ctrl->dwPosX);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(control_y) {
+  if (ClientState() != ClientStateMenu) {
+    return JS_FALSE;
+  }
+
+  ControlData* pData = ((ControlData*)JS_GetPrivate(obj));
+  if (!pData) return JS_FALSE;
+
+  Control* ctrl =
+      findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
+  if (!ctrl) return JS_FALSE;
+
+  vp.setNumber((double)ctrl->dwPosY);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(control_xsize) {
+  if (ClientState() != ClientStateMenu) {
+    return JS_FALSE;
+  }
+
+  ControlData* pData = ((ControlData*)JS_GetPrivate(obj));
+  if (!pData) return JS_FALSE;
+
+  Control* ctrl =
+      findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
+  if (!ctrl) return JS_FALSE;
+
+  vp.setNumber((double)ctrl->dwSizeX);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(control_ysize) {
+  if (ClientState() != ClientStateMenu) {
+    return JS_FALSE;
+  }
+
+  ControlData* pData = ((ControlData*)JS_GetPrivate(obj));
+  if (!pData) return JS_FALSE;
+
+  Control* ctrl =
+      findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
+  if (!ctrl) return JS_FALSE;
+
+  vp.setNumber((double)ctrl->dwSizeY);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(control_cursorpos) {
+  if (ClientState() != ClientStateMenu) {
+    return JS_FALSE;
+  }
+
+  ControlData* pData = ((ControlData*)JS_GetPrivate(obj));
+  if (!pData) return JS_FALSE;
+
+  Control* ctrl =
+      findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
+  if (!ctrl) return JS_FALSE;
+
+  vp.setNumber((double)ctrl->dwCursorPos);
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(control_cursorpos_setter) {
+  if (ClientState() != ClientStateMenu) return JS_FALSE;
+
+  ControlData* pData = ((ControlData*)JS_GetPrivate(obj));  // JS_THIS_OBJECT(cx, &vp.get())));
+  if (!pData) return JS_FALSE;
+
+  Control* ctrl =
+      findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
+  if (!ctrl) return JS_FALSE;
+
+  if (vp.isInt32()) {
+    JSAutoRequest r(cx);
+    uint32_t dwPos;
+    if (!JS_ValueToECMAUint32(cx, vp.get(), &dwPos)) {
+      THROW_ERROR(cx, "Invalid cursor position value");
+    }
+    memset((void*)&ctrl->dwCursorPos, dwPos, sizeof(DWORD));
+  }
+  return JS_TRUE;
+}
+
+JSAPI_PROP(control_selectstart) {
+  if (ClientState() != ClientStateMenu) {
+    return JS_FALSE;
+  }
+
+  ControlData* pData = ((ControlData*)JS_GetPrivate(obj));
+  if (!pData) return JS_FALSE;
+
+  Control* ctrl =
+      findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
+  if (!ctrl) return JS_FALSE;
+
+  vp.setNumber((double)ctrl->dwSelectStart);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(control_selectend) {
+  if (ClientState() != ClientStateMenu) {
+    return JS_FALSE;
+  }
+
+  ControlData* pData = ((ControlData*)JS_GetPrivate(obj));
+  if (!pData) return JS_FALSE;
+
+  Control* ctrl =
+      findControl(pData->dwType, (const wchar_t*)NULL, -1, pData->dwX, pData->dwY, pData->dwSizeX, pData->dwSizeY);
+  if (!ctrl) return JS_FALSE;
+
+  vp.setNumber((double)ctrl->dwSelectEnd);
   return JS_TRUE;
 }
 

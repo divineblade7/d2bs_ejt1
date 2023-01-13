@@ -11,45 +11,88 @@
 
 EMPTY_CTOR(room)
 
-JSAPI_PROP(room_getProperty) {
+JSAPI_PROP(room_area) {
   Room2* pRoom2 = (Room2*)JS_GetPrivate(obj);
 
   if (!pRoom2) return JS_TRUE;
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  switch (JSVAL_TO_INT(ID)) {
-    case ROOM_NUM:
-      if (pRoom2->dwPresetType != 2)
-        vp.setInt32(-1);
-      else if (pRoom2->pType2Info)
-        vp.setInt32(pRoom2->pType2Info->dwRoomNumber);
-      break;
-    case ROOM_XPOS:
-      vp.setInt32(pRoom2->dwPosX);
-      break;
-    case ROOM_YPOS:
-      vp.setInt32(pRoom2->dwPosY);
-      break;
-    case ROOM_XSIZE:
-      vp.setInt32(pRoom2->dwSizeX * 5);
-      break;
-    case ROOM_YSIZE:
-      vp.setInt32(pRoom2->dwSizeY * 5);
-      break;
-    case ROOM_AREA:
-    case ROOM_LEVEL:
-      if (pRoom2->pLevel) vp.setInt32(pRoom2->pLevel->dwLevelNo);
-      break;
 
-    case ROOM_CORRECTTOMB:
-      if (pRoom2->pLevel && pRoom2->pLevel->pMisc && pRoom2->pLevel->pMisc->dwStaffTombLevel)
-        vp.setInt32(pRoom2->pLevel->pMisc->dwStaffTombLevel);
-      break;
+  if (pRoom2->pLevel) vp.setInt32(pRoom2->pLevel->dwLevelNo);
+  return JS_TRUE;
+}
 
-    default:
-      break;
-  }
+JSAPI_PROP(room_level) {
+  Room2* pRoom2 = (Room2*)JS_GetPrivate(obj);
 
+  if (!pRoom2) return JS_TRUE;
+
+  if (pRoom2->pLevel) vp.setInt32(pRoom2->pLevel->dwLevelNo);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(room_number) {
+  Room2* pRoom2 = (Room2*)JS_GetPrivate(obj);
+
+  if (!pRoom2) return JS_TRUE;
+
+  if (pRoom2->dwPresetType != 2)
+    vp.setInt32(-1);
+  else if (pRoom2->pType2Info)
+    vp.setInt32(pRoom2->pType2Info->dwRoomNumber);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(room_subnumber) {
+  Room2* pRoom2 = (Room2*)JS_GetPrivate(obj);
+
+  if (!pRoom2) return JS_TRUE;
+
+  //??
+  return JS_TRUE;
+}
+
+JSAPI_PROP(room_x) {
+  Room2* pRoom2 = (Room2*)JS_GetPrivate(obj);
+
+  if (!pRoom2) return JS_TRUE;
+
+  vp.setInt32(pRoom2->dwPosX);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(room_y) {
+  Room2* pRoom2 = (Room2*)JS_GetPrivate(obj);
+
+  if (!pRoom2) return JS_TRUE;
+
+  vp.setInt32(pRoom2->dwPosY);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(room_xsize) {
+  Room2* pRoom2 = (Room2*)JS_GetPrivate(obj);
+
+  if (!pRoom2) return JS_TRUE;
+
+  vp.setInt32(pRoom2->dwSizeX * 5);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(room_ysize) {
+  Room2* pRoom2 = (Room2*)JS_GetPrivate(obj);
+
+  if (!pRoom2) return JS_TRUE;
+
+  vp.setInt32(pRoom2->dwSizeY * 5);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(room_correcttomb) {
+  Room2* pRoom2 = (Room2*)JS_GetPrivate(obj);
+
+  if (!pRoom2) return JS_TRUE;
+
+  if (pRoom2->pLevel && pRoom2->pLevel->pMisc && pRoom2->pLevel->pMisc->dwStaffTombLevel)
+    vp.setInt32(pRoom2->pLevel->pMisc->dwStaffTombLevel);
   return JS_TRUE;
 }
 

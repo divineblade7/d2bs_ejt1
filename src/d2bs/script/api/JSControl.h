@@ -6,18 +6,6 @@
 
 #include <windows.h>
 
-CLASS_CTOR(control);
-
-void control_finalize(JSFreeOp* fop, JSObject* obj);
-
-JSAPI_FUNC(control_getNext);
-JSAPI_FUNC(control_click);
-JSAPI_FUNC(control_setText);
-JSAPI_FUNC(control_getText);
-
-JSAPI_PROP(control_getProperty);
-JSAPI_STRICT_PROP(control_setProperty);
-
 struct ControlData {
   DWORD _dwPrivate;
   Control* pControl;
@@ -29,48 +17,70 @@ struct ControlData {
   DWORD dwSizeY;
 };
 
-enum control_tinyid {
-  CONTROL_TEXT,
-  CONTROL_X,
-  CONTROL_Y,
-  CONTROL_XSIZE,
-  CONTROL_YSIZE,
-  CONTROL_STATE,
-  CONTROL_MAXLENGTH,
-  CONTROL_TYPE,
-  CONTROL_VISIBLE,
-  CONTROL_CURSORPOS,
-  CONTROL_SELECTSTART,
-  CONTROL_SELECTEND,
-  CONTROL_PASSWORD,
-  CONTROL_DISABLED
+CLASS_CTOR(control);
+void control_finalize(JSFreeOp* fop, JSObject* obj);
+
+JSAPI_PROP(control_type);
+JSAPI_PROP(control_text);
+JSAPI_STRICT_PROP(control_text_setter);
+JSAPI_PROP(control_state);
+JSAPI_STRICT_PROP(control_state_setter);
+JSAPI_PROP(control_disabled);
+JSAPI_STRICT_PROP(control_disabled_setter);
+JSAPI_PROP(control_password);
+JSAPI_PROP(control_x);
+JSAPI_PROP(control_y);
+JSAPI_PROP(control_xsize);
+JSAPI_PROP(control_ysize);
+JSAPI_PROP(control_cursorpos);
+JSAPI_STRICT_PROP(control_cursorpos_setter);
+JSAPI_PROP(control_selectstart);
+JSAPI_PROP(control_selectend);
+
+JSAPI_FUNC(control_getNext);
+JSAPI_FUNC(control_click);
+JSAPI_FUNC(control_setText);
+JSAPI_FUNC(control_getText);
+
+// clang-format off
+static JSPropertySpec control_props[] = {
+    JS_PSG("type",        control_type,                                 JSPROP_PERMANENT_VAR),
+    JS_PSGS("text",       control_text, control_text_setter,            JSPROP_PERMANENT_VAR),
+    JS_PSGS("state",      control_state, control_state_setter,          JSPROP_PERMANENT_VAR),
+    JS_PSGS("disabled",   control_disabled, control_disabled_setter,    JSPROP_PERMANENT_VAR),
+    JS_PSG("password",    control_password,                             JSPROP_PERMANENT_VAR),
+    JS_PSG("x",           control_x,                                    JSPROP_PERMANENT_VAR),
+    JS_PSG("y",           control_y,                                    JSPROP_PERMANENT_VAR),
+    JS_PSG("xsize",       control_xsize,                                JSPROP_PERMANENT_VAR),
+    JS_PSG("ysize",       control_ysize,                                JSPROP_PERMANENT_VAR),
+    JS_PSGS("cursorpos",  control_cursorpos, control_cursorpos_setter,  JSPROP_PERMANENT_VAR),
+    JS_PSG("selectstart", control_selectstart,                          JSPROP_PERMANENT_VAR),
+    JS_PSG("selectend",   control_selectend,                            JSPROP_PERMANENT_VAR),
+    JS_PS_END
 };
 
-static JSPropertySpec control_props[] = {
-    {"text", CONTROL_TEXT, JSPROP_STATIC_VAR, JSOP_WRAPPER(control_getProperty), JSOP_WRAPPER(control_setProperty)},
-    {"x", CONTROL_X, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(control_getProperty), JSOP_NULLWRAPPER},
-    {"y", CONTROL_Y, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(control_getProperty), JSOP_NULLWRAPPER},
-    {"xsize", CONTROL_XSIZE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(control_getProperty), JSOP_NULLWRAPPER},
-    {"ysize", CONTROL_YSIZE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(control_getProperty), JSOP_NULLWRAPPER},
-    {"state", CONTROL_STATE, JSPROP_STATIC_VAR, JSOP_WRAPPER(control_getProperty), JSOP_WRAPPER(control_setProperty)},
-    {"password", CONTROL_PASSWORD, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(control_getProperty), JSOP_NULLWRAPPER},
-    //	{"maxlength",	CONTROL_MAXLENGTH,		JSPROP_PERMANENT_VAR,	control_getProperty},
-    {"type", CONTROL_TYPE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(control_getProperty), JSOP_NULLWRAPPER},
-    //	{"visible",		CONTROL_VISIBLE,		JSPROP_PERMANENT_VAR,	control_getProperty},
-    {"cursorpos", CONTROL_CURSORPOS, JSPROP_STATIC_VAR, JSOP_WRAPPER(control_getProperty),
-     JSOP_WRAPPER(control_setProperty)},
-    {"selectstart", CONTROL_SELECTSTART, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(control_getProperty), JSOP_NULLWRAPPER},
-    {"selectend", CONTROL_SELECTEND, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(control_getProperty), JSOP_NULLWRAPPER},
-    {"disabled", CONTROL_DISABLED, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(control_getProperty),
-     JSOP_WRAPPER(control_setProperty)},
-    {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
+static JSFunctionSpec control_funcs[] = {
+  JS_FS("getNext",        control_getNext,      0,  FUNCTION_FLAGS),
+  JS_FS("click",          control_click,        0,  FUNCTION_FLAGS),
+  JS_FS("setText",        control_setText,      1,  FUNCTION_FLAGS),
+  JS_FS("getText",        control_getText,      0,  FUNCTION_FLAGS),
+  JS_FS_END
+};
+// clang-format on
 
-static JSFunctionSpec control_funcs[] = {JS_FS("getNext", control_getNext, 0, FUNCTION_FLAGS),
-                                         JS_FS("click", control_click, 0, FUNCTION_FLAGS),
-                                         JS_FS("setText", control_setText, 1, FUNCTION_FLAGS),
-                                         JS_FS("getText", control_getText, 0, FUNCTION_FLAGS), JS_FS_END};
-
-static JSClass control_class = {
-    "Control", JSCLASS_HAS_PRIVATE,
-    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
-                 JS_ResolveStub, JS_ConvertStub, control_finalize, control_ctor)};
+static JSClass control_class{
+    "Control",                              // name
+    JSCLASS_HAS_PRIVATE,                    // flags
+    JSCLASS_METHODS(JS_PropertyStub,        // addProperty
+                    JS_PropertyStub,        // delProperty
+                    JS_PropertyStub,        // getProperty
+                    JS_StrictPropertyStub,  // setProperty
+                    JS_EnumerateStub,       // enumerate
+                    JS_ResolveStub,         // resolve
+                    JS_ConvertStub,         // mayResolve
+                    control_finalize,       // finalize
+                    nullptr,                // call
+                    nullptr,                // hasInstance
+                    control_ctor,           // construct
+                    nullptr)                // trace
+};

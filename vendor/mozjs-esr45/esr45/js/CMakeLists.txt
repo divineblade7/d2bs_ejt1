@@ -316,6 +316,8 @@ list(APPEND JS_SRCS
 add_library(js ${LIBRARY_TYPE} ${JS_SRCS})
 add_library(mozjs::js ALIAS js)
 
+target_compile_options(js PRIVATE /W0)
+
 set(JS_PUBLIC_HDRS
   "${CMAKE_CURRENT_SOURCE_DIR}/public/CallArgs.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/public/CallNonGenericMethod.h"

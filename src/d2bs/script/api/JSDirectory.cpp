@@ -37,6 +37,20 @@
 
 EMPTY_CTOR(dir)
 
+void dir_finalize(JSFreeOp*, JSObject* obj) {
+  DirData* d = (DirData*)JS_GetPrivate(obj);
+  delete d;
+}
+
+JSAPI_PROP(dir_name) {
+  DirData* d = (DirData*)JS_GetPrivate(obj);
+
+  if (!d) return JS_FALSE;
+
+  vp.setString(JS_InternUCString(cx, d->name));
+  return JS_TRUE;
+}
+
 JSAPI_FUNC(my_openDir) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
@@ -224,24 +238,4 @@ JSAPI_FUNC(dir_delete) {
 
   args.rval().setBoolean(true);
   return JS_TRUE;
-}
-
-JSAPI_PROP(dir_getProperty) {
-  DirData* d = (DirData*)JS_GetPrivate(obj);
-
-  if (!d) return JS_FALSE;
-
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  switch (JSVAL_TO_INT(ID)) {
-    case DIR_NAME:
-      vp.setString(JS_InternUCString(cx, d->name));
-      break;
-  }
-  return JS_TRUE;
-}
-
-void dir_finalize(JSFreeOp*, JSObject* obj) {
-  DirData* d = (DirData*)JS_GetPrivate(obj);
-  delete d;
 }

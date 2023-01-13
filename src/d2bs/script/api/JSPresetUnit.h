@@ -4,14 +4,6 @@
 
 #include <windows.h>
 
-CLASS_CTOR(presetunit);
-
-void presetunit_finalize(JSFreeOp* fop, JSObject* obj);
-JSAPI_PROP(presetunit_getProperty);
-
-JSAPI_FUNC(my_getPresetUnit);
-JSAPI_FUNC(my_getPresetUnits);
-
 struct myPresetUnit {
   DWORD dwType;
   DWORD dwRoomX;
@@ -22,27 +14,46 @@ struct myPresetUnit {
   DWORD dwLevel;
 };
 
-enum presetunit_tinyid {
-  PUNIT_TYPE,   // 0
-  PUNIT_ROOMX,  // 1
-  PUNIT_ROOMY,  // 2
-  PUNIT_X,      // 3
-  PUNIT_Y,      // 4
-  PUNIT_ID,     // 5
-  PUINT_LEVEL   // 6
-};
+CLASS_CTOR(presetunit);
+void presetunit_finalize(JSFreeOp* fop, JSObject* obj);
 
+JSAPI_PROP(presetunit_id);
+JSAPI_PROP(presetunit_type);
+JSAPI_PROP(presetunit_level);
+JSAPI_PROP(presetunit_x);
+JSAPI_PROP(presetunit_y);
+JSAPI_PROP(presetunit_roomx);
+JSAPI_PROP(presetunit_roomy);
+
+JSAPI_FUNC(my_getPresetUnit);
+JSAPI_FUNC(my_getPresetUnits);
+
+// clang-format off
 static JSPropertySpec presetunit_props[] = {
-    {"type", PUNIT_TYPE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(presetunit_getProperty), JSOP_NULLWRAPPER},
-    {"roomx", PUNIT_ROOMX, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(presetunit_getProperty), JSOP_NULLWRAPPER},
-    {"roomy", PUNIT_ROOMY, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(presetunit_getProperty), JSOP_NULLWRAPPER},
-    {"x", PUNIT_X, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(presetunit_getProperty), JSOP_NULLWRAPPER},
-    {"y", PUNIT_Y, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(presetunit_getProperty), JSOP_NULLWRAPPER},
-    {"id", PUNIT_ID, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(presetunit_getProperty), JSOP_NULLWRAPPER},
-    {"level", PUINT_LEVEL, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(presetunit_getProperty), JSOP_NULLWRAPPER},
-    {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
+  JS_PSG("id",          presetunit_id,          JSPROP_PERMANENT_VAR),
+  JS_PSG("type",        presetunit_type,        JSPROP_PERMANENT_VAR),
+  JS_PSG("level",       presetunit_level,       JSPROP_PERMANENT_VAR),
+  JS_PSG("x",           presetunit_x,           JSPROP_PERMANENT_VAR),
+  JS_PSG("y",           presetunit_y,           JSPROP_PERMANENT_VAR),
+  JS_PSG("roomx",       presetunit_roomx,       JSPROP_PERMANENT_VAR),
+  JS_PSG("roomy",       presetunit_roomy,       JSPROP_PERMANENT_VAR),
+  JS_PS_END
+};
+// clang-format on
 
-static JSClass presetunit_class = {
-    "PresetUnit", JSCLASS_HAS_PRIVATE,
-    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
-                 JS_ResolveStub, JS_ConvertStub, presetunit_finalize, presetunit_ctor)};
+static JSClass presetunit_class{
+    "PresetUnit",                           // name
+    JSCLASS_HAS_PRIVATE,                    // flags
+    JSCLASS_METHODS(JS_PropertyStub,        // addProperty
+                    JS_PropertyStub,        // delProperty
+                    JS_PropertyStub,        // getProperty
+                    JS_StrictPropertyStub,  // setProperty
+                    JS_EnumerateStub,       // enumerate
+                    JS_ResolveStub,         // resolve
+                    JS_ConvertStub,         // mayResolve
+                    presetunit_finalize,    // finalize
+                    nullptr,                // call
+                    nullptr,                // hasInstance
+                    presetunit_ctor,        // construct
+                    nullptr)                // trace
+};

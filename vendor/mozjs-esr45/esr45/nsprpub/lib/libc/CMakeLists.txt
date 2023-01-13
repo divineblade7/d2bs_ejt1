@@ -20,6 +20,8 @@ set(LIBC_SRCS
 add_library(libc ${LIBC_SRCS})
 add_library(mozjs::plc ALIAS libc)
 
+target_compile_options(libc PRIVATE /W0)
+
 target_include_directories(libc
   PUBLIC
     "${CMAKE_CURRENT_BINARY_DIR}"

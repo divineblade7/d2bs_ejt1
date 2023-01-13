@@ -39,111 +39,189 @@ struct FileData {
 
 EMPTY_CTOR(file)
 
-// JSBool file_equality(JSContext *cx, JSObject *obj, JS::Value v, JSBool *bp)
-//{
-//	*bp = JS_FALSE;
-//	if(JSVAL_IS_OBJECT(v) && !JSVAL_IS_VOID(v) && !JSVAL_IS_NULL(v))
-//	{
-//		FileData* ptr = (FileData*)JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-//		FileData* ptr2 = (FileData*)JS_GetInstancePrivate(cx, JSVAL_TO_OBJECT(v), &file_class, NULL);
-//		if(ptr && ptr2 && !_strcmpi(ptr->path, ptr2->path) && ptr->mode == ptr2->mode)
-//			*bp = JS_TRUE;
-//	}
-//	return JS_TRUE;
-//}
-
-JSAPI_PROP(file_getProperty) {
-  FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-  struct _stat filestat = {0};
+void file_finalize(JSFreeOp*, JSObject* obj) {
+  FileData* fdata = (FileData*)JS_GetPrivate(obj);
   if (fdata) {
-    JS::Value ID;
-    JS_IdToValue(cx, id, &ID);
-    JS_BeginRequest(cx);
-    switch (JSVAL_TO_INT(ID)) {
-      case FILE_READABLE:
-        vp.setBoolean((fdata->fptr && !feof(fdata->fptr) && !ferror(fdata->fptr)));
-        break;
-      case FILE_WRITEABLE:
-        vp.setBoolean((fdata->fptr && !ferror(fdata->fptr) && (fdata->mode % 3) > FILE_READ));
-        break;
-      case FILE_SEEKABLE:
-        vp.setBoolean((fdata->fptr && !ferror(fdata->fptr)));
-        break;
-      case FILE_MODE:
-        vp.setInt32((fdata->mode % 3));
-        break;
-      case FILE_BINARYMODE:
-        vp.setBoolean((fdata->mode > 2));
-        break;
-      case FILE_LENGTH:
-        if (fdata->fptr)
-          vp.setInt32(_filelength(_fileno(fdata->fptr)));
-        else
-          vp.setInt32(0);  //= JSVAL_ZERO;
-        break;
-      case FILE_PATH:
-        vp.setString(JS_NewUCStringCopyZ(cx, fdata->path + 1));
-        break;
-      case FILE_POSITION:
-        if (fdata->fptr) {
-          if (fdata->locked)
-            vp.setInt32(ftell(fdata->fptr));
-          else
-            vp.setInt32(_ftell_nolock(fdata->fptr));
-        } else
-          vp.setInt32(0);  //= JSVAL_ZERO;
-        break;
-      case FILE_EOF:
-        if (fdata->fptr)
-          vp.setBoolean(!!feof(fdata->fptr));
-        else
-          vp.set(JSVAL_TRUE);
-        break;
-      case FILE_AUTOFLUSH:
-        vp.setBoolean(fdata->autoflush);
-        break;
-      case FILE_ACCESSED:
-        if (fdata->fptr) {
-          _fstat(_fileno(fdata->fptr), &filestat);
-          vp.setNumber((double)filestat.st_atime);
-        } else
-          vp.setInt32(0);  //= JSVAL_ZERO;
-        break;
-      case FILE_MODIFIED:
-        if (fdata->fptr) {
-          _fstat(_fileno(fdata->fptr), &filestat);
-          vp.setNumber((double)filestat.st_mtime);
-        } else
-          vp.setInt32(0);
-        break;
-      case FILE_CREATED:
-        if (fdata->fptr) {
-          _fstat(_fileno(fdata->fptr), &filestat);
-          vp.setDouble((double)filestat.st_ctime);
-        } else
-          vp.setInt32(0);
-        break;
+    free(fdata->path);
+    if (fdata->fptr) {
+      if (fdata->locked) {
+        _unlock_file(fdata->fptr);
+#if DEBUG
+        fdata->lockLocation = __FILE__;
+        fdata->line = __LINE__;
+#endif
+        fclose(fdata->fptr);
+      } else
+        _fclose_nolock(fdata->fptr);
     }
-    JS_EndRequest(cx);
-  } else
-    THROW_ERROR(cx, "Couldn't get file object");
+    delete fdata;
+  }
+}
 
+JSAPI_PROP(file_readable) {
+  FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+  if (!fdata) {
+    THROW_ERROR(cx, "Couldn't get file object");
+  }
+
+  vp.setBoolean((fdata->fptr && !feof(fdata->fptr) && !ferror(fdata->fptr)));
   return JS_TRUE;
 }
 
-JSAPI_STRICT_PROP(file_setProperty) {
+JSAPI_PROP(file_writeable) {
   FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-  if (fdata) {
-    JS::Value ID;
-    JS_IdToValue(cx, id, &ID);
-    switch (JSVAL_TO_INT(ID)) {
-      case FILE_AUTOFLUSH:
-        if (vp.isBoolean()) fdata->autoflush = !!vp.toBoolean();
-        break;
-    }
-  } else
+  if (!fdata) {
     THROW_ERROR(cx, "Couldn't get file object");
+  }
 
+  vp.setBoolean((fdata->fptr && !ferror(fdata->fptr) && (fdata->mode % 3) > FILE_READ));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(file_seekable) {
+  FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+  if (!fdata) {
+    THROW_ERROR(cx, "Couldn't get file object");
+  }
+
+  vp.setBoolean((fdata->fptr && !ferror(fdata->fptr)));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(file_mode) {
+  FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+  if (!fdata) {
+    THROW_ERROR(cx, "Couldn't get file object");
+  }
+
+  vp.setInt32((fdata->mode % 3));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(file_binaryMode) {
+  FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+  if (!fdata) {
+    THROW_ERROR(cx, "Couldn't get file object");
+  }
+
+  vp.setBoolean((fdata->mode > 2));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(file_length) {
+  FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+  if (!fdata) {
+    THROW_ERROR(cx, "Couldn't get file object");
+  }
+
+  if (fdata->fptr)
+    vp.setInt32(_filelength(_fileno(fdata->fptr)));
+  else
+    vp.setInt32(0);  //= JSVAL_ZERO;
+  return JS_TRUE;
+}
+
+JSAPI_PROP(file_path) {
+  FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+  if (!fdata) {
+    THROW_ERROR(cx, "Couldn't get file object");
+  }
+
+  vp.setString(JS_NewUCStringCopyZ(cx, fdata->path + 1));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(file_position) {
+  FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+  if (!fdata) {
+    THROW_ERROR(cx, "Couldn't get file object");
+  }
+
+  if (fdata->fptr) {
+    if (fdata->locked)
+      vp.setInt32(ftell(fdata->fptr));
+    else
+      vp.setInt32(_ftell_nolock(fdata->fptr));
+  } else
+    vp.setInt32(0);  //= JSVAL_ZERO;
+  return JS_TRUE;
+}
+
+JSAPI_PROP(file_eof) {
+  FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+  if (!fdata) {
+    THROW_ERROR(cx, "Couldn't get file object");
+  }
+
+  if (fdata->fptr)
+    vp.setBoolean(!!feof(fdata->fptr));
+  else
+    vp.set(JSVAL_TRUE);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(file_accessed) {
+  FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+  struct _stat filestat = {0};
+  if (!fdata) {
+    THROW_ERROR(cx, "Couldn't get file object");
+  }
+
+  if (fdata->fptr) {
+    _fstat(_fileno(fdata->fptr), &filestat);
+    vp.setNumber((double)filestat.st_atime);
+  } else
+    vp.setInt32(0);  //= JSVAL_ZERO;
+  return JS_TRUE;
+}
+
+JSAPI_PROP(file_created) {
+  FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+  struct _stat filestat = {0};
+  if (!fdata) {
+    THROW_ERROR(cx, "Couldn't get file object");
+  }
+
+  if (fdata->fptr) {
+    _fstat(_fileno(fdata->fptr), &filestat);
+    vp.setDouble((double)filestat.st_ctime);
+  } else
+    vp.setInt32(0);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(file_modified) {
+  FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+  struct _stat filestat = {0};
+  if (!fdata) {
+    THROW_ERROR(cx, "Couldn't get file object");
+  }
+
+  if (fdata->fptr) {
+    _fstat(_fileno(fdata->fptr), &filestat);
+    vp.setNumber((double)filestat.st_mtime);
+  } else
+    vp.setInt32(0);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(file_autoflush) {
+  FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+  if (!fdata) {
+    THROW_ERROR(cx, "Couldn't get file object");
+  }
+
+  vp.setBoolean(fdata->autoflush);
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(file_autoflush_setter) {
+  FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+  if (!fdata) {
+    THROW_ERROR(cx, "Couldn't get file object");
+  }
+
+  if (vp.isBoolean()) fdata->autoflush = !!vp.toBoolean();
   return JS_TRUE;
 }
 
@@ -303,8 +381,7 @@ JSAPI_FUNC(file_read) {
       }
       if (count == 1) {
         args.rval().setInt32(result[0]);
-      }
-      else {
+      } else {
         JSAutoRequest r(cx);
         JSObject* arr = JS_NewArrayObject(cx, 0, NULL);
         args.rval().setObjectOrNull(arr);
@@ -487,7 +564,8 @@ JSAPI_FUNC(file_write) {
   auto self = args.thisv();
   FileData* fdata = (FileData*)JS_GetInstancePrivate(cx, self.toObjectOrNull(), &file_class, NULL);
   if (fdata && fdata->fptr) {
-    for (uint32_t i = 0; i < argc; i++) writeValue(fdata->fptr, cx, JS_ARGV(cx, vp)[i], !!(fdata->mode > 2), fdata->locked);
+    for (uint32_t i = 0; i < argc; i++)
+      writeValue(fdata->fptr, cx, JS_ARGV(cx, vp)[i], !!(fdata->mode > 2), fdata->locked);
 
     if (fdata->autoflush) {
       if (fdata->locked)
@@ -579,23 +657,4 @@ JSAPI_FUNC(file_end) {
 
   args.rval().setObjectOrNull(self.toObjectOrNull());
   return JS_TRUE;
-}
-
-void file_finalize(JSFreeOp*, JSObject* obj) {
-  FileData* fdata = (FileData*)JS_GetPrivate(obj);
-  if (fdata) {
-    free(fdata->path);
-    if (fdata->fptr) {
-      if (fdata->locked) {
-        _unlock_file(fdata->fptr);
-#if DEBUG
-        fdata->lockLocation = __FILE__;
-        fdata->line = __LINE__;
-#endif
-        fclose(fdata->fptr);
-      } else
-        _fclose_nolock(fdata->fptr);
-    }
-    delete fdata;
-  }
 }

@@ -4,35 +4,6 @@
 #include "d2bs/core/ScreenHook.h"
 #include "d2bs/script/Script.h"
 
-void hook_finalize(JSFreeOp*, JSObject* obj) {
-  Genhook* hook = (Genhook*)JS_GetPrivate(obj);
-  Genhook::EnterGlobalSection();
-  if (hook) {
-    JS_SetPrivate(obj, NULL);
-    delete hook;
-  }
-  Genhook::LeaveGlobalSection();
-}
-
-JSAPI_FUNC(hook_remove) {
-  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-
-  auto self = args.thisv().toObjectOrNull();
-  Genhook::EnterGlobalSection();
-  Genhook* hook = (Genhook*)JS_GetPrivate(self);
-  if (hook) {
-    // hook->SetIsVisible(false);
-    delete hook;
-  }
-
-  JS_SetPrivate(self, NULL);
-  // JS_ClearScope(cx, obj);
-  JS_ValueToObject(cx, JS::UndefinedValue(), &self);
-  Genhook::LeaveGlobalSection();
-
-  return JS_TRUE;
-}
-
 // Function to create a frame which gets called on a "new Frame ()"
 // Parameters: x, y, xsize, ysize, alignment, automap, onClick, onHover
 JSAPI_FUNC(frame_ctor) {
@@ -71,79 +42,176 @@ JSAPI_FUNC(frame_ctor) {
   return JS_TRUE;
 }
 
-JSAPI_PROP(frame_getProperty) {
+void hook_finalize(JSFreeOp*, JSObject* obj) {
+  Genhook* hook = (Genhook*)JS_GetPrivate(obj);
+  Genhook::EnterGlobalSection();
+  if (hook) {
+    JS_SetPrivate(obj, NULL);
+    delete hook;
+  }
+  Genhook::LeaveGlobalSection();
+}
+
+JSAPI_PROP(frame_x) {
   FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
   if (!pFramehook) return JS_TRUE;
 
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  switch (JSVAL_TO_INT(ID)) {
-    case FRAME_X:
-      vp.setInt32(pFramehook->GetX());
-      break;
-    case FRAME_Y:
-      vp.setInt32(pFramehook->GetY());
-      break;
-    case FRAME_XSIZE:
-      vp.setInt32(pFramehook->GetXSize());
-      break;
-    case FRAME_YSIZE:
-      vp.setInt32(pFramehook->GetYSize());
-      break;
-    case FRAME_ALIGN:
-      vp.setInt32(pFramehook->GetAlign());
-      break;
-    case FRAME_VISIBLE:
-      vp.setBoolean(pFramehook->GetIsVisible());
-      break;
-    case FRAME_ZORDER:
-      vp.setInt32(pFramehook->GetZOrder());
-      break;
-    case FRAME_ONCLICK:
-      vp.set(pFramehook->GetClickHandler());
-      break;
-    case FRAME_ONHOVER:
-      vp.set(pFramehook->GetHoverHandler());
-      break;
-  }
+  vp.setInt32(pFramehook->GetX());
   return JS_TRUE;
 }
 
-JSAPI_STRICT_PROP(frame_setProperty) {
+JSAPI_STRICT_PROP(frame_x_setter) {
   FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
   if (!pFramehook) return JS_TRUE;
 
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  switch (JSVAL_TO_INT(ID)) {
-    case FRAME_X:
-      if (vp.isInt32()) pFramehook->SetX(vp.toInt32());
-      break;
-    case FRAME_Y:
-      if (vp.isInt32()) pFramehook->SetY(vp.toInt32());
-      break;
-    case FRAME_XSIZE:
-      if (vp.isInt32()) pFramehook->SetXSize(vp.toInt32());
-      break;
-    case FRAME_YSIZE:
-      if (vp.isInt32()) pFramehook->SetYSize(vp.toInt32());
-      break;
-    case FRAME_ALIGN:
-      if (vp.isInt32()) pFramehook->SetAlign((Align)vp.toInt32());
-      break;
-    case FRAME_VISIBLE:
-      if (vp.isBoolean()) pFramehook->SetIsVisible(!!vp.toBoolean());
-      break;
-    case FRAME_ZORDER:
-      if (vp.isInt32()) pFramehook->SetZOrder((ushort)vp.toInt32());
-      break;
-    case FRAME_ONCLICK:
-      pFramehook->SetClickHandler(vp.get());
-      break;
-    case FRAME_ONHOVER:
-      pFramehook->SetHoverHandler(vp.get());
-      break;
+  if (vp.isInt32()) pFramehook->SetX(vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(frame_y) {
+  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
+  if (!pFramehook) return JS_TRUE;
+
+  vp.setInt32(pFramehook->GetY());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(frame_y_setter) {
+  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
+  if (!pFramehook) return JS_TRUE;
+
+  if (vp.isInt32()) pFramehook->SetY(vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(frame_xsize) {
+  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
+  if (!pFramehook) return JS_TRUE;
+
+  vp.setInt32(pFramehook->GetXSize());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(frame_xsize_setter) {
+  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
+  if (!pFramehook) return JS_TRUE;
+
+  if (vp.isInt32()) pFramehook->SetXSize(vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(frame_ysize) {
+  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
+  if (!pFramehook) return JS_TRUE;
+
+  vp.setInt32(pFramehook->GetYSize());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(frame_ysize_setter) {
+  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
+  if (!pFramehook) return JS_TRUE;
+
+  if (vp.isInt32()) pFramehook->SetYSize(vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(frame_visible) {
+  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
+  if (!pFramehook) return JS_TRUE;
+
+  vp.setBoolean(pFramehook->GetIsVisible());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(frame_visible_setter) {
+  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
+  if (!pFramehook) return JS_TRUE;
+
+  if (vp.isBoolean()) pFramehook->SetIsVisible(!!vp.toBoolean());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(frame_align) {
+  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
+  if (!pFramehook) return JS_TRUE;
+
+  vp.setInt32(pFramehook->GetAlign());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(frame_align_setter) {
+  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
+  if (!pFramehook) return JS_TRUE;
+
+  if (vp.isInt32()) pFramehook->SetAlign((Align)vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(frame_zorder) {
+  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
+  if (!pFramehook) return JS_TRUE;
+
+  vp.setInt32(pFramehook->GetZOrder());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(frame_zorder_setter) {
+  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
+  if (!pFramehook) return JS_TRUE;
+
+  if (vp.isInt32()) pFramehook->SetZOrder((ushort)vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(frame_click) {
+  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
+  if (!pFramehook) return JS_TRUE;
+
+  vp.set(pFramehook->GetClickHandler());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(frame_click_setter) {
+  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
+  if (!pFramehook) return JS_TRUE;
+
+  pFramehook->SetClickHandler(vp.get());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(frame_hover) {
+  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
+  if (!pFramehook) return JS_TRUE;
+
+  vp.set(pFramehook->GetHoverHandler());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(frame_hover_setter) {
+  FrameHook* pFramehook = (FrameHook*)JS_GetPrivate(obj);
+  if (!pFramehook) return JS_TRUE;
+
+  pFramehook->SetHoverHandler(vp.get());
+  return JS_TRUE;
+}
+
+JSAPI_FUNC(hook_remove) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  auto self = args.thisv().toObjectOrNull();
+  Genhook::EnterGlobalSection();
+  Genhook* hook = (Genhook*)JS_GetPrivate(self);
+  if (hook) {
+    // hook->SetIsVisible(false);
+    delete hook;
   }
+
+  JS_SetPrivate(self, NULL);
+  // JS_ClearScope(cx, obj);
+  JS_ValueToObject(cx, JS::UndefinedValue(), &self);
+  Genhook::LeaveGlobalSection();
+
   return JS_TRUE;
 }
 
@@ -188,91 +256,180 @@ JSAPI_FUNC(box_ctor) {
 
   return JS_TRUE;
 }
-JSAPI_PROP(box_getProperty) {
+
+JSAPI_PROP(box_x) {
   BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
   if (!pBoxHook) return JS_TRUE;
 
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  switch (JSVAL_TO_INT(ID)) {
-    case BOX_X:
-      vp.setInt32(pBoxHook->GetX());
-      break;
-    case BOX_Y:
-      vp.setInt32(pBoxHook->GetY());
-      break;
-    case BOX_XSIZE:
-      vp.setInt32(pBoxHook->GetXSize());
-      break;
-    case BOX_YSIZE:
-      vp.setInt32(pBoxHook->GetYSize());
-      break;
-    case BOX_ALIGN:
-      vp.setInt32(pBoxHook->GetAlign());
-      break;
-    case BOX_COLOR:
-      vp.setInt32(pBoxHook->GetColor());
-      break;
-    case BOX_OPACITY:
-      vp.setInt32(pBoxHook->GetOpacity());
-      break;
-    case BOX_VISIBLE:
-      vp.setBoolean(pBoxHook->GetIsVisible());
-      break;
-    case BOX_ZORDER:
-      vp.setInt32(pBoxHook->GetZOrder());
-      break;
-    case BOX_ONCLICK:
-      vp.set(pBoxHook->GetClickHandler());
-      break;
-    case BOX_ONHOVER:
-      vp.set(pBoxHook->GetHoverHandler());
-      break;
-  }
+  vp.setInt32(pBoxHook->GetX());
   return JS_TRUE;
 }
 
-JSAPI_STRICT_PROP(box_setProperty) {
+JSAPI_STRICT_PROP(box_x_setter) {
   BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
   if (!pBoxHook) return JS_TRUE;
 
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  switch (JSVAL_TO_INT(ID)) {
-    case BOX_X:
-      if (vp.isInt32()) pBoxHook->SetX(vp.toInt32());
-      break;
-    case BOX_Y:
-      if (vp.isInt32()) pBoxHook->SetY(vp.toInt32());
-      break;
-    case BOX_XSIZE:
-      if (vp.isInt32()) pBoxHook->SetXSize(vp.toInt32());
-      break;
-    case BOX_YSIZE:
-      if (vp.isInt32()) pBoxHook->SetYSize(vp.toInt32());
-      break;
-    case BOX_OPACITY:
-      if (vp.isInt32()) pBoxHook->SetOpacity((ushort)vp.toInt32());
-      break;
-    case BOX_COLOR:
-      if (vp.isInt32()) pBoxHook->SetColor((ushort)vp.toInt32());
-      break;
-    case BOX_ALIGN:
-      if (vp.isInt32()) pBoxHook->SetAlign((Align)vp.toInt32());
-      break;
-    case BOX_VISIBLE:
-      if (vp.isBoolean()) pBoxHook->SetIsVisible(!!vp.toBoolean());
-      break;
-    case BOX_ZORDER:
-      if (vp.isInt32()) pBoxHook->SetZOrder((ushort)vp.toInt32());
-      break;
-    case BOX_ONCLICK:
-      pBoxHook->SetClickHandler(vp.get());
-      break;
-    case BOX_ONHOVER:
-      pBoxHook->SetHoverHandler(vp.get());
-      break;
-  }
+  if (vp.isInt32()) pBoxHook->SetX(vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(box_y) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  vp.setInt32(pBoxHook->GetY());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(box_y_setter) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  if (vp.isInt32()) pBoxHook->SetY(vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(box_xsize) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  vp.setInt32(pBoxHook->GetXSize());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(box_xsize_setter) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  if (vp.isInt32()) pBoxHook->SetXSize(vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(box_ysize) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  vp.setInt32(pBoxHook->GetYSize());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(box_ysize_setter) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  if (vp.isInt32()) pBoxHook->SetYSize(vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(box_visible) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  vp.setBoolean(pBoxHook->GetIsVisible());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(box_visible_setter) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  if (vp.isBoolean()) pBoxHook->SetIsVisible(!!vp.toBoolean());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(box_color) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  vp.setInt32(pBoxHook->GetColor());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(box_color_setter) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  if (vp.isInt32()) pBoxHook->SetColor((ushort)vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(box_opacity) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  vp.setInt32(pBoxHook->GetOpacity());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(box_opacity_setter) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  if (vp.isInt32()) pBoxHook->SetOpacity((ushort)vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(box_align) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  vp.setInt32(pBoxHook->GetAlign());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(box_align_setter) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  if (vp.isInt32()) pBoxHook->SetAlign((Align)vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(box_zorder) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  vp.setInt32(pBoxHook->GetZOrder());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(box_zorder_setter) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  if (vp.isInt32()) pBoxHook->SetZOrder((ushort)vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(box_click) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  vp.set(pBoxHook->GetClickHandler());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(box_click_setter) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  pBoxHook->SetClickHandler(vp.get());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(box_hover) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  vp.set(pBoxHook->GetHoverHandler());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(box_hover_setter) {
+  BoxHook* pBoxHook = (BoxHook*)JS_GetPrivate(obj);
+  if (!pBoxHook) return JS_TRUE;
+
+  pBoxHook->SetHoverHandler(vp.get());
   return JS_TRUE;
 }
 
@@ -315,79 +472,147 @@ JSAPI_FUNC(line_ctor) {
   return JS_TRUE;
 }
 
-JSAPI_PROP(line_getProperty) {
+JSAPI_PROP(line_x) {
   LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
   if (!pLineHook) return JS_TRUE;
 
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  switch (JSVAL_TO_INT(ID)) {
-    case LINE_X:
-      vp.setInt32(pLineHook->GetX());
-      break;
-    case LINE_Y:
-      vp.setInt32(pLineHook->GetY());
-      break;
-    case LINE_XSIZE:
-      vp.setInt32(pLineHook->GetX2());
-      break;
-    case LINE_YSIZE:
-      vp.setInt32(pLineHook->GetY2());
-      break;
-    case LINE_COLOR:
-      vp.setInt32(pLineHook->GetColor());
-      break;
-    case LINE_VISIBLE:
-      vp.setBoolean(pLineHook->GetIsVisible());
-      break;
-    case LINE_ZORDER:
-      vp.setInt32(pLineHook->GetZOrder());
-      break;
-    case LINE_ONCLICK:
-      vp.set(pLineHook->GetClickHandler());
-      break;
-    case LINE_ONHOVER:
-      vp.set(pLineHook->GetHoverHandler());
-      break;
-  }
+  vp.setInt32(pLineHook->GetX());
   return JS_TRUE;
 }
 
-JSAPI_STRICT_PROP(line_setProperty) {
+JSAPI_STRICT_PROP(line_x_setter) {
   LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
   if (!pLineHook) return JS_TRUE;
 
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  switch (JSVAL_TO_INT(ID)) {
-    case LINE_X:
-      if (vp.isInt32()) pLineHook->SetX(vp.toInt32());
-      break;
-    case LINE_Y:
-      if (vp.isInt32()) pLineHook->SetY(vp.toInt32());
-      break;
-    case LINE_XSIZE:
-      if (vp.isInt32()) pLineHook->SetX2(vp.toInt32());
-      break;
-    case LINE_YSIZE:
-      if (vp.isInt32()) pLineHook->SetY2(vp.toInt32());
-      break;
-    case LINE_COLOR:
-      if (vp.isInt32()) pLineHook->SetColor((ushort)vp.toInt32());
-      break;
-    case LINE_VISIBLE:
-      if (vp.isBoolean()) pLineHook->SetIsVisible(!!vp.toBoolean());
-      break;
-    case LINE_ZORDER:
-      if (vp.isInt32()) pLineHook->SetZOrder((ushort)vp.toInt32());
-      break;
-    case LINE_ONCLICK:
-      pLineHook->SetClickHandler(vp.get());
-      break;
-    case LINE_ONHOVER:
-      pLineHook->SetHoverHandler(vp.get());
-      break;
-  }
+  if (vp.isInt32()) pLineHook->SetX(vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(line_y) {
+  LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
+  if (!pLineHook) return JS_TRUE;
+
+  vp.setInt32(pLineHook->GetY());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(line_y_setter) {
+  LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
+  if (!pLineHook) return JS_TRUE;
+
+  if (vp.isInt32()) pLineHook->SetY(vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(line_x2) {
+  LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
+  if (!pLineHook) return JS_TRUE;
+
+  vp.setInt32(pLineHook->GetX2());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(line_x2_setter) {
+  LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
+  if (!pLineHook) return JS_TRUE;
+
+  if (vp.isInt32()) pLineHook->SetX2(vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(line_y2) {
+  LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
+  if (!pLineHook) return JS_TRUE;
+
+  vp.setInt32(pLineHook->GetY2());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(line_y2_setter) {
+  LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
+  if (!pLineHook) return JS_TRUE;
+
+  if (vp.isInt32()) pLineHook->SetY2(vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(line_visible) {
+  LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
+  if (!pLineHook) return JS_TRUE;
+
+  vp.setBoolean(pLineHook->GetIsVisible());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(line_visible_setter) {
+  LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
+  if (!pLineHook) return JS_TRUE;
+
+  if (vp.isBoolean()) pLineHook->SetIsVisible(!!vp.toBoolean());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(line_color) {
+  LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
+  if (!pLineHook) return JS_TRUE;
+
+  vp.setInt32(pLineHook->GetColor());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(line_color_setter) {
+  LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
+  if (!pLineHook) return JS_TRUE;
+
+  if (vp.isInt32()) pLineHook->SetColor((ushort)vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(line_zorder) {
+  LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
+  if (!pLineHook) return JS_TRUE;
+
+  vp.setInt32(pLineHook->GetZOrder());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(line_zorder_setter) {
+  LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
+  if (!pLineHook) return JS_TRUE;
+
+  if (vp.isInt32()) pLineHook->SetZOrder((ushort)vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(line_click) {
+  LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
+  if (!pLineHook) return JS_TRUE;
+
+  vp.set(pLineHook->GetClickHandler());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(line_click_setter) {
+  LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
+  if (!pLineHook) return JS_TRUE;
+
+  pLineHook->SetClickHandler(vp.get());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(line_hover) {
+  LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
+  if (!pLineHook) return JS_TRUE;
+
+  vp.set(pLineHook->GetHoverHandler());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(line_hover_setter) {
+  LineHook* pLineHook = (LineHook*)JS_GetPrivate(obj);
+  if (!pLineHook) return JS_TRUE;
+
+  pLineHook->SetHoverHandler(vp.get());
   return JS_TRUE;
 }
 
@@ -434,89 +659,167 @@ JSAPI_FUNC(text_ctor) {
   return JS_TRUE;
 }
 
-JSAPI_PROP(text_getProperty) {
+JSAPI_PROP(text_x) {
   TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
   if (!pTextHook) return JS_TRUE;
 
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  switch (JSVAL_TO_INT(ID)) {
-    case TEXT_X:
-      vp.setInt32(pTextHook->GetX());
-      break;
-    case TEXT_Y:
-      vp.setInt32(pTextHook->GetY());
-      break;
-    case TEXT_COLOR:
-      vp.setInt32(pTextHook->GetColor());
-      break;
-    case TEXT_FONT:
-      vp.setInt32(pTextHook->GetFont());
-      break;
-    case TEXT_TEXT:
-      vp.setString(JS_InternUCString(cx, pTextHook->GetText()));
-      break;
-    case TEXT_ALIGN:
-      vp.setInt32(pTextHook->GetAlign());
-      break;
-    case TEXT_VISIBLE:
-      vp.setBoolean(pTextHook->GetIsVisible());
-      break;
-    case TEXT_ZORDER:
-      vp.setInt32(pTextHook->GetZOrder());
-      break;
-    case TEXT_ONCLICK:
-      vp.set(pTextHook->GetClickHandler());
-      break;
-    case TEXT_ONHOVER:
-      vp.set(pTextHook->GetHoverHandler());
-      break;
+  vp.setInt32(pTextHook->GetX());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(text_x_setter) {
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
+  if (!pTextHook) return JS_TRUE;
+
+  if (vp.isInt32()) pTextHook->SetX(vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(text_y) {
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
+  if (!pTextHook) return JS_TRUE;
+
+  vp.setInt32(pTextHook->GetY());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(text_y_setter) {
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
+  if (!pTextHook) return JS_TRUE;
+
+  if (vp.isInt32()) pTextHook->SetY(vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(text_font) {
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
+  if (!pTextHook) return JS_TRUE;
+
+  vp.setInt32(pTextHook->GetFont());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(text_font_setter) {
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
+  if (!pTextHook) return JS_TRUE;
+
+  if (vp.isInt32()) pTextHook->SetFont((ushort)vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(text_visible) {
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
+  if (!pTextHook) return JS_TRUE;
+
+  vp.setBoolean(pTextHook->GetIsVisible());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(text_visible_setter) {
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
+  if (!pTextHook) return JS_TRUE;
+
+  if (vp.isBoolean()) pTextHook->SetIsVisible(!!vp.toBoolean());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(text_color) {
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
+  if (!pTextHook) return JS_TRUE;
+
+  vp.setInt32(pTextHook->GetColor());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(text_color_setter) {
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
+  if (!pTextHook) return JS_TRUE;
+
+  if (vp.isInt32()) pTextHook->SetColor((ushort)vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(text_text) {
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
+  if (!pTextHook) return JS_TRUE;
+
+  vp.setString(JS_InternUCString(cx, pTextHook->GetText()));
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(text_text_setter) {
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
+  if (!pTextHook) return JS_TRUE;
+
+  if (vp.isString()) {
+    const wchar_t* pText = JS_GetStringCharsZ(cx, vp.toString());
+    if (!pText) return JS_TRUE;
+    pTextHook->SetText(pText);
   }
   return JS_TRUE;
 }
 
-JSAPI_STRICT_PROP(text_setProperty) {
+JSAPI_PROP(text_align) {
   TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
   if (!pTextHook) return JS_TRUE;
 
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  switch (JSVAL_TO_INT(ID)) {
-    case TEXT_X:
-      if (vp.isInt32()) pTextHook->SetX(vp.toInt32());
-      break;
-    case TEXT_Y:
-      if (vp.isInt32()) pTextHook->SetY(vp.toInt32());
-      break;
-    case TEXT_COLOR:
-      if (vp.isInt32()) pTextHook->SetColor((ushort)vp.toInt32());
-      break;
-    case TEXT_FONT:
-      if (vp.isInt32()) pTextHook->SetFont((ushort)vp.toInt32());
-      break;
-    case TEXT_TEXT:
-      if (vp.isString()) {
-        const wchar_t* pText = JS_GetStringCharsZ(cx, vp.toString());
-        if (!pText) return JS_TRUE;
-        pTextHook->SetText(pText);
-      }
-      break;
-    case TEXT_ALIGN:
-      if (vp.isInt32()) pTextHook->SetAlign((Align)vp.toInt32());
-      break;
-    case TEXT_VISIBLE:
-      if (vp.isBoolean()) pTextHook->SetIsVisible(!!vp.toBoolean());
-      break;
-    case TEXT_ZORDER:
-      if (vp.isInt32()) pTextHook->SetZOrder((ushort)vp.toInt32());
-      break;
-    case TEXT_ONCLICK:
-      pTextHook->SetClickHandler(vp.get());
-      break;
-    case TEXT_ONHOVER:
-      pTextHook->SetHoverHandler(vp.get());
-      break;
-  }
+  vp.setInt32(pTextHook->GetAlign());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(text_align_setter) {
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
+  if (!pTextHook) return JS_TRUE;
+
+  if (vp.isInt32()) pTextHook->SetAlign((Align)vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(text_zorder) {
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
+  if (!pTextHook) return JS_TRUE;
+
+  vp.setInt32(pTextHook->GetZOrder());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(text_zorder_setter) {
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
+  if (!pTextHook) return JS_TRUE;
+
+  if (vp.isInt32()) pTextHook->SetZOrder((ushort)vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(text_click) {
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
+  if (!pTextHook) return JS_TRUE;
+
+  vp.set(pTextHook->GetClickHandler());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(text_click_setter) {
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
+  if (!pTextHook) return JS_TRUE;
+
+  pTextHook->SetClickHandler(vp.get());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(text_hover) {
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
+  if (!pTextHook) return JS_TRUE;
+
+  vp.set(pTextHook->GetHoverHandler());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(text_hover_setter) {
+  TextHook* pTextHook = (TextHook*)JS_GetPrivate(obj);
+  if (!pTextHook) return JS_TRUE;
+
+  pTextHook->SetHoverHandler(vp.get());
   return JS_TRUE;
 }
 
@@ -568,77 +871,135 @@ JSAPI_FUNC(image_ctor) {
   return JS_TRUE;
 }
 
-JSAPI_PROP(image_getProperty) {
+JSAPI_PROP(image_x) {
   ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
   if (!pImageHook) return JS_TRUE;
 
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  switch (JSVAL_TO_INT(ID)) {
-    case IMAGE_X:
-      vp.setInt32(pImageHook->GetX());
-      break;
-    case IMAGE_Y:
-      vp.setInt32(pImageHook->GetY());
-      break;
-    case IMAGE_LOCATION:
-      vp.setString(JS_InternUCString(cx, pImageHook->GetImage()));
-      break;
-    case IMAGE_ALIGN:
-      vp.setInt32(pImageHook->GetAlign());
-      break;
-    case IMAGE_VISIBLE:
-      vp.setBoolean(pImageHook->GetIsVisible());
-      break;
-    case IMAGE_ZORDER:
-      vp.setInt32(pImageHook->GetZOrder());
-      break;
-    case IMAGE_ONCLICK:
-      vp.set(pImageHook->GetClickHandler());
-      break;
-    case IMAGE_ONHOVER:
-      vp.set(pImageHook->GetHoverHandler());
-      break;
+  vp.setInt32(pImageHook->GetX());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(image_x_setter) {
+  ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
+  if (!pImageHook) return JS_TRUE;
+
+  if (vp.isInt32()) pImageHook->SetX(vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(image_y) {
+  ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
+  if (!pImageHook) return JS_TRUE;
+
+  vp.setInt32(pImageHook->GetY());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(image_y_setter) {
+  ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
+  if (!pImageHook) return JS_TRUE;
+
+  if (vp.isInt32()) pImageHook->SetY(vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(image_location) {
+  ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
+  if (!pImageHook) return JS_TRUE;
+
+  vp.setString(JS_InternUCString(cx, pImageHook->GetImage()));
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(image_location_setter) {
+  ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
+  if (!pImageHook) return JS_TRUE;
+
+  if (vp.isString()) {
+    const wchar_t* pimage = JS_GetStringCharsZ(cx, vp.toString());
+    if (!pimage) return JS_TRUE;
+    pImageHook->SetImage(pimage);
   }
   return JS_TRUE;
 }
 
-JSAPI_STRICT_PROP(image_setProperty) {
+JSAPI_PROP(image_visible) {
   ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
   if (!pImageHook) return JS_TRUE;
 
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  switch (JSVAL_TO_INT(ID)) {
-    case IMAGE_X:
-      if (vp.isInt32()) pImageHook->SetX(vp.toInt32());
-      break;
-    case IMAGE_Y:
-      if (vp.isInt32()) pImageHook->SetY(vp.toInt32());
-      break;
-    case IMAGE_LOCATION:
-      if (vp.isString()) {
-        const wchar_t* pimage = JS_GetStringCharsZ(cx, vp.toString());
-        if (!pimage) return JS_TRUE;
-        pImageHook->SetImage(pimage);
-      }
-      break;
-    case IMAGE_ALIGN:
-      if (vp.isInt32()) pImageHook->SetAlign((Align)vp.toInt32());
-      break;
-    case IMAGE_VISIBLE:
-      if (vp.isBoolean()) pImageHook->SetIsVisible(!!vp.toBoolean());
-      break;
-    case IMAGE_ZORDER:
-      if (vp.isInt32()) pImageHook->SetZOrder((ushort)vp.toInt32());
-      break;
-    case IMAGE_ONCLICK:
-      pImageHook->SetClickHandler(vp.get());
-      break;
-    case IMAGE_ONHOVER:
-      pImageHook->SetHoverHandler(vp.get());
-      break;
-  }
+  vp.setBoolean(pImageHook->GetIsVisible());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(image_visible_setter) {
+  ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
+  if (!pImageHook) return JS_TRUE;
+
+  if (vp.isBoolean()) pImageHook->SetIsVisible(!!vp.toBoolean());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(image_align) {
+  ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
+  if (!pImageHook) return JS_TRUE;
+
+  vp.setInt32(pImageHook->GetAlign());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(image_align_setter) {
+  ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
+  if (!pImageHook) return JS_TRUE;
+
+  if (vp.isInt32()) pImageHook->SetAlign((Align)vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(image_zorder) {
+  ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
+  if (!pImageHook) return JS_TRUE;
+
+  vp.setInt32(pImageHook->GetZOrder());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(image_zorder_setter) {
+  ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
+  if (!pImageHook) return JS_TRUE;
+
+  if (vp.isInt32()) pImageHook->SetZOrder((ushort)vp.toInt32());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(image_click) {
+  ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
+  if (!pImageHook) return JS_TRUE;
+
+  vp.set(pImageHook->GetClickHandler());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(image_click_setter) {
+  ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
+  if (!pImageHook) return JS_TRUE;
+
+  pImageHook->SetClickHandler(vp.get());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(image_hover) {
+  ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
+  if (!pImageHook) return JS_TRUE;
+
+  vp.set(pImageHook->GetHoverHandler());
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(image_hover_setter) {
+  ImageHook* pImageHook = (ImageHook*)JS_GetPrivate(obj);
+  if (!pImageHook) return JS_TRUE;
+
+  pImageHook->SetHoverHandler(vp.get());
   return JS_TRUE;
 }
 

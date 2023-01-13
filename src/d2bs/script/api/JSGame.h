@@ -46,7 +46,20 @@ JSAPI_FUNC(my_getPlayerFlag);
 JSAPI_FUNC(my_moveNPC);
 JSAPI_FUNC(my_revealLevel);
 
-static JSClass dialogLine_class = {
-    "DailogLine", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1),
-    JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
-                 JS_ResolveStub, JS_ConvertStub, NULL, NULL)};
+static JSClass dialogLine_class{
+    // TODO: yes this is mispelled, wont fix until I can figure out if it's used in kolbot ~ ejt
+    "DailogLine",                                         // name
+    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1),  // flags
+    JSCLASS_METHODS(JS_PropertyStub,                      // addProperty
+                    JS_PropertyStub,                      // delProperty
+                    JS_PropertyStub,                      // getProperty
+                    JS_StrictPropertyStub,                // setProperty
+                    JS_EnumerateStub,                     // enumerate
+                    JS_ResolveStub,                       // resolve
+                    JS_ConvertStub,                       // mayResolve
+                    nullptr,                              // finalize
+                    nullptr,                              // call
+                    nullptr,                              // hasInstance
+                    nullptr,                              // construct
+                    nullptr)                              // trace
+};

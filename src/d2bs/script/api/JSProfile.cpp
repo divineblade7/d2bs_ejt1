@@ -95,6 +95,88 @@ CLASS_CTOR(profile) {
   return JS_TRUE;
 }
 
+void profile_finalize(JSFreeOp*, JSObject* obj) {
+  // Profile* prof;
+
+  // prof = (Profile*)JS_GetPrivate(obj);
+
+  // if (prof != NULL) delete prof;
+
+  JS_SetPrivate(obj, NULL);
+}
+
+JSAPI_PROP(profile_type) {
+  d2bs::Profile* prof;
+
+  prof = (d2bs::Profile*)JS_GetPrivate(obj);
+
+  vp.setInt32(prof->type);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(profile_id) {
+  d2bs::Profile* prof;
+
+  prof = (d2bs::Profile*)JS_GetPrivate(obj);
+
+  vp.setString(JS_NewUCStringCopyZ(cx, prof->ip));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(profile_username) {
+  d2bs::Profile* prof;
+
+  prof = (d2bs::Profile*)JS_GetPrivate(obj);
+
+  vp.setString(JS_NewUCStringCopyZ(cx, prof->username));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(profile_gateway) {
+  d2bs::Profile* prof;
+
+  prof = (d2bs::Profile*)JS_GetPrivate(obj);
+
+  vp.setString(JS_NewUCStringCopyZ(cx, prof->gateway));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(profile_character) {
+  d2bs::Profile* prof;
+
+  prof = (d2bs::Profile*)JS_GetPrivate(obj);
+
+  vp.setString(JS_NewUCStringCopyZ(cx, prof->charname));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(profile_difficulty) {
+  d2bs::Profile* prof;
+
+  prof = (d2bs::Profile*)JS_GetPrivate(obj);
+
+  vp.setInt32(prof->diff);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(profile_maxLoginTime) {
+  d2bs::Profile* prof;
+
+  prof = (d2bs::Profile*)JS_GetPrivate(obj);
+
+  vp.setInt32(Vars.settings.maxLoginTime);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(profile_maxCharacterSelectTime) {
+  d2bs::Profile* prof;
+
+  prof = (d2bs::Profile*)JS_GetPrivate(obj);
+
+  vp.setInt32(Vars.settings.maxCharTime);
+  return JS_TRUE;
+}
+
 JSAPI_FUNC(profile_login) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   args.rval().setUndefined();
@@ -106,53 +188,6 @@ JSAPI_FUNC(profile_login) {
   prof = (d2bs::Profile*)JS_GetPrivate(self.toObjectOrNull());
 
   if (prof->login(&error) != 0) THROW_ERROR(cx, error);
-
-  return JS_TRUE;
-}
-
-void profile_finalize(JSFreeOp*, JSObject* obj) {
-  // Profile* prof;
-
-  // prof = (Profile*)JS_GetPrivate(obj);
-
-  // if (prof != NULL) delete prof;
-
-  JS_SetPrivate(obj, NULL);
-}
-
-JSAPI_PROP(profile_getProperty) {
-  d2bs::Profile* prof;
-
-  prof = (d2bs::Profile*)JS_GetPrivate(obj);
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-
-  switch (JSVAL_TO_INT(ID)) {
-    case PROFILE_TYPE:
-      vp.setInt32(prof->type);
-      break;
-    case PROFILE_IP:
-      vp.setString(JS_NewUCStringCopyZ(cx, prof->ip));
-      break;
-    case PROFILE_USERNAME:
-      vp.setString(JS_NewUCStringCopyZ(cx, prof->username));
-      break;
-    case PROFILE_GATEWAY:
-      vp.setString(JS_NewUCStringCopyZ(cx, prof->gateway));
-      break;
-    case PROFILE_CHARACTER:
-      vp.setString(JS_NewUCStringCopyZ(cx, prof->charname));
-      break;
-    case PROFILE_DIFFICULTY:
-      vp.setInt32(prof->diff);
-      break;
-    case PROFILE_MAXLOGINTIME:
-      vp.setInt32(Vars.settings.maxLoginTime);
-      break;
-    case PROFILE_MAXCHARSELTIME:
-      vp.setInt32(Vars.settings.maxCharTime);
-      break;
-  }
 
   return JS_TRUE;
 }

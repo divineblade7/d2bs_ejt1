@@ -4,11 +4,6 @@
 
 #include <windows.h>
 
-CLASS_CTOR(exit);
-
-void exit_finalize(JSFreeOp* fop, JSObject* obj);
-JSAPI_PROP(exit_getProperty);
-
 struct myExit {
   DWORD x;
   DWORD y;
@@ -18,17 +13,41 @@ struct myExit {
   DWORD level;
 };
 
-enum exit_tinyid { EXIT_X, EXIT_Y, EXIT_TARGET, EXIT_TYPE, EXIT_TILEID, EXIT_LEVELID };
+CLASS_CTOR(exit);
+void exit_finalize(JSFreeOp* fop, JSObject* obj);
 
+JSAPI_PROP(exit_type);
+JSAPI_PROP(exit_tileid);
+JSAPI_PROP(exit_level);
+JSAPI_PROP(exit_x);
+JSAPI_PROP(exit_y);
+JSAPI_PROP(exit_target);
+
+// clang-format off
 static JSPropertySpec exit_props[] = {
-    {"x", EXIT_X, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(exit_getProperty), JSOP_NULLWRAPPER},
-    {"y", EXIT_Y, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(exit_getProperty), JSOP_NULLWRAPPER},
-    {"target", EXIT_TARGET, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(exit_getProperty), JSOP_NULLWRAPPER},
-    {"type", EXIT_TYPE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(exit_getProperty), JSOP_NULLWRAPPER},
-    {"tileid", EXIT_TILEID, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(exit_getProperty), JSOP_NULLWRAPPER},
-    {"level", EXIT_LEVELID, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(exit_getProperty), JSOP_NULLWRAPPER},
-    {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
+  JS_PSG("type",          exit_type,      JSPROP_PERMANENT_VAR),
+  JS_PSG("tileid",        exit_tileid,    JSPROP_PERMANENT_VAR),
+  JS_PSG("level",         exit_level,     JSPROP_PERMANENT_VAR),
+  JS_PSG("x",             exit_x,         JSPROP_PERMANENT_VAR),
+  JS_PSG("y",             exit_y,         JSPROP_PERMANENT_VAR),
+  JS_PSG("target",        exit_target,    JSPROP_PERMANENT_VAR),
+  JS_PS_END
+};
+// clang-format on
 
-static JSClass exit_class = {"Exit", JSCLASS_HAS_PRIVATE,
-                             JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-                                          JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, exit_finalize, exit_ctor)};
+static JSClass exit_class{
+    "Exit",                                 // name
+    JSCLASS_HAS_PRIVATE,                    // flags
+    JSCLASS_METHODS(JS_PropertyStub,        // addProperty
+                    JS_PropertyStub,        // delProperty
+                    JS_PropertyStub,        // getProperty
+                    JS_StrictPropertyStub,  // setProperty
+                    JS_EnumerateStub,       // enumerate
+                    JS_ResolveStub,         // resolve
+                    JS_ConvertStub,         // mayResolve
+                    exit_finalize,          // finalize
+                    nullptr,                // call
+                    nullptr,                // hasInstance
+                    exit_ctor,              // construct
+                    nullptr)                // trace
+};

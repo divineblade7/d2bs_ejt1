@@ -26,6 +26,8 @@ set(MFBT_SRCS
 add_library(mfbt ${LIBRARY_TYPE} ${MFBT_SRCS})
 add_library(mozjs::mfbt ALIAS mfbt)
 
+target_compile_options(mfbt PRIVATE /W0)
+
 target_include_directories(mfbt
   PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"

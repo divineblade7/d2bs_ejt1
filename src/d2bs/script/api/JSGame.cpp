@@ -18,6 +18,11 @@
 #include <cassert>
 #include <cmath>
 
+// deprecate
+#ifndef ArraySize
+#define ArraySize(x) (sizeof((x)) / sizeof((x)[0]))
+#endif
+
 JSAPI_FUNC(my_copyUnit) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 

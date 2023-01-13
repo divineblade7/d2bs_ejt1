@@ -28,6 +28,6 @@ class AutoRoot {
 
  private:
   JSContext* cx = nullptr;
-  JS::Value var = JSVAL_NULL;
+  JS::Value var = JS::NullValue();
   int count = 0;
 };

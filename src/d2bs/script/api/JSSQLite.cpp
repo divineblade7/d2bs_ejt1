@@ -63,22 +63,6 @@ void close_db_stmt(DBStmt* stmt) {
   }
 }
 
-JSAPI_FUNC(my_sqlite_version) {
-  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-
-  args.rval().setString(JS_InternString(cx, sqlite3_version));
-  return JS_TRUE;
-}
-
-JSAPI_FUNC(my_sqlite_memusage) {
-  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-
-  args.rval().setNumber(static_cast<double>(sqlite3_memory_used()));
-  return JS_TRUE;
-}
-
-EMPTY_CTOR(sqlite_stmt)
-
 JSAPI_FUNC(sqlite_ctor) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
@@ -124,6 +108,74 @@ JSAPI_FUNC(sqlite_ctor) {
   }
 
   args.rval().setObjectOrNull(jsdb);
+  return JS_TRUE;
+}
+
+void sqlite_finalize(JSFreeOp*, JSObject* obj) {
+  SqliteDB* dbobj = (SqliteDB*)JS_GetPrivate(obj);
+  JS_SetPrivate(obj, NULL);
+  if (dbobj) {
+    clean_sqlite_db(dbobj);
+    delete dbobj;
+  }
+}
+
+JSAPI_PROP(sqlite_path) {
+  SqliteDB* dbobj = (SqliteDB*)JS_GetInstancePrivate(cx, obj, &sqlite_db, NULL);
+
+  vp.setString(JS_NewUCStringCopyZ(cx, dbobj->path.c_str()));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(sqlite_statements) {
+  SqliteDB* dbobj = (SqliteDB*)JS_GetInstancePrivate(cx, obj, &sqlite_db, NULL);
+
+  JSAutoRequest r(cx);
+  JSObject* stmts = JS_NewArrayObject(cx, dbobj->stmts.size(), NULL);
+  vp.set(OBJECT_TO_JSVAL(stmts));
+  int i = 0;
+  for (StmtList::iterator it = dbobj->stmts.begin(); it != dbobj->stmts.end(); it++, i++) {
+    if ((*it)->open) {
+      JSObject* stmt = BuildObject(cx, &sqlite_stmt, sqlite_stmt_methods, sqlite_stmt_props, *it);
+      JS::Value tmp = OBJECT_TO_JSVAL(stmt);
+      JS_SetElement(cx, stmts, i, &tmp);
+    }
+  }
+  return JS_TRUE;
+}
+
+JSAPI_PROP(sqlite_isOpen) {
+  SqliteDB* dbobj = (SqliteDB*)JS_GetInstancePrivate(cx, obj, &sqlite_db, NULL);
+
+  vp.setBoolean(dbobj->open);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(sqlite_lastRowId) {
+  SqliteDB* dbobj = (SqliteDB*)JS_GetInstancePrivate(cx, obj, &sqlite_db, NULL);
+
+  vp.setInt32(static_cast<int32_t>(sqlite3_last_insert_rowid(dbobj->db)));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(sqlite_changes) {
+  SqliteDB* dbobj = (SqliteDB*)JS_GetInstancePrivate(cx, obj, &sqlite_db, NULL);
+
+  vp.setDouble(sqlite3_changes(dbobj->db));
+  return JS_TRUE;
+}
+
+JSAPI_FUNC(my_sqlite_version) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  args.rval().setString(JS_InternString(cx, sqlite3_version));
+  return JS_TRUE;
+}
+
+JSAPI_FUNC(my_sqlite_memusage) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  args.rval().setNumber(static_cast<double>(sqlite3_memory_used()));
   return JS_TRUE;
 }
 
@@ -252,68 +304,35 @@ JSAPI_FUNC(sqlite_open) {
   return JS_TRUE;
 }
 
-JSAPI_PROP(sqlite_getProperty) {
-  SqliteDB* dbobj = (SqliteDB*)JS_GetInstancePrivate(cx, obj, &sqlite_db, NULL);
+EMPTY_CTOR(sqlite_stmt)
 
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  switch (JSVAL_TO_INT(ID)) {
-    case SQLITE_PATH:
-      vp.setString(JS_NewUCStringCopyZ(cx, dbobj->path.c_str()));
-      break;
-    case SQLITE_OPEN:
-      vp.setBoolean(dbobj->open);
-      break;
-    case SQLITE_LASTROWID:
-      vp.setInt32(static_cast<int32_t>(sqlite3_last_insert_rowid(dbobj->db)));
-      break;
-    case SQLITE_STMTS: {
-      JS_BeginRequest(cx);
-      JSObject* stmts = JS_NewArrayObject(cx, dbobj->stmts.size(), NULL);
-      vp.set(OBJECT_TO_JSVAL(stmts));
-      int i = 0;
-      for (StmtList::iterator it = dbobj->stmts.begin(); it != dbobj->stmts.end(); it++, i++) {
-        if ((*it)->open) {
-          JSObject* stmt = BuildObject(cx, &sqlite_stmt, sqlite_stmt_methods, sqlite_stmt_props, *it);
-          JS::Value tmp = OBJECT_TO_JSVAL(stmt);
-          JS_SetElement(cx, stmts, i, &tmp);
-        }
-      }
-      JS_EndRequest(cx);
-    } break;
-    case SQLITE_CHANGES:
-      vp.setDouble(sqlite3_changes(dbobj->db));
-      // JS_NewNumberValue(cx, (double)sqlite3_changes(dbobj->db), vp);
-      break;
+void sqlite_stmt_finalize(JSFreeOp*, JSObject* obj) {
+  DBStmt* stmtobj = (DBStmt*)JS_GetPrivate(obj);
+  JS_SetPrivate(obj, NULL);
+  if (stmtobj) {
+    if (stmtobj->stmt && stmtobj->open) {
+      stmtobj->assoc_db->stmts.erase(stmtobj);
+      // if(stmtobj->current_row)
+      //	JS_RemoveRoot( &stmtobj->current_row);
+      close_db_stmt(stmtobj);
+    }
+    delete stmtobj;
   }
+}
+
+JSAPI_PROP(sqlite_stmt_sql) {
+  DBStmt* stmtobj = (DBStmt*)JS_GetInstancePrivate(cx, obj, &sqlite_stmt, NULL);
+
+  vp.setString(JS_NewStringCopyZ(cx, sqlite3_sql(stmtobj->stmt)));
   return JS_TRUE;
 }
 
-void sqlite_finalize(JSFreeOp*, JSObject* obj) {
-  SqliteDB* dbobj = (SqliteDB*)JS_GetPrivate(obj);
-  JS_SetPrivate(obj, NULL);
-  if (dbobj) {
-    clean_sqlite_db(dbobj);
-    delete dbobj;
-  }
-}
+JSAPI_PROP(sqlite_stmt_ready) {
+  DBStmt* stmtobj = (DBStmt*)JS_GetInstancePrivate(cx, obj, &sqlite_stmt, NULL);
 
-// JSBool sqlite_equal(JSContext *cx, JSObject *obj, JS::Value v, JSBool *bp)
-//{
-//	SqliteDB* dbobj = (SqliteDB*)JS_GetInstancePrivate(cx, obj, &sqlite_db, NULL);
-//	if(!JSVAL_IS_OBJECT(v))
-//		return JS_TRUE;
-//	JSObject *obj2 = JSVAL_TO_OBJECT(v);
-//	if(!obj2 || JS_GET_CLASS(cx, obj2) != JS_GET_CLASS(cx, obj))
-//		return JS_TRUE;
-//
-//	SqliteDB* dbobj2 = (SqliteDB*)JS_GetPrivate(obj2);
-//	if(dbobj2->db != dbobj->db)
-//		return JS_TRUE;
-//
-//	*bp = JS_TRUE;
-//	return JS_TRUE;
-//}
+  vp.setBoolean(stmtobj->canGet);
+  return JS_TRUE;
+}
 
 JSAPI_FUNC(sqlite_stmt_getobject) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
@@ -571,35 +590,4 @@ JSAPI_FUNC(sqlite_stmt_close) {
   if (JS_ValueToObject(cx, JSVAL_NULL, &self) == JS_FALSE) return JS_TRUE;
 
   return JS_TRUE;
-}
-
-JSAPI_PROP(sqlite_stmt_getProperty) {
-  DBStmt* stmtobj = (DBStmt*)JS_GetInstancePrivate(cx, obj, &sqlite_stmt, NULL);
-
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  switch (JSVAL_TO_INT(ID)) {
-    case SQLITE_STMT_SQL: {
-      vp.setString(JS_NewStringCopyZ(cx, sqlite3_sql(stmtobj->stmt)));
-      break;
-    }
-    case SQLITE_STMT_READY:
-      vp.setBoolean(stmtobj->canGet);
-      break;
-  }
-  return JS_TRUE;
-}
-
-void sqlite_stmt_finalize(JSFreeOp*, JSObject* obj) {
-  DBStmt* stmtobj = (DBStmt*)JS_GetPrivate(obj);
-  JS_SetPrivate(obj, NULL);
-  if (stmtobj) {
-    if (stmtobj->stmt && stmtobj->open) {
-      stmtobj->assoc_db->stmts.erase(stmtobj);
-      // if(stmtobj->current_row)
-      //	JS_RemoveRoot( &stmtobj->current_row);
-      close_db_stmt(stmtobj);
-    }
-    delete stmtobj;
-  }
 }

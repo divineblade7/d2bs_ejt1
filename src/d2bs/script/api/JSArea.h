@@ -4,14 +4,6 @@
 
 #include <windows.h>
 
-CLASS_CTOR(area);
-
-void area_finalize(JSFreeOp* fop, JSObject* obj);
-
-JSAPI_PROP(area_getProperty);
-
-JSAPI_FUNC(my_getArea);
-
 class ApiArea {
  public:
   ApiArea() = default;
@@ -22,18 +14,46 @@ class ApiArea {
   JSObject* ExitArray;
 };
 
-enum area_tinyid { AUNIT_EXITS, AUNIT_NAME, AUNIT_X, AUNIT_XSIZE, AUNIT_Y, AUNIT_YSIZE, AUNIT_ID };
+CLASS_CTOR(area);
+void area_finalize(JSFreeOp* fop, JSObject* obj);
 
+// This should really have been the constructor lol, can't change that now...
+JSAPI_FUNC(my_getArea);
+
+JSAPI_PROP(area_id);
+JSAPI_PROP(area_name);
+JSAPI_PROP(area_x);
+JSAPI_PROP(area_y);
+JSAPI_PROP(area_xsize);
+JSAPI_PROP(area_ysize);
+JSAPI_PROP(area_exits);
+
+// clang-format off
 static JSPropertySpec area_props[] = {
-    {"exits", AUNIT_EXITS, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(area_getProperty), JSOP_NULLWRAPPER},
-    {"name", AUNIT_NAME, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(area_getProperty), JSOP_NULLWRAPPER},
-    {"x", AUNIT_X, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(area_getProperty), JSOP_NULLWRAPPER},
-    {"xsize", AUNIT_XSIZE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(area_getProperty), JSOP_NULLWRAPPER},
-    {"y", AUNIT_Y, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(area_getProperty), JSOP_NULLWRAPPER},
-    {"ysize", AUNIT_YSIZE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(area_getProperty), JSOP_NULLWRAPPER},
-    {"id", AUNIT_ID, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(area_getProperty), JSOP_NULLWRAPPER},
-    {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
+    JS_PSG("id",      area_id,      JSPROP_PERMANENT_VAR),
+    JS_PSG("name",    area_name,    JSPROP_PERMANENT_VAR),
+    JS_PSG("x",       area_x,       JSPROP_PERMANENT_VAR),
+    JS_PSG("y",       area_y,       JSPROP_PERMANENT_VAR),
+    JS_PSG("xsize",   area_xsize,   JSPROP_PERMANENT_VAR),
+    JS_PSG("ysize",   area_ysize,   JSPROP_PERMANENT_VAR),
+    JS_PSG("exits",   area_exits,   JSPROP_PERMANENT_VAR),
+    JS_PS_END
+};
+//clang-format on
 
-static JSClass area_class = {"Area", JSCLASS_HAS_PRIVATE,
-                             JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-                                          JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, area_finalize, area_ctor)};
+static JSClass area_class{
+    "Area",                                 // name
+    JSCLASS_HAS_PRIVATE,                    // flags
+    JSCLASS_METHODS(JS_PropertyStub,        // addProperty
+                    JS_PropertyStub,        // delProperty
+                    JS_PropertyStub,        // getProperty
+                    JS_StrictPropertyStub,  // setProperty
+                    JS_EnumerateStub,       // enumerate
+                    JS_ResolveStub,         // resolve
+                    JS_ConvertStub,         // mayResolve
+                    area_finalize,          // finalize
+                    nullptr,                // call
+                    nullptr,                // hasInstance
+                    area_ctor,              // construct
+                    nullptr)                // trace
+};

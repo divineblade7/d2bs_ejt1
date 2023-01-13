@@ -4,8 +4,6 @@
 #include "d2bs/script/ScriptEngine.h"
 #include "d2bs/utils/Helpers.h"
 
-EMPTY_CTOR(script)
-
 struct FindHelper {
   DWORD tid;
   wchar_t* name;
@@ -15,34 +13,45 @@ struct FindHelper {
 bool __fastcall FindScriptByTid(Script* script, FindHelper* helper);
 bool __fastcall FindScriptByName(Script* script, FindHelper* helper);
 
-JSAPI_PROP(script_getProperty) {
+EMPTY_CTOR(script)
+
+JSAPI_PROP(script_name) {
   Script* script = (Script*)JS_GetInstancePrivate(cx, obj, &script_class, NULL);
-
-  // TODO: make this check stronger
   if (!script) return JS_TRUE;
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
 
-  switch (JSVAL_TO_INT(ID)) {
-    case SCRIPT_FILENAME:
-      vp.setString(JS_InternUCString(cx, script->filename_short()));
-      break;
-    case SCRIPT_GAMETYPE:
-      vp.setBoolean(script->type() == ScriptType::InGame ? false : true);
-      break;
-    case SCRIPT_RUNNING:
-      vp.setBoolean(script->is_running());
-      break;
-    case SCRIPT_THREADID:
-      vp.setInt32(script->thread_id());
-      break;
-    case SCRIPT_MEMORY:
-      vp.setInt32(JS_GetGCParameter(script->runtime(), JSGC_BYTES));
-      break;
-    default:
-      break;
-  }
+  vp.setString(JS_InternUCString(cx, script->filename_short()));
+  return JS_TRUE;
+}
 
+JSAPI_PROP(script_type) {
+  Script* script = (Script*)JS_GetInstancePrivate(cx, obj, &script_class, NULL);
+  if (!script) return JS_TRUE;
+
+  vp.setBoolean(script->type() == ScriptType::InGame ? false : true);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(script_running) {
+  Script* script = (Script*)JS_GetInstancePrivate(cx, obj, &script_class, NULL);
+  if (!script) return JS_TRUE;
+
+  vp.setBoolean(script->is_running());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(script_threadid) {
+  Script* script = (Script*)JS_GetInstancePrivate(cx, obj, &script_class, NULL);
+  if (!script) return JS_TRUE;
+
+  vp.setInt32(script->thread_id());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(script_memory) {
+  Script* script = (Script*)JS_GetInstancePrivate(cx, obj, &script_class, NULL);
+  if (!script) return JS_TRUE;
+
+  vp.setInt32(JS_GetGCParameter(script->runtime(), JSGC_BYTES));
   return JS_TRUE;
 }
 

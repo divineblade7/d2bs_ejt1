@@ -16,37 +16,66 @@ void presetunit_finalize(JSFreeOp*, JSObject* obj) {
   }
 }
 
-JSAPI_PROP(presetunit_getProperty) {
+JSAPI_PROP(presetunit_id) {
   myPresetUnit* pUnit = (myPresetUnit*)JS_GetPrivate(obj);
 
   if (!pUnit) return JS_TRUE;
 
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  switch (JSVAL_TO_INT(ID)) {
-    case PUNIT_TYPE:
-      vp.setInt32(pUnit->dwType);
-      break;
-    case PUNIT_ROOMX:
-      vp.setInt32(pUnit->dwRoomX);
-      break;
-    case PUNIT_ROOMY:
-      vp.setInt32(pUnit->dwRoomY);
-      break;
-    case PUNIT_X:
-      vp.setInt32(pUnit->dwPosX);
-      break;
-    case PUNIT_Y:
-      vp.setInt32(pUnit->dwPosY);
-      break;
-    case PUNIT_ID:
-      vp.setInt32(pUnit->dwId);
-      break;
-    case PUINT_LEVEL:
-      vp.setInt32(pUnit->dwLevel);
-    default:
-      break;
-  }
+  vp.setInt32(pUnit->dwId);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(presetunit_type) {
+  myPresetUnit* pUnit = (myPresetUnit*)JS_GetPrivate(obj);
+
+  if (!pUnit) return JS_TRUE;
+
+  vp.setInt32(pUnit->dwType);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(presetunit_level) {
+  myPresetUnit* pUnit = (myPresetUnit*)JS_GetPrivate(obj);
+
+  if (!pUnit) return JS_TRUE;
+
+  vp.setInt32(pUnit->dwLevel);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(presetunit_x) {
+  myPresetUnit* pUnit = (myPresetUnit*)JS_GetPrivate(obj);
+
+  if (!pUnit) return JS_TRUE;
+
+  vp.setInt32(pUnit->dwPosX);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(presetunit_y) {
+  myPresetUnit* pUnit = (myPresetUnit*)JS_GetPrivate(obj);
+
+  if (!pUnit) return JS_TRUE;
+
+  vp.setInt32(pUnit->dwPosY);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(presetunit_roomx) {
+  myPresetUnit* pUnit = (myPresetUnit*)JS_GetPrivate(obj);
+
+  if (!pUnit) return JS_TRUE;
+
+  vp.setInt32(pUnit->dwRoomX);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(presetunit_roomy) {
+  myPresetUnit* pUnit = (myPresetUnit*)JS_GetPrivate(obj);
+
+  if (!pUnit) return JS_TRUE;
+
+  vp.setInt32(pUnit->dwRoomY);
   return JS_TRUE;
 }
 

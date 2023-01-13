@@ -9,49 +9,93 @@
 
 EMPTY_CTOR(party)
 
-JSAPI_PROP(party_getProperty) {
+JSAPI_PROP(party_gid) {
   RosterUnit* pUnit = (RosterUnit*)JS_GetPrivate(obj);
 
   if (!pUnit) return JS_TRUE;
 
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  JS_BeginRequest(cx);
-  switch (JSVAL_TO_INT(ID)) {
-    case PARTY_NAME:
-      vp.setString(JS_NewStringCopyZ(cx, pUnit->szName));
-      break;
-    case PARTY_X:
-      vp.setInt32(pUnit->Xpos);
-      break;
-    case PARTY_Y:
-      vp.setInt32(pUnit->Ypos);
-      break;
-    case PARTY_AREA:
-      vp.setInt32(pUnit->dwLevelId);
-      break;
-    case PARTY_GID:
-      vp.setNumber((double)pUnit->dwUnitId);
-      break;
-    case PARTY_LIFE:
-      vp.setInt32(pUnit->dwPartyLife);
-      break;
-    case PARTY_CLASSID:
-      vp.setInt32(pUnit->dwClassId);
-      break;
-    case PARTY_LEVEL:
-      vp.setInt32(pUnit->wLevel);
-      break;
-    case PARTY_FLAG:
-      vp.setInt32(pUnit->dwPartyFlags);
-      break;
-    case PARTY_ID:
-      vp.setInt32(pUnit->wPartyId);
-      break;
-    default:
-      break;
-  }
-  JS_EndRequest(cx);
+  vp.setNumber((double)pUnit->dwUnitId);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(party_name) {
+  RosterUnit* pUnit = (RosterUnit*)JS_GetPrivate(obj);
+
+  if (!pUnit) return JS_TRUE;
+
+  vp.setString(JS_NewStringCopyZ(cx, pUnit->szName));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(party_classid) {
+  RosterUnit* pUnit = (RosterUnit*)JS_GetPrivate(obj);
+
+  if (!pUnit) return JS_TRUE;
+
+  vp.setInt32(pUnit->dwClassId);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(party_area) {
+  RosterUnit* pUnit = (RosterUnit*)JS_GetPrivate(obj);
+
+  if (!pUnit) return JS_TRUE;
+
+  vp.setInt32(pUnit->dwLevelId);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(party_level) {
+  RosterUnit* pUnit = (RosterUnit*)JS_GetPrivate(obj);
+
+  if (!pUnit) return JS_TRUE;
+
+  vp.setInt32(pUnit->wLevel);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(party_x) {
+  RosterUnit* pUnit = (RosterUnit*)JS_GetPrivate(obj);
+
+  if (!pUnit) return JS_TRUE;
+
+  vp.setInt32(pUnit->Xpos);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(party_y) {
+  RosterUnit* pUnit = (RosterUnit*)JS_GetPrivate(obj);
+
+  if (!pUnit) return JS_TRUE;
+
+  vp.setInt32(pUnit->Ypos);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(party_life) {
+  RosterUnit* pUnit = (RosterUnit*)JS_GetPrivate(obj);
+
+  if (!pUnit) return JS_TRUE;
+
+  vp.setInt32(pUnit->dwPartyLife);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(party_partyflag) {
+  RosterUnit* pUnit = (RosterUnit*)JS_GetPrivate(obj);
+
+  if (!pUnit) return JS_TRUE;
+
+  vp.setInt32(pUnit->dwPartyFlags);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(party_partyid) {
+  RosterUnit* pUnit = (RosterUnit*)JS_GetPrivate(obj);
+
+  if (!pUnit) return JS_TRUE;
+
+  vp.setInt32(pUnit->wPartyId);
   return JS_TRUE;
 }
 

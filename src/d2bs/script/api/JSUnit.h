@@ -5,7 +5,128 @@
 
 #include <windows.h>
 
+struct myUnit {
+  DWORD _dwPrivateType;
+  DWORD dwUnitId;
+  DWORD dwClassId;
+  DWORD dwType;
+  DWORD dwMode;
+  char szName[128]{};
+};
+
+struct invUnit {
+  DWORD _dwPrivateType;
+  DWORD dwUnitId;
+  DWORD dwClassId;
+  DWORD dwType;
+  DWORD dwMode;
+  char szName[128]{};
+  DWORD dwOwnerId;
+  DWORD dwOwnerType;
+};
+
 CLASS_CTOR(unit);
+void unit_finalize(JSFreeOp* fop, JSObject* obj);
+
+JSAPI_PROP(me_account);
+JSAPI_PROP(me_charname);
+JSAPI_PROP(me_diff);
+JSAPI_PROP(me_maxdiff);
+JSAPI_PROP(me_gamename);
+JSAPI_PROP(me_gamepassword);
+JSAPI_PROP(me_gameserverip);
+JSAPI_PROP(me_gamestarttime);
+JSAPI_PROP(me_gametype);
+JSAPI_PROP(me_itemoncursor);
+JSAPI_PROP(me_automap);
+JSAPI_STRICT_PROP(me_automap_setter);
+JSAPI_PROP(me_ladder);
+JSAPI_PROP(me_ping);
+JSAPI_PROP(me_fps);
+JSAPI_PROP(me_locale);
+JSAPI_PROP(me_playertype);
+JSAPI_PROP(me_realm);
+JSAPI_PROP(me_realmshort);
+JSAPI_PROP(me_mercrevivecost);
+JSAPI_PROP(me_runwalk);
+JSAPI_STRICT_PROP(me_runwalk_setter);
+JSAPI_PROP(me_weaponswitch);
+JSAPI_PROP(me_chickenhp);
+JSAPI_STRICT_PROP(me_chickenhp_setter);
+JSAPI_PROP(me_chickenmp);
+JSAPI_STRICT_PROP(me_chickenmp_setter);
+JSAPI_PROP(me_quitonhostile);
+JSAPI_STRICT_PROP(me_quitonhostile_setter);
+JSAPI_PROP(me_blockKeys);
+JSAPI_STRICT_PROP(me_blockKeys_setter);
+JSAPI_PROP(me_blockMouse);
+JSAPI_STRICT_PROP(me_blockMouse_setter);
+JSAPI_PROP(me_gameReady);
+JSAPI_PROP(me_profile);
+JSAPI_PROP(me_nopickup);
+JSAPI_STRICT_PROP(me_nopickup_setter);
+JSAPI_PROP(me_pid);
+JSAPI_PROP(me_unsupported);
+JSAPI_PROP(me_charflags);
+JSAPI_PROP(me_mapid);
+
+JSAPI_PROP(oog_screensize);
+JSAPI_PROP(oog_windowtitle);
+JSAPI_PROP(oog_ingame);
+JSAPI_PROP(oog_quitonerror);
+JSAPI_STRICT_PROP(oog_quitonerror_setter);
+JSAPI_PROP(oog_maxgametime);
+JSAPI_STRICT_PROP(oog_maxgametime_setter);
+
+JSAPI_PROP(unit_type);
+JSAPI_PROP(unit_classid);
+JSAPI_PROP(unit_mode);
+JSAPI_PROP(unit_name);
+JSAPI_PROP(unit_act);
+JSAPI_PROP(unit_gid);
+JSAPI_PROP(unit_x);
+JSAPI_PROP(unit_y);
+JSAPI_PROP(unit_targetx);
+JSAPI_PROP(unit_targety);
+JSAPI_PROP(unit_area);
+JSAPI_PROP(unit_hp);
+JSAPI_PROP(unit_hpmax);
+JSAPI_PROP(unit_mp);
+JSAPI_PROP(unit_mpmax);
+JSAPI_PROP(unit_stamina);
+JSAPI_PROP(unit_staminamax);
+JSAPI_PROP(unit_charlvl);
+JSAPI_PROP(unit_itemcount);
+JSAPI_PROP(unit_owner);
+JSAPI_PROP(unit_ownertype);
+JSAPI_PROP(unit_spectype);
+JSAPI_PROP(unit_direction);
+JSAPI_PROP(unit_uniqueid);
+
+JSAPI_PROP(item_code);
+JSAPI_PROP(item_prefix);
+JSAPI_PROP(item_suffix);
+JSAPI_PROP(item_prefixes);
+JSAPI_PROP(item_suffixes);
+JSAPI_PROP(item_prefixnum);
+JSAPI_PROP(item_suffixnum);
+JSAPI_PROP(item_prefixnums);
+JSAPI_PROP(item_suffixnums);
+JSAPI_PROP(item_fname);
+JSAPI_PROP(item_quality);
+JSAPI_PROP(item_node);
+JSAPI_PROP(item_location);
+JSAPI_PROP(item_sizex);
+JSAPI_PROP(item_sizey);
+JSAPI_PROP(item_type);
+JSAPI_PROP(item_description);
+JSAPI_PROP(item_bodylocation);
+JSAPI_PROP(item_ilvl);
+JSAPI_PROP(item_levelreq);
+JSAPI_PROP(item_gfx);
+
+JSAPI_PROP(object_type);
+JSAPI_PROP(object_locked);
 
 JSAPI_FUNC(unit_getUnit);
 JSAPI_FUNC(unit_getNext);
@@ -35,289 +156,194 @@ JSAPI_FUNC(unit_getMinionCount);
 JSAPI_FUNC(me_getRepairCost);
 JSAPI_FUNC(item_getItemCost);
 
-void unit_finalize(JSFreeOp* fop, JSObject* obj);
-
-JSAPI_PROP(unit_getProperty);
-JSAPI_STRICT_PROP(unit_setProperty);
-
-// JSBool unit_equal(JSContext* cx, JSObject* obj, JS::Value v, JSBool* bp);
-
-struct myUnit {
-  DWORD _dwPrivateType;
-  DWORD dwUnitId;
-  DWORD dwClassId;
-  DWORD dwType;
-  DWORD dwMode;
-  char szName[128]{};
-};
-
-struct invUnit {
-  DWORD _dwPrivateType;
-  DWORD dwUnitId;
-  DWORD dwClassId;
-  DWORD dwType;
-  DWORD dwMode;
-  char szName[128]{};
-  DWORD dwOwnerId;
-  DWORD dwOwnerType;
-};
-
-enum unit_tinyid {
-  UNIT_TYPE,
-  UNIT_CLASSID,
-  UNIT_ID,
-  UNIT_MODE,
-  UNIT_NAME,
-  UNIT_BUSY,
-  UNIT_ACT,
-  UNIT_XPOS,
-  UNIT_YPOS,
-  ME_WSWITCH,
-  UNIT_AREA,
-  UNIT_HP,
-  UNIT_HPMAX,
-  UNIT_MP,
-  UNIT_MPMAX,
-  UNIT_STAMINA,
-  UNIT_STAMINAMAX,
-  UNIT_CHARLVL,
-  ME_RUNWALK,
-  ITEM_CODE,
-  ITEM_PREFIX,
-  ITEM_SUFFIX,
-  ITEM_FNAME,
-  ITEM_QUALITY,
-  ITEM_NODE,
-  UNIT_SELECTABLE,
-  ITEM_LOC,
-  ITEM_SIZEX,
-  ITEM_SIZEY,
-  ITEM_TYPE,
-  MISSILE_DIR,
-  MISSILE_VEL,
-  ITEM_CLASS,
-  UNIT_SPECTYPE,
-  ITEM_DESC,
-  ITEM_BODYLOCATION,
-  UNIT_ITEMCOUNT,
-  ITEM_LEVELREQ,
-  UNIT_OWNER,
-  UNIT_OWNERTYPE,
-  UNIT_UNIQUEID,
-  ITEM_LEVEL,
-  UNIT_DIRECTION,
-  ITEM_SUFFIXNUM,
-  ITEM_PREFIXNUM,
-  ITEM_PREFIXES,
-  ITEM_SUFFIXES,
-  ITEM_SUFFIXNUMS,
-  ITEM_PREFIXNUMS,
-  ITEM_GFX,
-  OBJECT_TYPE,
-  OBJECT_LOCKED,
-  UNIT_TARGETX,
-  UNIT_TARGETY
-};
-
-enum me_tinyid {
-  ME_ACCOUNT = 90,
-  ME_CHARNAME,
-  ME_CHICKENHP,
-  ME_CHICKENMP,
-  ME_DIFF,
-  ME_MAXDIFF,
-  ME_GAMENAME,
-  ME_GAMEPASSWORD,
-  ME_GAMESERVERIP,
-  ME_GAMESTARTTIME,
-  ME_GAMETYPE,
-  ME_ITEMONCURSOR,
-  ME_AUTOMAP,
-  ME_LADDER,
-  ME_PING,
-  ME_FPS,
-  ME_LOCALE,
-  ME_PLAYERTYPE,
-  ME_QUITONHOSTILE,
-  ME_REALM,
-  ME_REALMSHORT,
-  ME_MERCREVIVECOST,
-  ME_MAPID,
-  OOG_WINDOWTITLE,
-  OOG_SCREENSIZE,
-  OOG_INGAME,
-  OOG_QUITONERROR,
-  OOG_MAXGAMETIME,
-  ME_BLOCKKEYS,
-  ME_BLOCKMOUSE,
-  ME_GAMEREADY,
-  ME_PROFILE,
-  ME_NOPICKUP,
-  ME_PID,
-  ME_UNSUPPORTED,
-  ME_CHARFLAGS
-};
-
+// clang-format off
 static JSPropertySpec me_props[] = {
-    {"account", ME_ACCOUNT, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"charname", ME_CHARNAME, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"diff", ME_DIFF, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"maxdiff", ME_MAXDIFF, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"gamename", ME_GAMENAME, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"gamepassword", ME_GAMEPASSWORD, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"gameserverip", ME_GAMESERVERIP, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"gamestarttime", ME_GAMESTARTTIME, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"gametype", ME_GAMETYPE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"itemoncursor", ME_ITEMONCURSOR, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"automap", ME_AUTOMAP, JSPROP_STATIC_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_WRAPPER(unit_setProperty)},
-    {"ladder", ME_LADDER, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"ping", ME_PING, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"fps", ME_FPS, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"locale", ME_LOCALE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"playertype", ME_PLAYERTYPE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"realm", ME_REALM, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"realmshort", ME_REALMSHORT, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"mercrevivecost", ME_MERCREVIVECOST, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"runwalk", ME_RUNWALK, JSPROP_STATIC_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_WRAPPER(unit_setProperty)},
-    {"weaponswitch", ME_WSWITCH, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"chickenhp", ME_CHICKENHP, JSPROP_STATIC_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_WRAPPER(unit_setProperty)},
-    {"chickenmp", ME_CHICKENMP, JSPROP_STATIC_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_WRAPPER(unit_setProperty)},
-    {"quitonhostile", ME_QUITONHOSTILE, JSPROP_STATIC_VAR, JSOP_WRAPPER(unit_getProperty),
-     JSOP_WRAPPER(unit_setProperty)},
-    {"blockKeys", ME_BLOCKKEYS, JSPROP_STATIC_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_WRAPPER(unit_setProperty)},
-    {"blockMouse", ME_BLOCKMOUSE, JSPROP_STATIC_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_WRAPPER(unit_setProperty)},
-    {"gameReady", ME_GAMEREADY, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"profile", ME_PROFILE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"nopickup", ME_NOPICKUP, JSPROP_STATIC_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_WRAPPER(unit_setProperty)},
-    {"pid", ME_PID, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"unsupported", ME_UNSUPPORTED, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"charflags", ME_CHARFLAGS, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
+  JS_PSG("account",             me_account,             JSPROP_PERMANENT_VAR),
+  JS_PSG("charname",            me_charname,            JSPROP_PERMANENT_VAR),
+  JS_PSG("diff",                me_diff,                JSPROP_PERMANENT_VAR),
+  JS_PSG("maxdiff",             me_maxdiff,             JSPROP_PERMANENT_VAR),
+  JS_PSG("gamename",            me_gamename,            JSPROP_PERMANENT_VAR),
+  JS_PSG("gamepassword",        me_gamepassword,        JSPROP_PERMANENT_VAR),
+  JS_PSG("gameserverip",        me_gameserverip,        JSPROP_PERMANENT_VAR),
+  JS_PSG("gamestarttime",       me_gamestarttime,       JSPROP_PERMANENT_VAR),
+  JS_PSG("gametype",            me_gametype,            JSPROP_PERMANENT_VAR),
+  JS_PSG("itemoncursor",        me_itemoncursor,        JSPROP_PERMANENT_VAR),
+  JS_PSGS("automap",            me_automap,             me_automap_setter,          JSPROP_STATIC_VAR),
+  JS_PSG("ladder",              me_ladder,              JSPROP_PERMANENT_VAR),
+  JS_PSG("ping",                me_ping,                JSPROP_PERMANENT_VAR),
+  JS_PSG("fps",                 me_fps,                 JSPROP_PERMANENT_VAR),
+  JS_PSG("locale",              me_locale,              JSPROP_PERMANENT_VAR),
+  JS_PSG("playertype",          me_playertype,          JSPROP_PERMANENT_VAR),
+  JS_PSG("realm",               me_realm,               JSPROP_PERMANENT_VAR),
+  JS_PSG("realmshort",          me_realmshort,          JSPROP_PERMANENT_VAR),
+  JS_PSG("mercrevivecost",      me_mercrevivecost,      JSPROP_PERMANENT_VAR),
+  JS_PSGS("runwalk",            me_runwalk,             me_runwalk_setter,          JSPROP_STATIC_VAR),
+  JS_PSG("weaponswitch",        me_weaponswitch,        JSPROP_PERMANENT_VAR),
+  JS_PSGS("chickenhp",          me_chickenhp,           me_chickenhp_setter,        JSPROP_STATIC_VAR),
+  JS_PSGS("chickenmp",          me_chickenmp,           me_chickenmp_setter,        JSPROP_STATIC_VAR),
+  JS_PSGS("quitonhostile",      me_quitonhostile,       me_quitonhostile_setter,    JSPROP_STATIC_VAR),
+  JS_PSGS("blockKeys",          me_blockKeys,           me_blockKeys_setter,        JSPROP_STATIC_VAR),
+  JS_PSGS("blockMouse",         me_blockMouse,          me_blockMouse_setter,       JSPROP_STATIC_VAR),
+  JS_PSG("gameReady",           me_gameReady,           JSPROP_PERMANENT_VAR),
+  JS_PSG("profile",             me_profile,             JSPROP_PERMANENT_VAR),
+  JS_PSGS("nopickup",           me_nopickup,            me_nopickup_setter,         JSPROP_STATIC_VAR),
+  JS_PSG("pid",                 me_pid,                 JSPROP_PERMANENT_VAR),
+  JS_PSG("unsupported",         me_unsupported,         JSPROP_PERMANENT_VAR),
+  JS_PSG("charflags",           me_charflags,           JSPROP_PERMANENT_VAR),
+  JS_PSG("mapid",               me_mapid,               JSPROP_PERMANENT_VAR),
 
-    {"screensize", OOG_SCREENSIZE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"windowtitle", OOG_WINDOWTITLE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"ingame", OOG_INGAME, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"quitonerror", OOG_QUITONERROR, JSPROP_STATIC_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_WRAPPER(unit_setProperty)},
-    {"maxgametime", OOG_MAXGAMETIME, JSPROP_STATIC_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_WRAPPER(unit_setProperty)},
+  JS_PSG("screensize",          oog_screensize,         JSPROP_PERMANENT_VAR),
+  JS_PSG("windowtitle",         oog_windowtitle,        JSPROP_PERMANENT_VAR),
+  JS_PSG("ingame",              oog_ingame,             JSPROP_PERMANENT_VAR),
+  JS_PSGS("quitonerror",        oog_quitonerror,        oog_quitonerror_setter,     JSPROP_STATIC_VAR),
+  JS_PSGS("maxgametime",        oog_maxgametime,        oog_maxgametime_setter,     JSPROP_STATIC_VAR),
 
-    {"type", UNIT_TYPE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"classid", UNIT_CLASSID, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"mode", UNIT_MODE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"name", UNIT_NAME, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"mapid", ME_MAPID, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"act", UNIT_ACT, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"gid", UNIT_ID, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"x", UNIT_XPOS, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"y", UNIT_YPOS, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"targetx", UNIT_TARGETX, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"targety", UNIT_TARGETY, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"area", UNIT_AREA, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"hp", UNIT_HP, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"hpmax", UNIT_HPMAX, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"mp", UNIT_MP, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"mpmax", UNIT_MPMAX, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"stamina", UNIT_STAMINA, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"staminamax", UNIT_STAMINAMAX, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"charlvl", UNIT_CHARLVL, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"itemcount", UNIT_ITEMCOUNT, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"owner", UNIT_OWNER, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"ownertype", UNIT_OWNERTYPE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"spectype", UNIT_SPECTYPE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"direction", UNIT_DIRECTION, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
+  JS_PSG("type",                unit_type,              JSPROP_PERMANENT_VAR),
+  JS_PSG("classid",             unit_classid,           JSPROP_PERMANENT_VAR),
+  JS_PSG("mode",                unit_mode,              JSPROP_PERMANENT_VAR),
+  JS_PSG("name",                unit_name,              JSPROP_PERMANENT_VAR),
+  JS_PSG("act",                 unit_act,               JSPROP_PERMANENT_VAR),
+  JS_PSG("gid",                 unit_gid,               JSPROP_PERMANENT_VAR),
+  JS_PSG("x",                   unit_x,                 JSPROP_PERMANENT_VAR),
+  JS_PSG("y",                   unit_y,                 JSPROP_PERMANENT_VAR),
+  JS_PSG("targetx",             unit_targetx,           JSPROP_PERMANENT_VAR),
+  JS_PSG("targety",             unit_targety,           JSPROP_PERMANENT_VAR),
+  JS_PSG("area",                unit_area,              JSPROP_PERMANENT_VAR),
+  JS_PSG("hp",                  unit_hp,                JSPROP_PERMANENT_VAR),
+  JS_PSG("hpmax",               unit_hpmax,             JSPROP_PERMANENT_VAR),
+  JS_PSG("mp",                  unit_mp,                JSPROP_PERMANENT_VAR),
+  JS_PSG("mpmax",               unit_mpmax,             JSPROP_PERMANENT_VAR),
+  JS_PSG("stamina",             unit_stamina,           JSPROP_PERMANENT_VAR),
+  JS_PSG("staminamax",          unit_staminamax,        JSPROP_PERMANENT_VAR),
+  JS_PSG("charlvl",             unit_charlvl,           JSPROP_PERMANENT_VAR),
+  JS_PSG("itemcount",           unit_itemcount,         JSPROP_PERMANENT_VAR),
+  JS_PSG("owner",               unit_owner,             JSPROP_PERMANENT_VAR),
+  JS_PSG("ownertype",           unit_ownertype,         JSPROP_PERMANENT_VAR),
+  JS_PSG("spectype",            unit_spectype,          JSPROP_PERMANENT_VAR),
+  JS_PSG("direction",           unit_direction,         JSPROP_PERMANENT_VAR),
 
-    {"code", ITEM_CODE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"prefix", ITEM_PREFIX, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"suffix", ITEM_SUFFIX, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"prefixes", ITEM_PREFIXES, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"suffixes", ITEM_SUFFIXES, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"prefixnum", ITEM_PREFIXNUM, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"suffixnum", ITEM_SUFFIXNUM, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"prefixnums", ITEM_PREFIXNUMS, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"suffixnums", ITEM_SUFFIXNUMS, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"fname", ITEM_FNAME, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"quality", ITEM_QUALITY, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"node", ITEM_NODE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"location", ITEM_LOC, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"sizex", ITEM_SIZEX, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"sizey", ITEM_SIZEY, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"itemType", ITEM_TYPE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"description", ITEM_DESC, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"bodylocation", ITEM_BODYLOCATION, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"ilvl", ITEM_LEVEL, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
+  JS_PSG("code",                item_code,              JSPROP_PERMANENT_VAR),
+  JS_PSG("prefix",              item_prefix,            JSPROP_PERMANENT_VAR),
+  JS_PSG("suffix",              item_suffix,            JSPROP_PERMANENT_VAR),
+  JS_PSG("prefixes",            item_prefixes,          JSPROP_PERMANENT_VAR),
+  JS_PSG("suffixes",            item_suffixes,          JSPROP_PERMANENT_VAR),
+  JS_PSG("prefixnum",           item_prefixnum,         JSPROP_PERMANENT_VAR),
+  JS_PSG("suffixnum",           item_suffixnum,         JSPROP_PERMANENT_VAR),
+  JS_PSG("prefixnums",          item_prefixnums,        JSPROP_PERMANENT_VAR),
+  JS_PSG("suffixnums",          item_suffixnums,        JSPROP_PERMANENT_VAR),
+  JS_PSG("fname",               item_fname,             JSPROP_PERMANENT_VAR),
+  JS_PSG("quality",             item_quality,           JSPROP_PERMANENT_VAR),
+  JS_PSG("node",                item_node,              JSPROP_PERMANENT_VAR),
+  JS_PSG("location",            item_location,          JSPROP_PERMANENT_VAR),
+  JS_PSG("sizex",               item_sizex,             JSPROP_PERMANENT_VAR),
+  JS_PSG("sizey",               item_sizey,             JSPROP_PERMANENT_VAR),
+  JS_PSG("itemType",            item_type,              JSPROP_PERMANENT_VAR),
+  JS_PSG("description",         item_description,       JSPROP_PERMANENT_VAR),
+  JS_PSG("bodylocation",        item_bodylocation,      JSPROP_PERMANENT_VAR),
+  JS_PSG("ilvl",                item_ilvl,              JSPROP_PERMANENT_VAR),
+  JS_PS_END
+};
 
 static JSPropertySpec unit_props[] = {
-    {"type", UNIT_TYPE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"classid", UNIT_CLASSID, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"mode", UNIT_MODE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"name", UNIT_NAME, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"act", UNIT_ACT, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"gid", UNIT_ID, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"x", UNIT_XPOS, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"y", UNIT_YPOS, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"targetx", UNIT_TARGETX, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"targety", UNIT_TARGETY, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"area", UNIT_AREA, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"hp", UNIT_HP, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"hpmax", UNIT_HPMAX, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"mp", UNIT_MP, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"mpmax", UNIT_MPMAX, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"stamina", UNIT_STAMINA, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"staminamax", UNIT_STAMINAMAX, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"charlvl", UNIT_CHARLVL, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"itemcount", UNIT_ITEMCOUNT, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"owner", UNIT_OWNER, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"ownertype", UNIT_OWNERTYPE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"spectype", UNIT_SPECTYPE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"direction", UNIT_DIRECTION, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"uniqueid", UNIT_UNIQUEID, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
+  // why??
+  JS_PSG("runwalk",             me_runwalk,             JSPROP_PERMANENT_VAR),
+  JS_PSG("weaponswitch",        me_weaponswitch,        JSPROP_PERMANENT_VAR),
 
-    {"code", ITEM_CODE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"prefix", ITEM_PREFIX, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"suffix", ITEM_SUFFIX, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"prefixes", ITEM_PREFIXES, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"suffixes", ITEM_SUFFIXES, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"prefixnum", ITEM_PREFIXNUM, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"suffixnum", ITEM_SUFFIXNUM, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"prefixnums", ITEM_PREFIXNUMS, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"suffixnums", ITEM_SUFFIXNUMS, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"fname", ITEM_FNAME, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"quality", ITEM_QUALITY, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"node", ITEM_NODE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"location", ITEM_LOC, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"sizex", ITEM_SIZEX, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"sizey", ITEM_SIZEY, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"itemType", ITEM_TYPE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"description", ITEM_DESC, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"bodylocation", ITEM_BODYLOCATION, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"ilvl", ITEM_LEVEL, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"lvlreq", ITEM_LEVELREQ, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"gfx", ITEM_GFX, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
+  JS_PSG("type",                unit_type,              JSPROP_PERMANENT_VAR),
+  JS_PSG("classid",             unit_classid,           JSPROP_PERMANENT_VAR),
+  JS_PSG("mode",                unit_mode,              JSPROP_PERMANENT_VAR),
+  JS_PSG("name",                unit_name,              JSPROP_PERMANENT_VAR),
+  JS_PSG("act",                 unit_act,               JSPROP_PERMANENT_VAR),
+  JS_PSG("gid",                 unit_gid,               JSPROP_PERMANENT_VAR),
+  JS_PSG("x",                   unit_x,                 JSPROP_PERMANENT_VAR),
+  JS_PSG("y",                   unit_y,                 JSPROP_PERMANENT_VAR),
+  JS_PSG("targetx",             unit_targetx,           JSPROP_PERMANENT_VAR),
+  JS_PSG("targety",             unit_targety,           JSPROP_PERMANENT_VAR),
+  JS_PSG("area",                unit_area,              JSPROP_PERMANENT_VAR),
+  JS_PSG("hp",                  unit_hp,                JSPROP_PERMANENT_VAR),
+  JS_PSG("hpmax",               unit_hpmax,             JSPROP_PERMANENT_VAR),
+  JS_PSG("mp",                  unit_mp,                JSPROP_PERMANENT_VAR),
+  JS_PSG("mpmax",               unit_mpmax,             JSPROP_PERMANENT_VAR),
+  JS_PSG("stamina",             unit_stamina,           JSPROP_PERMANENT_VAR),
+  JS_PSG("staminamax",          unit_staminamax,        JSPROP_PERMANENT_VAR),
+  JS_PSG("charlvl",             unit_charlvl,           JSPROP_PERMANENT_VAR),
+  JS_PSG("itemcount",           unit_itemcount,         JSPROP_PERMANENT_VAR),
+  JS_PSG("owner",               unit_owner,             JSPROP_PERMANENT_VAR),
+  JS_PSG("ownertype",           unit_ownertype,         JSPROP_PERMANENT_VAR),
+  JS_PSG("spectype",            unit_spectype,          JSPROP_PERMANENT_VAR),
+  JS_PSG("direction",           unit_direction,         JSPROP_PERMANENT_VAR),
+  JS_PSG("uniqueid",            unit_uniqueid,          JSPROP_PERMANENT_VAR),
 
-    {"runwalk", ME_RUNWALK, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"weaponswitch", ME_WSWITCH, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
+  JS_PSG("code",                item_code,              JSPROP_PERMANENT_VAR),
+  JS_PSG("prefix",              item_prefix,            JSPROP_PERMANENT_VAR),
+  JS_PSG("suffix",              item_suffix,            JSPROP_PERMANENT_VAR),
+  JS_PSG("prefixes",            item_prefixes,          JSPROP_PERMANENT_VAR),
+  JS_PSG("suffixes",            item_suffixes,          JSPROP_PERMANENT_VAR),
+  JS_PSG("prefixnum",           item_prefixnum,         JSPROP_PERMANENT_VAR),
+  JS_PSG("suffixnum",           item_suffixnum,         JSPROP_PERMANENT_VAR),
+  JS_PSG("prefixnums",          item_prefixnums,        JSPROP_PERMANENT_VAR),
+  JS_PSG("suffixnums",          item_suffixnums,        JSPROP_PERMANENT_VAR),
+  JS_PSG("fname",               item_fname,             JSPROP_PERMANENT_VAR),
+  JS_PSG("quality",             item_quality,           JSPROP_PERMANENT_VAR),
+  JS_PSG("node",                item_node,              JSPROP_PERMANENT_VAR),
+  JS_PSG("location",            item_location,          JSPROP_PERMANENT_VAR),
+  JS_PSG("sizex",               item_sizex,             JSPROP_PERMANENT_VAR),
+  JS_PSG("sizey",               item_sizey,             JSPROP_PERMANENT_VAR),
+  JS_PSG("itemType",            item_type,              JSPROP_PERMANENT_VAR),
+  JS_PSG("description",         item_description,       JSPROP_PERMANENT_VAR),
+  JS_PSG("bodylocation",        item_bodylocation,      JSPROP_PERMANENT_VAR),
+  JS_PSG("ilvl",                item_ilvl,              JSPROP_PERMANENT_VAR),
+  JS_PSG("lvlreq",              item_levelreq,          JSPROP_PERMANENT_VAR),
+  JS_PSG("gfx",                 item_gfx,               JSPROP_PERMANENT_VAR),
 
-    {"objtype", OBJECT_TYPE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {"islocked", OBJECT_LOCKED, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(unit_getProperty), JSOP_NULLWRAPPER},
-    {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
+  JS_PSG("objtype",             object_type,            JSPROP_PERMANENT_VAR),
+  JS_PSG("islocked",            object_locked,          JSPROP_PERMANENT_VAR),
+  JS_PS_END
+};
 
 static JSFunctionSpec unit_methods[] = {
-    JS_FS("getNext", unit_getNext, 0, FUNCTION_FLAGS), JS_FS("cancel", unit_cancel, 0, FUNCTION_FLAGS),
-    JS_FS("repair", unit_repair, 0, FUNCTION_FLAGS), JS_FS("useMenu", unit_useMenu, 0, FUNCTION_FLAGS),
-    JS_FS("interact", unit_interact, 0, FUNCTION_FLAGS), JS_FS("getItem", unit_getItem, 3, FUNCTION_FLAGS),
-    JS_FS("getItems", unit_getItems, 0, FUNCTION_FLAGS), JS_FS("getMerc", unit_getMerc, 0, FUNCTION_FLAGS),
-    JS_FS("getMercHP", unit_getMercHP, 0, FUNCTION_FLAGS), JS_FS("getSkill", unit_getSkill, 0, FUNCTION_FLAGS),
-    JS_FS("getParent", unit_getParent, 0, FUNCTION_FLAGS), JS_FS("overhead", my_overhead, 0, FUNCTION_FLAGS),
-    JS_FS("revive", my_revive, 0, FUNCTION_FLAGS), JS_FS("getFlags", item_getFlags, 1, FUNCTION_FLAGS),
-    JS_FS("getFlag", item_getFlag, 1, FUNCTION_FLAGS), JS_FS("getStat", unit_getStat, 1, FUNCTION_FLAGS),
-    JS_FS("getState", unit_getState, 1, FUNCTION_FLAGS),
-    //	{"geSPrice",		item_getPrice,		1},
-    JS_FS("getEnchant", unit_getEnchant, 1, FUNCTION_FLAGS), JS_FS("shop", item_shop, 2, FUNCTION_FLAGS),
-    JS_FS("setSkill", unit_setskill, 2, FUNCTION_FLAGS), JS_FS("move", unit_move, 2, FUNCTION_FLAGS),
-    JS_FS("getQuest", unit_getQuest, 2, FUNCTION_FLAGS),
-    JS_FS("getMinionCount", unit_getMinionCount, 1, FUNCTION_FLAGS),
-    JS_FS("getRepairCost", me_getRepairCost, 1, FUNCTION_FLAGS),
-    JS_FS("getItemCost", item_getItemCost, 1, FUNCTION_FLAGS), JS_FS_END};
+  JS_FS("getNext",              unit_getNext,           0, FUNCTION_FLAGS),
+  JS_FS("cancel",               unit_cancel,            0, FUNCTION_FLAGS),
+  JS_FS("repair",               unit_repair,            0, FUNCTION_FLAGS),
+  JS_FS("useMenu",              unit_useMenu,           0, FUNCTION_FLAGS),
+  JS_FS("interact",             unit_interact,          0, FUNCTION_FLAGS),
+  JS_FS("getItem",              unit_getItem,           3, FUNCTION_FLAGS),
+  JS_FS("getItems",             unit_getItems,          0, FUNCTION_FLAGS),
+  JS_FS("getMerc",              unit_getMerc,           0, FUNCTION_FLAGS),
+  JS_FS("getMercHP",            unit_getMercHP,         0, FUNCTION_FLAGS),
+  JS_FS("getSkill",             unit_getSkill,          0, FUNCTION_FLAGS),
+  JS_FS("getParent",            unit_getParent,         0, FUNCTION_FLAGS),
+  JS_FS("overhead",             my_overhead,            0, FUNCTION_FLAGS),
+  JS_FS("revive",               my_revive,              0, FUNCTION_FLAGS),
+  JS_FS("getFlags",             item_getFlags,          1, FUNCTION_FLAGS),
+  JS_FS("getFlag",              item_getFlag,           1, FUNCTION_FLAGS),
+  JS_FS("getStat",              unit_getStat,           1, FUNCTION_FLAGS),
+  JS_FS("getState",             unit_getState,          1, FUNCTION_FLAGS),
+  JS_FS("getEnchant",           unit_getEnchant,        1, FUNCTION_FLAGS),
+  JS_FS("shop",                 item_shop,              2, FUNCTION_FLAGS),
+  JS_FS("setSkill",             unit_setskill,          2, FUNCTION_FLAGS),
+  JS_FS("move",                 unit_move,              2, FUNCTION_FLAGS),
+  JS_FS("getQuest",             unit_getQuest,          2, FUNCTION_FLAGS),
+  JS_FS("getMinionCount",       unit_getMinionCount,    1, FUNCTION_FLAGS),
+  JS_FS("getRepairCost",        me_getRepairCost,       1, FUNCTION_FLAGS),
+  JS_FS("getItemCost",          item_getItemCost,       1, FUNCTION_FLAGS),
+  JS_FS_END
+};
+// clang-format on
 
-static JSClass unit_class = {"Unit", JSCLASS_HAS_PRIVATE,
-                             JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-                                          JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, unit_finalize, unit_ctor)};
+static JSClass unit_class{
+    "Unit",                                 // name
+    JSCLASS_HAS_PRIVATE,                    // flags
+    JSCLASS_METHODS(JS_PropertyStub,        // addProperty
+                    JS_PropertyStub,        // delProperty
+                    JS_PropertyStub,        // getProperty
+                    JS_StrictPropertyStub,  // setProperty
+                    JS_EnumerateStub,       // enumerate
+                    JS_ResolveStub,         // resolve
+                    JS_ConvertStub,         // mayResolve
+                    unit_finalize,          // finalize
+                    nullptr,                // call
+                    nullptr,                // hasInstance
+                    unit_ctor,              // construct
+                    nullptr)                // trace
+};

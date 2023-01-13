@@ -207,15 +207,15 @@ DWORD FillBaseStat(JSContext* cx, JS::Value* argv, int table, int row, int colum
       szBuffer = new char[(pTable[column].dwFieldLength + 1)];
       memset(szBuffer, NULL, pTable[column].dwFieldLength + 1);
       if (!FillBaseStat(table, row, column, szBuffer, pTable[column].dwFieldLength + 1))
-        (*argv) = JSVAL_VOID;
+        (*argv) = JS::UndefinedValue();
       else
-        (*argv) = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, szBuffer));
+        (*argv) = JS::StringValue(JS_NewStringCopyZ(cx, szBuffer));
       delete[] szBuffer;
       return TRUE;
 
     case FIELDTYPE_DATA_DWORD:
       if (!FillBaseStat(table, row, column, &dwBuffer, sizeof(DWORD)))
-        (*argv) = JSVAL_VOID;
+        (*argv) = JS::UndefinedValue();
       else
         *argv = JS_NumberValue((double)dwBuffer);
       return TRUE;
@@ -225,7 +225,7 @@ DWORD FillBaseStat(JSContext* cx, JS::Value* argv, int table, int row, int colum
     case FIELDTYPE_DATA_DWORD_2:
     case FIELDTYPE_UNKNOWN_11:
       if (!FillBaseStat(table, row, column, &dwBuffer, sizeof(DWORD)))
-        (*argv) = JSVAL_VOID;
+        (*argv) = JS::UndefinedValue();
       else
         *argv = JS_NumberValue((long)dwBuffer);
       return TRUE;
@@ -238,25 +238,25 @@ DWORD FillBaseStat(JSContext* cx, JS::Value* argv, int table, int row, int colum
     case FIELDTYPE_DATA_WORD:
     case FIELDTYPE_CODE_TO_WORD:
       if (!FillBaseStat(table, row, column, &wBuffer, sizeof(WORD)))
-        (*argv) = JSVAL_VOID;
+        (*argv) = JS::UndefinedValue();
       else
-        (*argv) = INT_TO_JSVAL(wBuffer);
+        (*argv) = JS::Int32Value(wBuffer);
       return TRUE;
 
     case FIELDTYPE_CODE_TO_BYTE:
     case FIELDTYPE_DATA_BYTE_2:
     case FIELDTYPE_DATA_BYTE:
       if (!FillBaseStat(table, row, column, &dwBuffer, dwHelperSize))
-        (*argv) = JSVAL_VOID;
+        (*argv) = JS::UndefinedValue();
       else
-        (*argv) = INT_TO_JSVAL(dwBuffer);
+        (*argv) = JS::Int32Value(dwBuffer);
       return TRUE;
 
     case FIELDTYPE_DATA_BIT:
       if (!FillBaseStat(table, row, column, &dwBuffer, sizeof(DWORD)))
-        (*argv) = JSVAL_VOID;
+        (*argv) = JS::UndefinedValue();
       else
-        (*argv) = INT_TO_JSVAL(dwBuffer);
+        (*argv) = JS::Int32Value(dwBuffer);
       //(*argv) = (BOOLEAN_TO_JSVAL(!!dwBuffer) ? 1 : 0);
       return TRUE;
 
@@ -265,9 +265,9 @@ DWORD FillBaseStat(JSContext* cx, JS::Value* argv, int table, int row, int colum
       szBuffer = new char[5];
       memset(szBuffer, NULL, 5);
       if (!FillBaseStat(table, row, column, szBuffer, 5))
-        (*argv) = JSVAL_VOID;
+        (*argv) = JS::UndefinedValue();
       else
-        (*argv) = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, szBuffer));
+        (*argv) = JS::StringValue(JS_NewStringCopyZ(cx, szBuffer));
       delete[] szBuffer;
       return TRUE;
 

@@ -3,40 +3,55 @@
 #include "d2bs/script/js32.h"
 
 CLASS_CTOR(party);
-JSAPI_PROP(party_getProperty);
+
+JSAPI_PROP(party_gid);
+JSAPI_PROP(party_name);
+JSAPI_PROP(party_classid);
+JSAPI_PROP(party_area);
+JSAPI_PROP(party_level);
+JSAPI_PROP(party_x);
+JSAPI_PROP(party_y);
+JSAPI_PROP(party_life);
+JSAPI_PROP(party_partyflag);
+JSAPI_PROP(party_partyid);
 
 JSAPI_FUNC(party_getNext);
-
 JSAPI_FUNC(my_getParty);
 
-enum party_tinyid {
-  PARTY_AREA,
-  PARTY_X,
-  PARTY_Y,
-  PARTY_GID,
-  PARTY_LIFE,
-  PARTY_NAME,
-  PARTY_FLAG,
-  PARTY_ID,
-  PARTY_CLASSID,
-  PARTY_LEVEL
+// clang-format off
+static JSPropertySpec party_props[] = {
+  JS_PSG("gid",           party_gid,            JSPROP_PERMANENT_VAR),
+  JS_PSG("name",          party_name,           JSPROP_PERMANENT_VAR),
+  JS_PSG("classid",       party_classid,        JSPROP_PERMANENT_VAR),
+  JS_PSG("area",          party_area,           JSPROP_PERMANENT_VAR),
+  JS_PSG("level",         party_level,          JSPROP_PERMANENT_VAR),
+  JS_PSG("x",             party_x,              JSPROP_PERMANENT_VAR),
+  JS_PSG("y",             party_y,              JSPROP_PERMANENT_VAR),
+  JS_PSG("life",          party_life,           JSPROP_PERMANENT_VAR),
+  JS_PSG("partyflag",     party_partyflag,      JSPROP_PERMANENT_VAR),
+  JS_PSG("partyid",       party_partyid,        JSPROP_PERMANENT_VAR),
+  JS_PS_END
 };
 
-static JSPropertySpec party_props[] = {
-    {"x", PARTY_X, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(party_getProperty), JSOP_NULLWRAPPER},
-    {"y", PARTY_Y, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(party_getProperty), JSOP_NULLWRAPPER},
-    {"area", PARTY_AREA, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(party_getProperty), JSOP_NULLWRAPPER},
-    {"gid", PARTY_GID, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(party_getProperty), JSOP_NULLWRAPPER},
-    {"life", PARTY_LIFE, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(party_getProperty), JSOP_NULLWRAPPER},
-    {"partyflag", PARTY_FLAG, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(party_getProperty), JSOP_NULLWRAPPER},
-    {"partyid", PARTY_ID, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(party_getProperty), JSOP_NULLWRAPPER},
-    {"name", PARTY_NAME, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(party_getProperty), JSOP_NULLWRAPPER},
-    {"classid", PARTY_CLASSID, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(party_getProperty), JSOP_NULLWRAPPER},
-    {"level", PARTY_LEVEL, JSPROP_PERMANENT_VAR, JSOP_WRAPPER(party_getProperty), JSOP_NULLWRAPPER},
-    {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}};
+static JSFunctionSpec party_methods[] = {
+  JS_FS("getNext",        party_getNext,        0, FUNCTION_FLAGS),
+  JS_FS_END
+};
+// clang-format on
 
-static JSFunctionSpec party_methods[] = {JS_FS("getNext", party_getNext, 0, FUNCTION_FLAGS), JS_FS_END};
-
-static JSClass party_class = {"Party", JSCLASS_HAS_PRIVATE,
-                              JSCLASS_SPEC(JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-                                           JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL, party_ctor)};
+static JSClass party_class{
+    "Party",                                // name
+    JSCLASS_HAS_PRIVATE,                    // flags
+    JSCLASS_METHODS(JS_PropertyStub,        // addProperty
+                    JS_PropertyStub,        // delProperty
+                    JS_PropertyStub,        // getProperty
+                    JS_StrictPropertyStub,  // setProperty
+                    JS_EnumerateStub,       // enumerate
+                    JS_ResolveStub,         // resolve
+                    JS_ConvertStub,         // mayResolve
+                    nullptr,                // finalize
+                    nullptr,                // call
+                    nullptr,                // hasInstance
+                    party_ctor,             // construct
+                    nullptr)                // trace
+};

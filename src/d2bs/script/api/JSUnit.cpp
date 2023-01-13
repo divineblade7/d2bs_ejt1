@@ -10,6 +10,13 @@
 #include "d2bs/utils/CriticalSections.h"
 #include "d2bs/utils/Helpers.h"
 
+#define GET_UNIT_FROM_VP                                                                  \
+  if (ClientState() != ClientStateInGame) return JS_TRUE;                                 \
+  myUnit* lpUnit = (myUnit*)JS_GetPrivate(obj);                                           \
+  if (!lpUnit || (lpUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) return JS_TRUE; \
+  UnitAny* pUnit = D2CLIENT_FindUnit(lpUnit->dwUnitId, lpUnit->dwType);                   \
+  if (!pUnit) return JS_TRUE;
+
 EMPTY_CTOR(unit)
 
 void unit_finalize(JSFreeOp*, JSObject* obj) {
@@ -32,485 +39,744 @@ void unit_finalize(JSFreeOp*, JSObject* obj) {
   JS_SetPrivate(obj, NULL);
 }
 
-JSAPI_PROP(unit_getProperty) {
+JSAPI_PROP(me_account) {
   BnetData* pData = *p_D2LAUNCH_BnData;
-  GameStructInfo* pInfo = *p_D2CLIENT_GameInfo;
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  JS_BeginRequest(cx);
+  if (!pData) return JS_TRUE;
 
-  switch (JSVAL_TO_INT(ID)) {
-    case ME_PID:
-      vp.setDouble((double)GetCurrentProcessId());
-      // JS_NewNumberValue(cx, (double)GetCurrentProcessId(), vp);
-      break;
-    case ME_PROFILE:
-      vp.setString(JS_NewUCStringCopyZ(cx, Vars.settings.szProfile));
-      break;
-    case ME_GAMEREADY:
-      vp.setBoolean(GameReady());
-      //*vp = BOOLEAN_TO_JSVAL(GameReady());
-      break;
-    case ME_ACCOUNT:
-      if (!pData) return JS_TRUE;
-      vp.setString(JS_NewStringCopyZ(cx, pData->szAccountName));
-      // vp.setString(JS_NewStringCopyZ(cx, pData->szAccountName));
-      break;
-    case ME_CHARNAME:
-      if (!pData) return JS_TRUE;
-      vp.setString(JS_NewStringCopyZ(cx, pData->szPlayerName));
-      break;
-    case ME_CHICKENHP:
-      vp.setInt32(Vars.nChickenHP);
-      break;
-    case ME_CHICKENMP:
-      vp.setInt32(Vars.nChickenMP);
-      break;
-    case ME_DIFF:
-      vp.setInt32(D2CLIENT_GetDifficulty());
-      break;
-    case ME_MAXDIFF:
-      vp.setInt32(pData->nMaxDiff);
-      break;
-    case ME_GAMENAME:
-      if (!pInfo) return JS_TRUE;
-      vp.setString(JS_NewStringCopyZ(cx, pInfo->szGameName));
-      break;
-    case ME_GAMEPASSWORD:
-      if (!pInfo) return JS_TRUE;
-      vp.setString(JS_NewStringCopyZ(cx, pInfo->szGamePassword));
-      break;
-    case ME_GAMESERVERIP:
-      if (!pInfo) return JS_TRUE;
-      vp.setString(JS_NewStringCopyZ(cx, pInfo->szGameServerIp));
-      break;
-    case ME_GAMESTARTTIME:
-      vp.setDouble((double)Vars.settings.dwGameTime);
-      break;
-    case ME_GAMETYPE:
-      vp.setInt32(*p_D2CLIENT_ExpCharFlag);
-      break;
-    case ME_PLAYERTYPE:
-      if (pData) vp.setBoolean(!!(pData->nCharFlags & PLAYER_TYPE_HARDCORE));
-      break;
-    case ME_ITEMONCURSOR:
-      vp.setBoolean(!!(D2CLIENT_GetCursorItem()));
-      break;
-    case ME_AUTOMAP:
-      vp.setBoolean(*p_D2CLIENT_AutomapOn);
-      // JS_NewNumberValue(cx, (double)(*p_D2CLIENT_AutomapOn), vp);
-      //*vp = *p_D2CLIENT_AutomapOn;
-      break;
-    case ME_LADDER:
-      if (pData)
-        // vp.setBoolean(!!(pData->ladderflag & (LADDERFLAG_SET|LADDERFLAG_EXPANSION_NORMAL)));
-        vp.setDouble((double)pData->ladderflag);
-      break;
-    case ME_QUITONHOSTILE:
-      vp.setBoolean(Vars.settings.bQuitOnHostile);
-      break;
-    case ME_REALM:
-      vp.setString(JS_NewStringCopyZ(cx, pData->szRealmName));
-      break;
-    case ME_REALMSHORT:
-      vp.setString(JS_NewStringCopyZ(cx, pData->szRealmName2));
-      break;
-    case OOG_SCREENSIZE:
-      vp.setInt32(D2GFX_GetScreenSize());
-      break;
-    case OOG_WINDOWTITLE: {
-      wchar_t szTitle[256];
-      GetWindowTextW(D2GFX_GetHwnd(), szTitle, 256);
-      vp.setString(JS_NewUCStringCopyZ(cx, szTitle));
-    } break;
-    case ME_PING:
-      vp.setInt32(*p_D2CLIENT_Ping);
-      break;
-    case ME_FPS:
-      vp.setInt32(*p_D2CLIENT_FPS);
-      break;
-    case ME_LOCALE:
-      vp.setInt32(Vars.dwLocale);
-      break;
-    case OOG_INGAME:
-      vp.setBoolean((ClientState() == ClientStateMenu ? false : true));
-      break;
-    case OOG_QUITONERROR:
-      vp.setBoolean(Vars.settings.bQuitOnError);
-      break;
-    case OOG_MAXGAMETIME:
-      vp.setInt32(Vars.settings.dwMaxGameTime);
-      break;
-    case ME_MERCREVIVECOST:
-      vp.setInt32((*p_D2CLIENT_MercReviveCost));
-      break;
-    case ME_BLOCKKEYS:
-      vp.setBoolean(Vars.bBlockKeys);
-      break;
-    case ME_BLOCKMOUSE:
-      vp.setBoolean(Vars.bBlockMouse);
-      break;
-    case ME_UNSUPPORTED:
-      vp.setBoolean(Vars.settings.bEnableUnsupported);
-      break;
-    case ME_CHARFLAGS:
-      if (pData) vp.setInt32(pData->nCharFlags);
-      break;
-    default:
-      break;
-  }
-  JS_EndRequest(cx);
-  if (ClientState() != ClientStateInGame) return JS_TRUE;
-  // JSObject* obj ;
-  // JS_ValueToObject(cx,  JS_CALLEE(cx,vp),obj);
-  myUnit* lpUnit = (myUnit*)JS_GetPrivate(obj);
-  if (!lpUnit || (lpUnit->_dwPrivateType & PRIVATE_UNIT) != PRIVATE_UNIT) return JS_TRUE;
-
-  UnitAny* pUnit = D2CLIENT_FindUnit(lpUnit->dwUnitId, lpUnit->dwType);
-  if (!pUnit) {
-    return JS_TRUE;
-  }
-  Room1* pRoom = NULL;
-
-  switch (JSVAL_TO_INT(ID)) {
-    case UNIT_TYPE:
-      vp.setInt32(pUnit->dwType);
-      break;
-    case UNIT_CLASSID:
-      vp.setInt32(pUnit->dwTxtFileNo);
-      break;
-    case UNIT_MODE:
-      vp.setInt32(pUnit->dwMode);
-      break;
-    case UNIT_NAME: {
-      char tmp[128] = "";
-      GetUnitName(pUnit, tmp, 128);
-      vp.setString(JS_InternString(cx, tmp));
-    } break;
-    case ME_MAPID:
-      vp.setInt32(*p_D2CLIENT_MapId);
-      break;
-    case ME_NOPICKUP:
-      vp.setBoolean(!!*p_D2CLIENT_NoPickUp);
-      break;
-    case UNIT_ACT:
-      vp.setInt32(pUnit->dwAct + 1);
-      break;
-    case UNIT_AREA:
-      pRoom = D2COMMON_GetRoomFromUnit(pUnit);
-      if (pRoom && pRoom->pRoom2 && pRoom->pRoom2->pLevel) vp.setInt32(pRoom->pRoom2->pLevel->dwLevelNo);
-      break;
-    case UNIT_ID:
-      JS_BeginRequest(cx);
-      vp.setNumber((double)pUnit->dwUnitId);
-      JS_EndRequest(cx);
-      break;
-    case UNIT_XPOS:
-      vp.setInt32(D2CLIENT_GetUnitX(pUnit));
-      break;
-    case UNIT_YPOS:
-      vp.setInt32(D2CLIENT_GetUnitY(pUnit));
-      break;
-    case UNIT_TARGETX:
-      switch (pUnit->dwType) {
-        case 0:
-        case 1:
-        case 3:
-          vp.setInt32(pUnit->pPath->xTarget);
-      }
-      break;
-    case UNIT_TARGETY:
-      switch (pUnit->dwType) {
-        case 0:
-        case 1:
-        case 3:
-          vp.setInt32(pUnit->pPath->yTarget);
-      }
-      break;
-    case UNIT_HP:
-      vp.setInt32(D2COMMON_GetUnitStat(pUnit, 6, 0) >> 8);
-      break;
-    case UNIT_HPMAX:
-      vp.setInt32(D2COMMON_GetUnitStat(pUnit, 7, 0) >> 8);
-      break;
-    case UNIT_MP:
-      vp.setInt32(D2COMMON_GetUnitStat(pUnit, 8, 0) >> 8);
-      break;
-    case UNIT_MPMAX:
-      vp.setInt32(D2COMMON_GetUnitStat(pUnit, 9, 0) >> 8);
-      break;
-    case UNIT_STAMINA:
-      vp.setInt32(D2COMMON_GetUnitStat(pUnit, 10, 0) >> 8);
-      break;
-    case UNIT_STAMINAMAX:
-      vp.setInt32(D2COMMON_GetUnitStat(pUnit, 11, 0) >> 8);
-      break;
-    case UNIT_CHARLVL:
-      vp.setInt32(D2COMMON_GetUnitStat(pUnit, 12, 0));
-      break;
-    case ME_RUNWALK:
-      if (pUnit == D2CLIENT_GetPlayerUnit()) vp.setInt32(*p_D2CLIENT_AlwaysRun);
-      break;
-    case UNIT_SPECTYPE:
-      DWORD SpecType;
-      SpecType = NULL;
-      if (pUnit->dwType == UNIT_MONSTER && pUnit->pMonsterData) {
-        if (pUnit->pMonsterData->fMinion & 1) SpecType |= 0x08;
-        if (pUnit->pMonsterData->fBoss & 1) SpecType |= 0x04;
-        if (pUnit->pMonsterData->fChamp & 1) SpecType |= 0x02;
-        if ((pUnit->pMonsterData->fBoss & 1) && (pUnit->pMonsterData->fNormal & 1)) SpecType |= 0x01;
-        if (pUnit->pMonsterData->fNormal & 1) SpecType |= 0x00;
-        vp.setInt32(SpecType);
-        return JS_TRUE;
-      }
-      break;
-    case UNIT_UNIQUEID:
-      if (pUnit->dwType == UNIT_MONSTER && pUnit->pMonsterData->fBoss && pUnit->pMonsterData->fNormal)
-        vp.setInt32(pUnit->pMonsterData->wUniqueNo);
-      else
-        vp.setInt32(-1);
-      break;
-    case ITEM_CODE:  // replace with better method if found
-      if (!(pUnit->dwType == UNIT_ITEM) && pUnit->pItemData) break;
-      ItemTxt* pTxt;
-      pTxt = D2COMMON_GetItemText(pUnit->dwTxtFileNo);
-      if (!pTxt) {
-        vp.setString(JS_InternString(cx, "Unknown"));
-        return JS_TRUE;
-      }
-      char szCode[4];
-      memcpy(szCode, pTxt->szCode, 3);
-      szCode[3] = 0x00;
-      vp.setString(JS_InternString(cx, szCode));
-      break;
-    case ITEM_PREFIX:
-      if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData)
-        if (D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicPrefix[0]))
-          vp.setString(JS_InternString(cx, D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicPrefix[0])));
-      break;
-    case ITEM_SUFFIX:
-      if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData)
-        if (D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicSuffix[0]))
-          vp.setString(JS_InternString(cx, D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicSuffix[0])));
-      break;
-    case ITEM_PREFIXNUM:
-      if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) vp.setInt32(pUnit->pItemData->wMagicPrefix[0]);
-      break;
-    case ITEM_SUFFIXNUM:
-      if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) vp.setInt32(pUnit->pItemData->wMagicSuffix[0]);
-      break;
-
-    case ITEM_PREFIXES:
-      if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) {
-        JSObject* pReturnArray = JS_NewArrayObject(cx, 0, NULL);
-
-        for (int i = 0; i < 3; i++) {
-          if (D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicPrefix[i])) {
-            JS::Value nPrefix =
-                STRING_TO_JSVAL(JS_InternString(cx, D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicPrefix[i])));
-
-            JS_SetElement(cx, pReturnArray, i, &nPrefix);
-          }
-        }
-        vp.setObject(*pReturnArray);
-        //*vp = OBJECT_TO_JSVAL(pReturnArray);
-      }
-
-      break;
-    case ITEM_PREFIXNUMS:
-      if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) {
-        JSObject* pReturnArray = JS_NewArrayObject(cx, 0, NULL);
-
-        for (int i = 0; i < 3; i++) {
-          if (pUnit->pItemData->wMagicPrefix[i]) {
-            JS::Value nPrefixnum = INT_TO_JSVAL(pUnit->pItemData->wMagicPrefix[i]);
-
-            JS_SetElement(cx, pReturnArray, i, &nPrefixnum);
-          }
-        }
-        vp.setObject(*pReturnArray);
-        //*vp = OBJECT_TO_JSVAL(pReturnArray);
-      }
-
-      break;
-    case ITEM_SUFFIXES:
-      if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) {
-        JSObject* pReturnArray = JS_NewArrayObject(cx, 0, NULL);
-
-        for (int i = 0; i < 3; i++) {
-          if (D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicSuffix[i])) {
-            JS::Value nSuffix =
-                STRING_TO_JSVAL(JS_InternString(cx, D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicSuffix[i])));
-
-            JS_SetElement(cx, pReturnArray, i, &nSuffix);
-          }
-        }
-        vp.setObject(*pReturnArray);
-        //*vp = OBJECT_TO_JSVAL(pReturnArray);
-      }
-
-      break;
-    case ITEM_SUFFIXNUMS:
-      if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) {
-        JSObject* pReturnArray = JS_NewArrayObject(cx, 0, NULL);
-
-        for (int i = 0; i < 3; i++) {
-          if (pUnit->pItemData->wMagicSuffix[i]) {
-            JS::Value nSuffixnum = INT_TO_JSVAL(pUnit->pItemData->wMagicSuffix[i]);
-
-            JS_SetElement(cx, pReturnArray, i, &nSuffixnum);
-          }
-        }
-
-        vp.setObject(*pReturnArray);
-      }
-
-      break;
-
-    case ITEM_FNAME:
-      if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) {
-        wchar_t wszfname[256] = L"";
-        D2CLIENT_GetItemName(pUnit, wszfname, _countof(wszfname));
-        if (wszfname) {
-          vp.setString(JS_InternUCString(cx, wszfname));
-        }
-      }
-      break;
-    case ITEM_QUALITY:
-      if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) vp.setInt32(pUnit->pItemData->dwQuality);
-      break;
-    case ITEM_NODE:
-      if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) vp.setInt32(pUnit->pItemData->NodePage);
-      break;
-    case ITEM_LOC:
-      if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) vp.setInt32(pUnit->pItemData->GameLocation);
-      break;
-    case ITEM_SIZEX:
-      if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) {
-        if (!D2COMMON_GetItemText(pUnit->dwTxtFileNo)) break;
-        vp.setInt32(D2COMMON_GetItemText(pUnit->dwTxtFileNo)->xSize);
-      }
-      break;
-    case ITEM_SIZEY:
-      if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) {
-        if (!D2COMMON_GetItemText(pUnit->dwTxtFileNo)) break;
-        vp.setInt32(D2COMMON_GetItemText(pUnit->dwTxtFileNo)->ySize);
-      }
-      break;
-    case ITEM_TYPE:
-      if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) {
-        if (!D2COMMON_GetItemText(pUnit->dwTxtFileNo)) break;
-        vp.setInt32(D2COMMON_GetItemText(pUnit->dwTxtFileNo)->nType);
-      }
-      break;
-    case ITEM_DESC: {
-      if (pUnit->dwType != UNIT_ITEM) break;
-
-      CriticalRoom cRoom;
-
-      wchar_t wBuffer[2048] = L"";
-      wchar_t bBuffer[1] = {1};
-      if (pUnit->pItemData && pUnit->pItemData->pOwnerInventory && pUnit->pItemData->pOwnerInventory->pOwner) {
-        ::WriteProcessMemory(GetCurrentProcess(), (void*)GetDllOffset("D2Client.dll", 0x7BCBE8 - 0x400000), bBuffer, 1,
-                             NULL);
-        ::WriteProcessMemory(GetCurrentProcess(), (void*)GetDllOffset("D2Client.dll", 0x7BCBF4 - 0x400000), &pUnit, 4,
-                             NULL);
-
-        // D2CLIENT_LoadItemDesc(D2CLIENT_GetPlayerUnit(), 0);
-        D2CLIENT_LoadItemDesc(pUnit->pItemData->pOwnerInventory->pOwner, 0);
-        ReadProcessBYTES(GetCurrentProcess(), GetDllOffset("D2Win.dll", 0x841EC8 - 0x400000), wBuffer, 2047);
-      }
-      if (wcslen(wBuffer) > 0) {
-        vp.setString(JS_InternUCString(cx, wBuffer));
-      }
-    }
-
-    break;
-    case ITEM_GFX:
-      if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) vp.setInt32(pUnit->pItemData->bInvGfxIdx);
-      break;
-    case UNIT_ITEMCOUNT:
-      if (pUnit->pInventory) vp.setInt32(pUnit->pInventory->dwItemCount);
-      break;
-    case ITEM_BODYLOCATION:
-      if (pUnit->dwType != UNIT_ITEM) break;
-      if (pUnit->pItemData) vp.setInt32(pUnit->pItemData->BodyLocation);
-      break;
-    case UNIT_OWNER:
-      vp.setNumber((double)pUnit->dwOwnerId);
-      break;
-    case UNIT_OWNERTYPE:
-      vp.setInt32(pUnit->dwOwnerType);
-      break;
-    case ITEM_LEVEL:
-      if (pUnit->dwType != UNIT_ITEM) break;
-      if (pUnit->pItemData) vp.setInt32(pUnit->pItemData->dwItemLevel);
-      break;
-    case ITEM_LEVELREQ:
-      if (pUnit->dwType != UNIT_ITEM) break;
-      vp.setInt32(D2COMMON_GetItemLevelRequirement(pUnit, D2CLIENT_GetPlayerUnit()));
-      break;
-    case UNIT_DIRECTION:
-
-      if (pUnit->pPath && pUnit->pPath->pRoom1) vp.setInt32(pUnit->pPath->bDirection);
-      break;
-    case OBJECT_TYPE:
-      if (pUnit->dwType == UNIT_OBJECT && pUnit->pObjectData) {
-        pRoom = D2COMMON_GetRoomFromUnit(pUnit);
-        if (pRoom && D2COMMON_GetLevelNoFromRoom(pRoom))
-          vp.setInt32(pUnit->pObjectData->Type & 255);
-        else
-          vp.setInt32(pUnit->pObjectData->Type);
-      }
-      break;
-    case OBJECT_LOCKED:
-      if (pUnit->dwType == UNIT_OBJECT && pUnit->pObjectData) vp.setInt32(pUnit->pObjectData->ChestLocked);
-      break;
-    case ME_WSWITCH:
-      if (pUnit == D2CLIENT_GetPlayerUnit()) vp.setInt32(*p_D2CLIENT_bWeapSwitch);
-      break;
-    default:
-      break;
-  }
-
+  vp.setString(JS_NewStringCopyZ(cx, pData->szAccountName));
   return JS_TRUE;
 }
 
-JSAPI_STRICT_PROP(unit_setProperty) {
-  JS::Value ID;
-  JS_IdToValue(cx, id, &ID);
-  switch (JSVAL_TO_INT(ID)) {
-    case ME_CHICKENHP:
-      if (vp.isInt32()) Vars.nChickenHP = vp.toInt32();
-      break;
-    case ME_CHICKENMP:
-      if (vp.isInt32()) Vars.nChickenMP = vp.toInt32();
-      break;
-    case ME_QUITONHOSTILE:
-      if (vp.isBoolean()) Vars.settings.bQuitOnHostile = vp.toBoolean();
-      break;
-    case OOG_QUITONERROR:
-      if (vp.isBoolean()) Vars.settings.bQuitOnError = vp.toBoolean();
-      break;
-    case OOG_MAXGAMETIME:
-      if (vp.isInt32()) Vars.settings.dwMaxGameTime = vp.toInt32();
-      break;
-    case ME_BLOCKKEYS:
-      if (vp.isBoolean()) Vars.bBlockKeys = vp.toBoolean();
-      break;
-    case ME_BLOCKMOUSE:
-      if (vp.isBoolean()) Vars.bBlockMouse = vp.toBoolean();
-      break;
-    case ME_RUNWALK:
-      *p_D2CLIENT_AlwaysRun = !!vp.toInt32();
-      break;
-    case ME_AUTOMAP:
-      *p_D2CLIENT_AutomapOn = vp.toBoolean() ? 1 : 0;
-      break;
-    case ME_NOPICKUP:
-      *p_D2CLIENT_NoPickUp = !!vp.toInt32();
-      break;
+JSAPI_PROP(me_charname) {
+  BnetData* pData = *p_D2LAUNCH_BnData;
+  if (!pData) return JS_TRUE;
+
+  vp.setString(JS_NewStringCopyZ(cx, pData->szPlayerName));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_diff) {
+  vp.setInt32(D2CLIENT_GetDifficulty());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_maxdiff) {
+  BnetData* pData = *p_D2LAUNCH_BnData;
+  if (!pData) return JS_TRUE;
+
+  vp.setInt32(pData->nMaxDiff);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_gamename) {
+  GameStructInfo* pInfo = *p_D2CLIENT_GameInfo;
+  if (!pInfo) return JS_TRUE;
+
+  vp.setString(JS_NewStringCopyZ(cx, pInfo->szGameName));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_gamepassword) {
+  GameStructInfo* pInfo = *p_D2CLIENT_GameInfo;
+  if (!pInfo) return JS_TRUE;
+
+  vp.setString(JS_NewStringCopyZ(cx, pInfo->szGamePassword));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_gameserverip) {
+  GameStructInfo* pInfo = *p_D2CLIENT_GameInfo;
+  if (!pInfo) return JS_TRUE;
+
+  vp.setString(JS_NewStringCopyZ(cx, pInfo->szGameServerIp));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_gamestarttime) {
+  vp.setDouble((double)Vars.settings.dwGameTime);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_gametype) {
+  vp.setInt32(*p_D2CLIENT_ExpCharFlag);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_itemoncursor) {
+  vp.setBoolean(!!(D2CLIENT_GetCursorItem()));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_automap) {
+  vp.setBoolean(*p_D2CLIENT_AutomapOn);
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(me_automap_setter) {
+  *p_D2CLIENT_AutomapOn = vp.toBoolean() ? 1 : 0;
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_ladder) {
+  BnetData* pData = *p_D2LAUNCH_BnData;
+  if (!pData) return JS_TRUE;
+
+  vp.setDouble((double)pData->ladderflag);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_ping) {
+  vp.setInt32(*p_D2CLIENT_Ping);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_fps) {
+  vp.setInt32(*p_D2CLIENT_FPS);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_locale) {
+  vp.setInt32(Vars.dwLocale);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_playertype) {
+  BnetData* pData = *p_D2LAUNCH_BnData;
+  if (!pData) return JS_TRUE;
+
+  vp.setBoolean(!!(pData->nCharFlags & PLAYER_TYPE_HARDCORE));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_realm) {
+  BnetData* pData = *p_D2LAUNCH_BnData;
+  if (!pData) return JS_TRUE;
+
+  vp.setString(JS_NewStringCopyZ(cx, pData->szRealmName));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_realmshort) {
+  BnetData* pData = *p_D2LAUNCH_BnData;
+  if (!pData) return JS_TRUE;
+
+  vp.setString(JS_NewStringCopyZ(cx, pData->szRealmName2));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_mercrevivecost) {
+  vp.setInt32((*p_D2CLIENT_MercReviveCost));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_runwalk) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit == D2CLIENT_GetPlayerUnit()) vp.setInt32(*p_D2CLIENT_AlwaysRun);
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(me_runwalk_setter) {
+  *p_D2CLIENT_AlwaysRun = !!vp.toInt32();
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_weaponswitch) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit == D2CLIENT_GetPlayerUnit()) vp.setInt32(*p_D2CLIENT_bWeapSwitch);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_chickenhp) {
+  vp.setInt32(Vars.nChickenHP);
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(me_chickenhp_setter) {
+  if (vp.isInt32()) Vars.nChickenHP = vp.toInt32();
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_chickenmp) {
+  vp.setInt32(Vars.nChickenMP);
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(me_chickenmp_setter) {
+  if (vp.isInt32()) Vars.nChickenMP = vp.toInt32();
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_quitonhostile) {
+  vp.setBoolean(Vars.settings.bQuitOnHostile);
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(me_quitonhostile_setter) {
+  if (vp.isBoolean()) Vars.settings.bQuitOnHostile = vp.toBoolean();
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_blockKeys) {
+  vp.setBoolean(Vars.bBlockKeys);
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(me_blockKeys_setter) {
+  if (vp.isBoolean()) Vars.bBlockKeys = vp.toBoolean();
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_blockMouse) {
+  vp.setBoolean(Vars.bBlockMouse);
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(me_blockMouse_setter) {
+  if (vp.isBoolean()) Vars.bBlockMouse = vp.toBoolean();
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_gameReady) {
+  vp.setBoolean(GameReady());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_profile) {
+  vp.setString(JS_NewUCStringCopyZ(cx, Vars.settings.szProfile));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_nopickup) {
+  vp.setBoolean(!!*p_D2CLIENT_NoPickUp);
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(me_nopickup_setter) {
+  *p_D2CLIENT_NoPickUp = !!vp.toInt32();
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_pid) {
+  vp.setDouble((double)GetCurrentProcessId());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_unsupported) {
+  vp.setBoolean(Vars.settings.bEnableUnsupported);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_charflags) {
+  BnetData* pData = *p_D2LAUNCH_BnData;
+  if (!pData) return JS_TRUE;
+
+  if (pData) vp.setInt32(pData->nCharFlags);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(me_mapid) {
+  vp.setInt32(*p_D2CLIENT_MapId);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(oog_screensize) {
+  vp.setInt32(D2GFX_GetScreenSize());
+  return JS_TRUE;
+}
+
+JSAPI_PROP(oog_windowtitle) {
+  wchar_t szTitle[256];
+  GetWindowTextW(D2GFX_GetHwnd(), szTitle, 256);
+  vp.setString(JS_NewUCStringCopyZ(cx, szTitle));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(oog_ingame) {
+  vp.setBoolean((ClientState() == ClientStateMenu ? false : true));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(oog_quitonerror) {
+  vp.setBoolean(Vars.settings.bQuitOnError);
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(oog_quitonerror_setter) {
+  if (vp.isBoolean()) Vars.settings.bQuitOnError = vp.toBoolean();
+  return JS_TRUE;
+}
+
+JSAPI_PROP(oog_maxgametime) {
+  vp.setInt32(Vars.settings.dwMaxGameTime);
+  return JS_TRUE;
+}
+
+JSAPI_STRICT_PROP(oog_maxgametime_setter) {
+  if (vp.isInt32()) Vars.settings.dwMaxGameTime = vp.toInt32();
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_type) {
+  GET_UNIT_FROM_VP;
+
+  vp.setInt32(pUnit->dwType);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_classid) {
+  GET_UNIT_FROM_VP;
+
+  vp.setInt32(pUnit->dwTxtFileNo);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_mode) {
+  GET_UNIT_FROM_VP;
+
+  vp.setInt32(pUnit->dwMode);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_name) {
+  GET_UNIT_FROM_VP;
+
+  char tmp[128] = "";
+  GetUnitName(pUnit, tmp, 128);
+  vp.setString(JS_InternString(cx, tmp));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_act) {
+  GET_UNIT_FROM_VP;
+
+  vp.setInt32(pUnit->dwAct + 1);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_gid) {
+  GET_UNIT_FROM_VP;
+
+  JSAutoRequest r(cx);
+  vp.setNumber((double)pUnit->dwUnitId);
+  JS_EndRequest(cx);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_x) {
+  GET_UNIT_FROM_VP;
+
+  vp.setInt32(D2CLIENT_GetUnitX(pUnit));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_y) {
+  GET_UNIT_FROM_VP;
+
+  vp.setInt32(D2CLIENT_GetUnitY(pUnit));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_targetx) {
+  GET_UNIT_FROM_VP;
+
+  switch (pUnit->dwType) {
+    case 0:
+    case 1:
+    case 3:
+      vp.setInt32(pUnit->pPath->xTarget);
   }
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_targety) {
+  GET_UNIT_FROM_VP;
+
+  switch (pUnit->dwType) {
+    case 0:
+    case 1:
+    case 3:
+      vp.setInt32(pUnit->pPath->yTarget);
+  }
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_area) {
+  GET_UNIT_FROM_VP;
+
+  Room1* pRoom = D2COMMON_GetRoomFromUnit(pUnit);
+  if (pRoom && pRoom->pRoom2 && pRoom->pRoom2->pLevel) vp.setInt32(pRoom->pRoom2->pLevel->dwLevelNo);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_hp) {
+  GET_UNIT_FROM_VP;
+
+  vp.setInt32(D2COMMON_GetUnitStat(pUnit, 6, 0) >> 8);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_hpmax) {
+  GET_UNIT_FROM_VP;
+
+  vp.setInt32(D2COMMON_GetUnitStat(pUnit, 7, 0) >> 8);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_mp) {
+  GET_UNIT_FROM_VP;
+
+  vp.setInt32(D2COMMON_GetUnitStat(pUnit, 8, 0) >> 8);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_mpmax) {
+  GET_UNIT_FROM_VP;
+
+  vp.setInt32(D2COMMON_GetUnitStat(pUnit, 9, 0) >> 8);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_stamina) {
+  GET_UNIT_FROM_VP;
+
+  vp.setInt32(D2COMMON_GetUnitStat(pUnit, 10, 0) >> 8);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_staminamax) {
+  GET_UNIT_FROM_VP;
+
+  vp.setInt32(D2COMMON_GetUnitStat(pUnit, 11, 0) >> 8);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_charlvl) {
+  GET_UNIT_FROM_VP;
+
+  vp.setInt32(D2COMMON_GetUnitStat(pUnit, 12, 0));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_itemcount) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->pInventory) vp.setInt32(pUnit->pInventory->dwItemCount);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_owner) {
+  GET_UNIT_FROM_VP;
+
+  vp.setNumber((double)pUnit->dwOwnerId);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_ownertype) {
+  GET_UNIT_FROM_VP;
+
+  vp.setInt32(pUnit->dwOwnerType);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_spectype) {
+  GET_UNIT_FROM_VP;
+
+  DWORD SpecType;
+  SpecType = NULL;
+  if (pUnit->dwType == UNIT_MONSTER && pUnit->pMonsterData) {
+    if (pUnit->pMonsterData->fMinion & 1) SpecType |= 0x08;
+    if (pUnit->pMonsterData->fBoss & 1) SpecType |= 0x04;
+    if (pUnit->pMonsterData->fChamp & 1) SpecType |= 0x02;
+    if ((pUnit->pMonsterData->fBoss & 1) && (pUnit->pMonsterData->fNormal & 1)) SpecType |= 0x01;
+    if (pUnit->pMonsterData->fNormal & 1) SpecType |= 0x00;
+    vp.setInt32(SpecType);
+  }
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_direction) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->pPath && pUnit->pPath->pRoom1) vp.setInt32(pUnit->pPath->bDirection);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(unit_uniqueid) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType == UNIT_MONSTER && pUnit->pMonsterData->fBoss && pUnit->pMonsterData->fNormal)
+    vp.setInt32(pUnit->pMonsterData->wUniqueNo);
+  else
+    vp.setInt32(-1);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_code) {
+  GET_UNIT_FROM_VP;
+
+  if (!(pUnit->dwType == UNIT_ITEM) && pUnit->pItemData) return JS_TRUE;
+  ItemTxt* pTxt;
+  pTxt = D2COMMON_GetItemText(pUnit->dwTxtFileNo);
+  if (!pTxt) {
+    vp.setString(JS_InternString(cx, "Unknown"));
+    return JS_TRUE;
+  }
+  char szCode[4];
+  memcpy(szCode, pTxt->szCode, 3);
+  szCode[3] = 0x00;
+  vp.setString(JS_InternString(cx, szCode));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_prefix) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData)
+    if (D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicPrefix[0]))
+      vp.setString(JS_InternString(cx, D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicPrefix[0])));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_suffix) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData)
+    if (D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicSuffix[0]))
+      vp.setString(JS_InternString(cx, D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicSuffix[0])));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_prefixes) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) {
+    JSObject* pReturnArray = JS_NewArrayObject(cx, 0, NULL);
+
+    for (int i = 0; i < 3; i++) {
+      if (D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicPrefix[i])) {
+        JS::Value nPrefix =
+            STRING_TO_JSVAL(JS_InternString(cx, D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicPrefix[i])));
+
+        JS_SetElement(cx, pReturnArray, i, &nPrefix);
+      }
+    }
+    vp.setObject(*pReturnArray);
+    //*vp = OBJECT_TO_JSVAL(pReturnArray);
+  }
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_suffixes) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) {
+    JSObject* pReturnArray = JS_NewArrayObject(cx, 0, NULL);
+
+    for (int i = 0; i < 3; i++) {
+      if (D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicSuffix[i])) {
+        JS::Value nSuffix =
+            STRING_TO_JSVAL(JS_InternString(cx, D2COMMON_GetItemMagicalMods(pUnit->pItemData->wMagicSuffix[i])));
+
+        JS_SetElement(cx, pReturnArray, i, &nSuffix);
+      }
+    }
+    vp.setObject(*pReturnArray);
+    //*vp = OBJECT_TO_JSVAL(pReturnArray);
+  }
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_prefixnum) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) vp.setInt32(pUnit->pItemData->wMagicPrefix[0]);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_suffixnum) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) vp.setInt32(pUnit->pItemData->wMagicSuffix[0]);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_prefixnums) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) {
+    JSObject* pReturnArray = JS_NewArrayObject(cx, 0, NULL);
+
+    for (int i = 0; i < 3; i++) {
+      if (pUnit->pItemData->wMagicPrefix[i]) {
+        JS::Value nPrefixnum = INT_TO_JSVAL(pUnit->pItemData->wMagicPrefix[i]);
+
+        JS_SetElement(cx, pReturnArray, i, &nPrefixnum);
+      }
+    }
+    vp.setObject(*pReturnArray);
+    //*vp = OBJECT_TO_JSVAL(pReturnArray);
+  }
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_suffixnums) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) {
+    JSObject* pReturnArray = JS_NewArrayObject(cx, 0, NULL);
+
+    for (int i = 0; i < 3; i++) {
+      if (pUnit->pItemData->wMagicSuffix[i]) {
+        JS::Value nSuffixnum = INT_TO_JSVAL(pUnit->pItemData->wMagicSuffix[i]);
+
+        JS_SetElement(cx, pReturnArray, i, &nSuffixnum);
+      }
+    }
+
+    vp.setObject(*pReturnArray);
+  }
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_fname) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) {
+    wchar_t wszfname[256] = L"";
+    D2CLIENT_GetItemName(pUnit, wszfname, _countof(wszfname));
+    if (wszfname) {
+      vp.setString(JS_InternUCString(cx, wszfname));
+    }
+  }
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_quality) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) vp.setInt32(pUnit->pItemData->dwQuality);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_node) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) vp.setInt32(pUnit->pItemData->NodePage);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_location) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) vp.setInt32(pUnit->pItemData->GameLocation);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_sizex) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) {
+    if (!D2COMMON_GetItemText(pUnit->dwTxtFileNo)) return JS_TRUE;
+    vp.setInt32(D2COMMON_GetItemText(pUnit->dwTxtFileNo)->xSize);
+  }
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_sizey) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) {
+    if (!D2COMMON_GetItemText(pUnit->dwTxtFileNo)) return JS_TRUE;
+    vp.setInt32(D2COMMON_GetItemText(pUnit->dwTxtFileNo)->ySize);
+  }
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_type) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) {
+    if (!D2COMMON_GetItemText(pUnit->dwTxtFileNo)) return JS_TRUE;
+    vp.setInt32(D2COMMON_GetItemText(pUnit->dwTxtFileNo)->nType);
+  }
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_description) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType != UNIT_ITEM) return JS_TRUE;
+
+  CriticalRoom cRoom;
+
+  wchar_t wBuffer[2048] = L"";
+  wchar_t bBuffer[1] = {1};
+  if (pUnit->pItemData && pUnit->pItemData->pOwnerInventory && pUnit->pItemData->pOwnerInventory->pOwner) {
+    ::WriteProcessMemory(GetCurrentProcess(), (void*)GetDllOffset("D2Client.dll", 0x7BCBE8 - 0x400000), bBuffer, 1,
+                         NULL);
+    ::WriteProcessMemory(GetCurrentProcess(), (void*)GetDllOffset("D2Client.dll", 0x7BCBF4 - 0x400000), &pUnit, 4,
+                         NULL);
+
+    // D2CLIENT_LoadItemDesc(D2CLIENT_GetPlayerUnit(), 0);
+    D2CLIENT_LoadItemDesc(pUnit->pItemData->pOwnerInventory->pOwner, 0);
+    ReadProcessBYTES(GetCurrentProcess(), GetDllOffset("D2Win.dll", 0x841EC8 - 0x400000), wBuffer, 2047);
+  }
+  if (wcslen(wBuffer) > 0) {
+    vp.setString(JS_InternUCString(cx, wBuffer));
+  }
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_bodylocation) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType != UNIT_ITEM) return JS_TRUE;
+  if (pUnit->pItemData) vp.setInt32(pUnit->pItemData->BodyLocation);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_ilvl) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType != UNIT_ITEM) return JS_TRUE;
+  if (pUnit->pItemData) vp.setInt32(pUnit->pItemData->dwItemLevel);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_levelreq) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType != UNIT_ITEM) return JS_TRUE;
+  vp.setInt32(D2COMMON_GetItemLevelRequirement(pUnit, D2CLIENT_GetPlayerUnit()));
+  return JS_TRUE;
+}
+
+JSAPI_PROP(item_gfx) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType == UNIT_ITEM && pUnit->pItemData) vp.setInt32(pUnit->pItemData->bInvGfxIdx);
+  return JS_TRUE;
+}
+
+JSAPI_PROP(object_type) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType == UNIT_OBJECT && pUnit->pObjectData) {
+    Room1* pRoom = D2COMMON_GetRoomFromUnit(pUnit);
+    if (pRoom && D2COMMON_GetLevelNoFromRoom(pRoom))
+      vp.setInt32(pUnit->pObjectData->Type & 255);
+    else
+      vp.setInt32(pUnit->pObjectData->Type);
+  }
+  return JS_TRUE;
+}
+
+JSAPI_PROP(object_locked) {
+  GET_UNIT_FROM_VP;
+
+  if (pUnit->dwType == UNIT_OBJECT && pUnit->pObjectData) vp.setInt32(pUnit->pObjectData->ChestLocked);
   return JS_TRUE;
 }
 
@@ -1565,7 +1831,7 @@ JSAPI_FUNC(unit_getMercHP) {
 
   if (!args.thisv().isObject()) {
     args.rval().setUndefined();
-    return JS_TRUE; // should be an error but cant change the API :(
+    return JS_TRUE;  // should be an error but cant change the API :(
   }
   auto self = args.thisv().toObjectOrNull();
   JS::Value* rest = 0;
